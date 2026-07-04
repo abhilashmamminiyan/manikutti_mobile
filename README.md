@@ -11,6 +11,7 @@ A premium, offline-first mobile companion for the **Manikutti Finance Tracker** 
 - **UTC Timezone Normalization**: Automatically converts all timestamps to UTC before performing duplicate checks, neutralizing timezone offsets between local devices (e.g., IST) and Vercel servers (UTC).
 - **Interactive Ledger UI**: Modern UI featuring net savings metrics, category badges, dynamic charts, filter chips, and automated sync indicators.
 - **Secure Authentication**: Verification via email OTP (one-time passwords) that issues stateless JWT credentials.
+- **Automated Deployments**: Fully automated CI/CD pipelines via GitHub Actions.
 
 ---
 
