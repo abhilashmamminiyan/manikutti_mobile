@@ -1,17 +1,37 @@
-# manikutti_flutter
+# Manikutti Mobile Client
 
-A new Flutter project.
+A premium, offline-first mobile companion for the **Manikutti Finance Tracker** built using **Flutter**. It allows family members to track their personal and family expenses, synchronize data with Google Sheets via a Next.js serverless backend, and work completely offline when network connection is unavailable.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## ✨ Features
 
-A few resources to get you started if this is your first Flutter project:
+- **Offline-First Storage**: Saves all transactions locally in a secure SQLite database to prevent lag and ensure it works without internet access.
+- **Background Synchronization**: Detects network connectivity changes, automatically pushing local offline edits to Google Sheets and pulling remote updates.
+- **UTC Timezone Normalization**: Automatically converts all timestamps to UTC before performing duplicate checks, neutralizing timezone offsets between local devices (e.g., IST) and Vercel servers (UTC).
+- **Interactive Ledger UI**: Modern UI featuring net savings metrics, category badges, dynamic charts, filter chips, and automated sync indicators.
+- **Secure Authentication**: Verification via email OTP (one-time passwords) that issues stateless JWT credentials.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🛠️ Getting Started
+
+### Prerequisites
+- **Flutter SDK**: Ensure you have Flutter version `3.18.0` or higher installed.
+- **Dart SDK**: Clean environment setup with package dependencies resolved.
+- **Android Studio / Xcode**: Formats and builds debug/release payloads.
+
+### Installation & Run
+1. Navigate to the mobile project directory:
+   ```bash
+   cd manikutti_mobile
+   ```
+2. Fetch package dependencies:
+   ```bash
+   flutter pub get
+   ```
+3. Connect a physical Android/iOS phone (with USB Debugging active) or start an emulator.
+4. Run the application:
+   ```bash
+   flutter run
+   ```
