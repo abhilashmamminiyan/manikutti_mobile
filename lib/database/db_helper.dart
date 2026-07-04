@@ -82,6 +82,15 @@ class DbHelper {
     );
   }
 
+  Future<int> deleteSyncedTransactions() async {
+    final db = await instance.database;
+    return await db.delete(
+      'transactions',
+      where: 'synced = ?',
+      whereArgs: [1],
+    );
+  }
+
   Future<int> updateTransaction(TransactionModel transaction) async {
     final db = await instance.database;
     return await db.update(

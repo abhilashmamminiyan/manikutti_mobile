@@ -100,60 +100,41 @@ class SyncService {
 
     // Fetch personal transactions
     List<dynamic> remotePersonal = [];
+    bool personalSuccess = false;
     try {
       remotePersonal = await apiService.fetchTransactions('Personal_Expenses');
+      personalSuccess = true;
     } catch (e) {
       print('[SyncService] Failed to pull personal expenses: $e');
     }
 
     // Fetch family transactions (if joined)
     List<dynamic> remoteFamily = [];
+    bool familySuccess = false;
+    bool hasFamily = false;
     try {
       final familyInfo = await apiService.getFamilyInfo();
       if (familyInfo != null && familyInfo['familyCode'] != null) {
+        hasFamily = true;
         remoteFamily = await apiService.fetchTransactions('Family_Expenses');
+        familySuccess = true;
+      } else {
+        // No family joined, so treat family pull as successful
+        familySuccess = true;
       }
     } catch (e) {
       print('[SyncService] Failed to pull family expenses: $e');
     }
 
-    // Fetch local transactions to perform comparison
-    final localList = await dbHelper.getAllTransactions();
+    // Flush and align with Google Sheets ONLY if the remote pull succeeded!
+    // This protects local data in case of temporary network dropouts during pull.
+    if (personalSuccess && familySuccess) {
+      // 1. Clear all local synced transactions
+      await dbHelper.deleteSyncedTransactions();
 
-    // Helper to check if a remote transaction is already in local list
-    bool isAlreadyLocal(Map<String, dynamic> remote, String type) {
-      final remoteDateStr = remote['date']?.toString() ?? '';
-      final remoteAmount = (remote['amount'] as num).toDouble();
-      final remoteCategory = remote['category'] ?? '';
-      final remoteNote = remote['note'] ?? '';
-
-      final remoteParsed = DateTime.tryParse(remoteDateStr)?.toUtc();
-
-      return localList.any((local) {
-        if (local.amount != remoteAmount ||
-            local.category != remoteCategory ||
-            local.note != remoteNote ||
-            local.type != type) {
-          return false;
-        }
-
-        // Compare timestamps in UTC to normalize timezone differences
-        final localParsed = DateTime.tryParse(local.date)?.toUtc();
-        if (localParsed != null && remoteParsed != null) {
-          // Allow up to 5 seconds difference to account for minor round-trips
-          final diff = localParsed.difference(remoteParsed).inSeconds.abs();
-          return diff <= 5;
-        }
-
-        // Fallback string compare
-        return local.date == remoteDateStr;
-      });
-    }
-
-    // Process personal remote items
-    for (final item in remotePersonal) {
-      final type = item['type'] == 'Income' ? 'Income' : 'Expense';
-      if (!isAlreadyLocal(item, type)) {
+      // 2. Insert fresh personal remote items
+      for (final item in remotePersonal) {
+        final type = item['type'] == 'Income' ? 'Income' : 'Expense';
         await dbHelper.insertTransaction(TransactionModel(
           date: item['date'],
           amount: (item['amount'] as num).toDouble(),
@@ -164,23 +145,24 @@ class SyncService {
           synced: true,
         ));
       }
-    }
 
-    // Process family remote items
-    for (final item in remoteFamily) {
-      if (!isAlreadyLocal(item, 'Family')) {
-        await dbHelper.insertTransaction(TransactionModel(
-          date: item['date'],
-          amount: (item['amount'] as num).toDouble(),
-          category: item['category'] ?? 'General',
-          note: item['note'] ?? '',
-          isPaid: true,
-          type: 'Family',
-          addedBy: item['addedBy'],
-          familyCode: item['familyCode'],
-          synced: true,
-        ));
+      // 3. Insert fresh family remote items
+      if (hasFamily) {
+        for (final item in remoteFamily) {
+          await dbHelper.insertTransaction(TransactionModel(
+            date: item['date'],
+            amount: (item['amount'] as num).toDouble(),
+            category: item['category'] ?? 'General',
+            note: item['note'] ?? '',
+            isPaid: true,
+            type: 'Family',
+            addedBy: item['addedBy'],
+            familyCode: item['familyCode'],
+            synced: true,
+          ));
+        }
       }
+      print('[SyncService] Local database successfully aligned with Google Sheets.');
     }
   }
 }
