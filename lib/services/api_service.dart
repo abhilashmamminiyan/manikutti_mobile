@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter/foundation.dart';
+
 class ApiService {
   static final ApiService instance = ApiService._init();
   final _secureStorage = const FlutterSecureStorage();
@@ -12,6 +14,9 @@ class ApiService {
   ApiService._init();
 
   Future<String> getBaseUrl() async {
+    if (!kDebugMode) {
+      return _defaultBaseUrl;
+    }
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('api_base_url') ?? _defaultBaseUrl;
   }
@@ -20,7 +25,11 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     String formattedUrl = url.trim();
     if (formattedUrl.isNotEmpty && !formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-      formattedUrl = 'https://$formattedUrl';
+      final isLocal = formattedUrl.contains('localhost') || 
+                      formattedUrl.startsWith('192.168.') || 
+                      formattedUrl.startsWith('10.') || 
+                      formattedUrl.startsWith('127.0.0.1');
+      formattedUrl = isLocal ? 'http://$formattedUrl' : 'https://$formattedUrl';
     }
     await prefs.setString('api_base_url', formattedUrl);
   }
