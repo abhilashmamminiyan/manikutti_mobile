@@ -264,16 +264,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Column(
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Family Activity Feed',
                             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Manrope'),
                           ),
-                          Text(
-                            'Real-time prosperity logs',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          GestureDetector(
+                            onTap: () async {
+                              await NotificationService.instance.showImmediateNotification(
+                                id: 999,
+                                title: 'System Notification Test',
+                                body: 'This is a test notification in your drawer!',
+                              );
+                            },
+                            child: const Text(
+                              'Tap here to test drawer notification',
+                              style: TextStyle(
+                                fontSize: 12, 
+                                color: Color(0xFF006972), 
+                                decoration: TextDecoration.underline,
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
                           ),
                         ],
                       ),
