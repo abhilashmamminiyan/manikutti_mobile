@@ -15,7 +15,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>manikutti_flutter</string>
+	<string>Manikutti - Finance Tracker</string>
+	<key>CFBundleDisplayName</key>
+	<string>Manikutti - Finance Tracker</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

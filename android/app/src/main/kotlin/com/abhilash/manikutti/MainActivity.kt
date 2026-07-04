@@ -1,4 +1,4 @@
-package com.example.manikutti_flutter
+package com.abhilash.manikutti
 
 import io.flutter.embedding.android.FlutterActivity
 
