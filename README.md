@@ -49,3 +49,5 @@ This repository uses a decentralized **Polyrepo** architecture, meaning it manag
   2. Sets the build number to the unique GitHub Run Number.
   3. Uploads the APK directly to **Firebase App Distribution** (to the `family` tester group).
 * **Parent Sync:** Finally, the `sync-parent.yml` workflow updates the `manikutti-hub` parent repository so it always points to this exact production release.
+
+> **Note:** For a complete architectural overview of how the mobile and web repositories sync together, see the [`CI_CD_PIPELINE.md`](https://github.com/abhilashmamminiyan/manikutti-hub/blob/main/CI_CD_PIPELINE.md) document in the parent repository.
