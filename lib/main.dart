@@ -1,15 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workmanager/workmanager.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    try {
+      final familyInfo = await ApiService.instance.getFamilyInfo();
+      if (familyInfo != null && familyInfo['familyCode'] != null) {
+        final familyCode = familyInfo['familyCode'] as String;
+        final notifs = await ApiService.instance.fetchNotifications(familyCode);
+        
+        if (notifs.isNotEmpty) {
+          final latestNotif = notifs.first;
+          final prefs = await SharedPreferences.getInstance();
+          final lastNotifiedDate = prefs.getString('last_notified_date') ?? '';
+          final currentNotifDate = latestNotif['date'] as String? ?? '';
+          
+          if (currentNotifDate.isNotEmpty && currentNotifDate != lastNotifiedDate) {
+            await prefs.setString('last_notified_date', currentNotifDate);
+            
+            await NotificationService.instance.showImmediateNotification(
+              id: latestNotif['id'] ?? 1,
+              title: latestNotif['title'] ?? 'New Activity Alert',
+              body: latestNotif['message'] ?? '',
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('Background task execution failed: $e');
+    }
+    return Future.value(true);
+  });
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Initialize notification service
   await NotificationService.instance.initialize();
+
+  // Initialize workmanager background sync task
+  try {
+    await Workmanager().initialize(callbackDispatcher);
+    await Workmanager().registerPeriodicTask(
+      "fetch_notifications_job",
+      "fetchNotificationsTask",
+      frequency: const Duration(minutes: 15),
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
+    );
+  } catch (e) {
+    print('Failed to register Workmanager: $e');
+  }
   
   // Check if session token and email exists
   final email = await ApiService.instance.getUserEmail();

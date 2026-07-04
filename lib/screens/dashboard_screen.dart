@@ -26,7 +26,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   List<dynamic> _monthlyExpenses = [];
   List<dynamic> _notifications = [];
+  List<dynamic> _familyMembers = [];
   double _totalRegularExpenses = 0;
+  double _totalPaidRegularExpenses = 0;
   String? _familyCode;
   String? _userEmail;
   int _currentPage = 0;
@@ -132,12 +134,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() => _isLoading = true);
     try {
       final list = await DbHelper.instance.getAllTransactions();
-      _calculateTotals(list);
-      
       setState(() {
         _transactions = list;
       });
-
+      _recalculateFamilyTotals();
+      
       await _fetchFamilyDuesAndNotifications();
     } catch (e) {
       print('Error loading data: $e');
@@ -155,18 +156,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         
         final expenses = await ApiService.instance.fetchMonthlyExpenses(_familyCode!);
         final notifs = await ApiService.instance.fetchNotifications(_familyCode!);
-        
-        double regularSum = 0;
-        for (final item in expenses) {
-          regularSum += (item['amount'] as num).toDouble();
-        }
+        final membersList = familyInfo['members'] as List<dynamic>? ?? [];
         
         setState(() {
           _monthlyExpenses = expenses;
           _notifications = notifs;
-          _totalRegularExpenses = regularSum;
+          _familyMembers = membersList;
         });
-
+ 
+        _recalculateFamilyTotals();
         await _syncLocalNotifications(expenses);
       }
     } catch (e) {
@@ -338,10 +336,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   notif['message'] ?? '',
                                   style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                                 ),
-                                subtitle: Text(
-                                  timeAgo,
-                                  style: const TextStyle(fontSize: 10, color: Colors.grey),
-                                ),
+                                 subtitle: Text(
+                                   '$timeAgo${notif['createdBy'] != null ? ' • By ${_getMemberNickname(notif['createdBy'])}' : ''}',
+                                   style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                 ),
                               );
                             },
                           ),
@@ -350,6 +348,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             );
           },
+        );
+      },
+    );
+  }
+
+  void _showProfileBottomSheet() {
+    final myNickname = _getMemberNickname(_userEmail ?? '');
+    
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(28),
+          height: 320,
+          child: Column(
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              CircleAvatar(
+                radius: 40,
+                backgroundColor: const Color(0xFF006972),
+                child: Text(
+                  myNickname.isNotEmpty ? myNickname[0].toUpperCase() : 'U',
+                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Manrope'),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                myNickname,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Manrope'),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _userEmail ?? '',
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _handleLogout();
+                  },
+                  icon: const Icon(Icons.logout, color: Colors.red),
+                  label: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: const BorderSide(color: Colors.redAccent),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -440,7 +505,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Family Prosperity Ledger',
+                  'Family Prosperity Summary',
                   style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600),
                 ),
                 Icon(Icons.people_alt_outlined, color: Colors.white70),
@@ -448,7 +513,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              '₹${(_totalFamilyExpenses + _totalRegularExpenses).toStringAsFixed(2)}',
+              '₹${(_totalFamilyExpenses + _totalPaidRegularExpenses).toStringAsFixed(2)}',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 32,
@@ -482,18 +547,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _calculateTotals(List<TransactionModel> list) {
+  void _recalculateFamilyTotals() {
     double income = 0;
     double personalEx = 0;
     double familyEx = 0;
 
-    for (final t in list) {
+    // 1. Calculate regular sums
+    double regularSum = 0;
+    double paidRegularSum = 0;
+    for (final item in _monthlyExpenses) {
+      final amt = (item['amount'] as num).toDouble();
+      regularSum += amt;
+      if (item['status'] == 'Paid') {
+        paidRegularSum += amt;
+      }
+    }
+
+    // 2. Helper to check if a transaction represents a regular commitment payment
+    bool isRegularCommitmentPayment(TransactionModel t) {
+      final noteLower = t.note.toLowerCase().trim();
+      if (noteLower.isEmpty) return false;
+      
+      for (final item in _monthlyExpenses) {
+        final title = (item['title'] as String).toLowerCase().trim();
+        final cleanTitle = title.replaceAll('emi:', '').trim();
+        final linkedLoan = (item['linkedLoan'] as String?)?.toLowerCase().trim() ?? '';
+        
+        if (noteLower == title || 
+            noteLower == cleanTitle || 
+            (linkedLoan.isNotEmpty && noteLower == linkedLoan) ||
+            noteLower.contains(cleanTitle) ||
+            (linkedLoan.isNotEmpty && noteLower.contains(linkedLoan))) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // 3. Sum up transactions
+    for (final t in _transactions) {
       if (t.type == 'Income') {
         income += t.amount;
       } else if (t.type == 'Expense') {
         personalEx += t.amount;
       } else if (t.type == 'Family') {
-        familyEx += t.amount;
+        if (!isRegularCommitmentPayment(t)) {
+          familyEx += t.amount;
+        }
       }
     }
 
@@ -501,7 +601,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _totalIncome = income;
       _totalPersonalExpenses = personalEx;
       _totalFamilyExpenses = familyEx;
+      _totalRegularExpenses = regularSum;
+      _totalPaidRegularExpenses = paidRegularSum;
     });
+  }
+
+  String _getMemberNickname(String email) {
+    final emailLower = email.trim().toLowerCase();
+    for (final m in _familyMembers) {
+      final mEmail = (m['email'] as String?)?.trim().toLowerCase() ?? '';
+      if (mEmail == emailLower) {
+        final nick = (m['nickname'] as String?)?.trim() ?? '';
+        if (nick.isNotEmpty) return nick;
+      }
+    }
+    return email.split('@').first;
   }
 
   Future<void> _triggerSync() async {
@@ -596,9 +710,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             tooltip: 'Sync with Sheets',
           ),
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _handleLogout,
-            tooltip: 'Logout',
+            icon: const Icon(Icons.person_outline),
+            onPressed: _showProfileBottomSheet,
+            tooltip: 'Profile',
           ),
         ],
       ),
@@ -902,7 +1016,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     children: [
                                       if (t.type == 'Family' && t.addedBy != null) ...[
                                         Text(
-                                          'By: ${t.addedBy!.split('@').first} ',
+                                          'By: ${_getMemberNickname(t.addedBy!)} ',
                                           style: TextStyle(color: Colors.grey[500], fontSize: 10, fontStyle: FontStyle.italic),
                                         ),
                                       ],
