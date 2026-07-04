@@ -3,7 +3,8 @@ name: Build & Distribute to Firebase
 on:
   push:
     branches:
-      - main
+      - main  # Only fires after a PR is merged into main
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 jobs:
   distribute:
@@ -47,7 +48,7 @@ jobs:
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
           appId: 1:945226005596:android:a8d62b7b8f49beb4cdba99
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          token: ${{ secrets.FIREBASE_TOKEN }}
           groups: family
           file: build/app/outputs/flutter-apk/app-release.apk
           releaseNotes: |

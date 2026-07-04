@@ -15,7 +15,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _otpController = TextEditingController();
   final _urlController = TextEditingController();
-  
+
   bool _isLoading = false;
   String _errorMessage = '';
   String _successMessage = '';
@@ -46,7 +46,10 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Configure Backend URL', style: TextStyle(fontFamily: 'Manrope', fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Configure Backend URL',
+          style: TextStyle(fontFamily: 'Manrope', fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -75,7 +78,9 @@ class _LoginScreenState extends State<LoginScreen> {
               await ApiService.instance.setBaseUrl(_urlController.text.trim());
               if (mounted) Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('API Base URL updated successfully.')),
+                const SnackBar(
+                  content: Text('API Base URL updated successfully.'),
+                ),
               );
             },
             child: const Text('Save'),
@@ -108,7 +113,9 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     } catch (e) {
-      setState(() => _errorMessage = e.toString().replaceAll('Exception: ', ''));
+      setState(
+        () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -118,7 +125,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final otp = _otpController.text.trim();
     final email = _emailController.text.trim();
     if (otp.isEmpty || otp.length < 6 || _verificationToken == null) {
-      setState(() => _errorMessage = 'Please enter the 6-digit verification code.');
+      setState(
+        () => _errorMessage = 'Please enter the 6-digit verification code.',
+      );
       return;
     }
 
@@ -128,11 +137,15 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final success = await ApiService.instance.verifyOTP(email, otp, _verificationToken!);
+      final success = await ApiService.instance.verifyOTP(
+        email,
+        otp,
+        _verificationToken!,
+      );
       if (success) {
         // Run initial synchronization cycle in background
         SyncService.instance.syncData();
-        
+
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -141,7 +154,9 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     } catch (e) {
-      setState(() => _errorMessage = e.toString().replaceAll('Exception: ', ''));
+      setState(
+        () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -183,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: theme.primaryColor.withOpacity(0.2),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
-                      )
+                      ),
                     ],
                   ),
                   child: Center(
@@ -208,9 +223,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                _isOtpStep 
-                  ? 'Enter the 6-digit code sent to your email.'
-                  : 'Track your personal & family expenses in one sacred space.',
+                _isOtpStep
+                    ? 'Enter the 6-digit code sent to your email.'
+                    : 'Track your personal & family expenses in one sacred space.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -219,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 40),
-              
+
               // Error Alert
               if (_errorMessage.isNotEmpty) ...[
                 Container(
@@ -227,7 +242,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: BoxDecoration(
                     color: theme.colorScheme.error.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: theme.colorScheme.error.withOpacity(0.3)),
+                    border: Border.all(
+                      color: theme.colorScheme.error.withOpacity(0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -236,7 +253,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       Expanded(
                         child: Text(
                           _errorMessage,
-                          style: TextStyle(color: theme.colorScheme.error, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                            color: theme.colorScheme.error,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],
@@ -256,12 +276,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.check_circle_outline, color: Colors.green),
+                      const Icon(
+                        Icons.check_circle_outline,
+                        color: Colors.green,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           _successMessage,
-                          style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w500),
+                          style: const TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],
@@ -283,13 +309,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleSendOTP,
-                  child: _isLoading 
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                      )
-                    : const Text('Send Verification Code'),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Send Verification Code'),
                 ),
               ] else ...[
                 TextField(
@@ -297,7 +326,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   keyboardType: TextInputType.number,
                   maxLength: 6,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 10),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 10,
+                  ),
                   decoration: const InputDecoration(
                     hintText: '000000',
                     counterText: '',
@@ -307,13 +340,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleVerifyOTP,
-                  child: _isLoading 
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                      )
-                    : const Text('Verify & Continue'),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Verify & Continue'),
                 ),
                 const SizedBox(height: 12),
                 TextButton(

@@ -18,11 +18,7 @@ class DbHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
+    return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future _createDB(Database db, int version) async {
@@ -75,20 +71,12 @@ class DbHelper {
 
   Future<int> deleteTransaction(int id) async {
     final db = await instance.database;
-    return await db.delete(
-      'transactions',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> deleteSyncedTransactions() async {
     final db = await instance.database;
-    return await db.delete(
-      'transactions',
-      where: 'synced = ?',
-      whereArgs: [1],
-    );
+    return await db.delete('transactions', where: 'synced = ?', whereArgs: [1]);
   }
 
   Future<int> updateTransaction(TransactionModel transaction) async {

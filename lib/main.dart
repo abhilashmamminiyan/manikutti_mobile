@@ -15,16 +15,17 @@ void callbackDispatcher() {
       if (familyInfo != null && familyInfo['familyCode'] != null) {
         final familyCode = familyInfo['familyCode'] as String;
         final notifs = await ApiService.instance.fetchNotifications(familyCode);
-        
+
         if (notifs.isNotEmpty) {
           final latestNotif = notifs.first;
           final prefs = await SharedPreferences.getInstance();
           final lastNotifiedDate = prefs.getString('last_notified_date') ?? '';
           final currentNotifDate = latestNotif['date'] as String? ?? '';
-          
-          if (currentNotifDate.isNotEmpty && currentNotifDate != lastNotifiedDate) {
+
+          if (currentNotifDate.isNotEmpty &&
+              currentNotifDate != lastNotifiedDate) {
             await prefs.setString('last_notified_date', currentNotifDate);
-            
+
             await NotificationService.instance.showImmediateNotification(
               id: latestNotif['id'] ?? 1,
               title: latestNotif['title'] ?? 'New Activity Alert',
@@ -42,7 +43,7 @@ void callbackDispatcher() {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize notification service
   await NotificationService.instance.initialize();
 
@@ -58,7 +59,7 @@ void main() async {
   } catch (e) {
     print('Failed to register Workmanager: $e');
   }
-  
+
   // Check if session token and email exists
   final email = await ApiService.instance.getUserEmail();
   final token = await ApiService.instance.getSessionToken();
@@ -69,7 +70,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final bool isLoggedIn;
-  
+
   const MyApp({super.key, required this.isLoggedIn});
 
   @override
