@@ -35,3 +35,17 @@ A premium, offline-first mobile companion for the **Manikutti Finance Tracker** 
    ```bash
    flutter run
    ```
+
+---
+
+## 🚀 CI/CD Pipeline & Deployments
+
+This repository uses a decentralized **Polyrepo** architecture, meaning it manages its own builds and deployments independently from the Web Dashboard.
+
+* **Quality Gates (PRs):** Any Pull Request opened against the `main` branch automatically triggers `pr-checks.yml`, which runs `dart format`, `flutter analyze`, and unit tests.
+* **Auto-Merge:** Once checks pass, the PR is automatically squash-merged into `main` using a Personal Access Token (PAT).
+* **Automated Deployments:** A push/merge to `main` triggers `distribute.yml`. This workflow:
+  1. Builds a Release APK.
+  2. Sets the build number to the unique GitHub Run Number.
+  3. Uploads the APK directly to **Firebase App Distribution** (to the `family` tester group).
+* **Parent Sync:** Finally, the `sync-parent.yml` workflow updates the `manikutti-hub` parent repository so it always points to this exact production release.
