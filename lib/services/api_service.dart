@@ -18,7 +18,11 @@ class ApiService {
 
   Future<void> setBaseUrl(String url) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('api_base_url', url);
+    String formattedUrl = url.trim();
+    if (formattedUrl.isNotEmpty && !formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      formattedUrl = 'https://$formattedUrl';
+    }
+    await prefs.setString('api_base_url', formattedUrl);
   }
 
   Future<void> saveSessionToken(String token) async {
