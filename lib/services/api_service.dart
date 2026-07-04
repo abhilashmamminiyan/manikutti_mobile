@@ -7,7 +7,7 @@ class ApiService {
   static final ApiService instance = ApiService._init();
   final _secureStorage = const FlutterSecureStorage();
   
-  static const String _defaultBaseUrl = 'http://localhost:3000'; // Default for local run. Can change in Settings.
+  static const String _defaultBaseUrl = 'https://manikutti.vercel.app'; // Default to Vercel production deployment.
   
   ApiService._init();
 
