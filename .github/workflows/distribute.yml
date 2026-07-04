@@ -3,7 +3,8 @@ name: Build & Distribute to Firebase
 on:
   push:
     branches:
-      - main
+      - main  # Only fires after a PR is merged into main
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 jobs:
   distribute:
