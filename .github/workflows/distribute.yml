@@ -49,6 +49,7 @@ jobs:
         with:
           appId: 1:945226005596:android:a8d62b7b8f49beb4cdba99
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          token: ${{ secrets.FIREBASE_TOKEN }}
           groups: family
           file: build/app/outputs/flutter-apk/app-release.apk
           releaseNotes: |
