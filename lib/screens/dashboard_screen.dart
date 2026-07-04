@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../database/db_helper.dart';
 import '../models/transaction_model.dart';
 import '../services/api_service.dart';
@@ -33,12 +34,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String? _userEmail;
   int _currentPage = 0;
   final PageController _pageController = PageController();
+  String _appVersion = '';
 
   @override
   void initState() {
     super.initState();
     _loadData();
     _checkFamilyMembership();
+    _initPackageInfo();
+  }
+
+  Future<void> _initPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _appVersion = '${info.version} (Build ${info.buildNumber})';
+    });
   }
 
   Future<void> _checkFamilyMembership() async {
@@ -467,6 +477,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _userEmail ?? '',
                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
+              if (_appVersion.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'App Version: $_appVersion',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                ),
+              ],
               const Spacer(),
               SizedBox(
                 width: double.infinity,
