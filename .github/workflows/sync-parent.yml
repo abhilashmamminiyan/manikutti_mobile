@@ -12,7 +12,7 @@ jobs:
       - name: Checkout Parent Repository
         uses: actions/checkout@v4
         with:
-          repository: 'abhilashmamminiyan/manikutti-the-finance-tracker'
+          repository: 'abhilashmamminiyan/manikutti-hub'
           token: ${{ secrets.PAT_TOKEN }}
           submodules: true
           fetch-depth: 0
