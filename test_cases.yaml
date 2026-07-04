@@ -1,0 +1,40 @@
+appId: com.abhilash.manikutti
+---
+# This is a Maestro (mobile.dev) compatible test case YAML file
+# You can run this using a test agent in Firebase or locally using Maestro
+
+- launchApp:
+    clearState: true
+
+# TEST 1: Login Flow
+- assertVisible: "Manikutti Finance"
+- tapOn: "Email"
+- inputText: "testuser@family.com"
+- tapOn: "Password"
+- inputText: "password123"
+- tapOn: "Login"
+
+# TEST 2: Dashboard Validation
+- extendedWaitUntil:
+    visible: "Family Dashboard"
+    timeout: 10000
+- assertVisible: "Total Balance"
+- assertVisible: "Transactions"
+
+# TEST 3: Add Transaction Flow
+- tapOn: 
+    id: "add_transaction_fab" # Or point to the floating action button by text/icon
+- assertVisible: "New Transaction"
+- tapOn: "Amount"
+- inputText: "500"
+- tapOn: "Description"
+- inputText: "Grocery Shopping"
+- tapOn: "Save"
+
+# TEST 4: Profile Section
+- tapOn: 
+    id: "profile_button"
+- assertVisible: "testuser@family.com"
+- assertVisible: "App Version"
+- tapOn: "Logout"
+- assertVisible: "Login"
