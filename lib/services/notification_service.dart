@@ -4,7 +4,8 @@ import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   static final NotificationService instance = NotificationService._init();
-  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
 
   NotificationService._init();
@@ -39,11 +40,15 @@ class NotificationService {
 
     // Request permissions on Android 13+ (API 33+)
     await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.requestNotificationsPermission();
 
     _isInitialized = true;
-    print('[NotificationService] Local notifications initialized successfully.');
+    print(
+      '[NotificationService] Local notifications initialized successfully.',
+    );
   }
 
   Future<void> showImmediateNotification({
@@ -92,10 +97,13 @@ class NotificationService {
       scheduledDate,
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
     );
-    print('[NotificationService] Scheduled monthly notification #$id for day $dueDay at 9:00 AM (Next run: $scheduledDate)');
+    print(
+      '[NotificationService] Scheduled monthly notification #$id for day $dueDay at 9:00 AM (Next run: $scheduledDate)',
+    );
   }
 
   Future<void> cancelNotification(int id) async {
@@ -119,7 +127,15 @@ class NotificationService {
       targetDay = lastDay;
     }
 
-    tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, year, month, targetDay, 9, 0, 0);
+    tz.TZDateTime scheduledDate = tz.TZDateTime(
+      tz.local,
+      year,
+      month,
+      targetDay,
+      9,
+      0,
+      0,
+    );
     if (scheduledDate.isBefore(now)) {
       month = month + 1;
       if (month > 12) {

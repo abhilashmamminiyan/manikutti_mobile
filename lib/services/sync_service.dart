@@ -13,14 +13,15 @@ class SyncService {
 
   Future<bool> isConnected() async {
     final connectivityResult = await Connectivity().checkConnectivity();
-    return !connectivityResult.contains(ConnectivityResult.none) && connectivityResult.isNotEmpty;
+    return !connectivityResult.contains(ConnectivityResult.none) &&
+        connectivityResult.isNotEmpty;
   }
 
   // Run the full sync cycle (push local unsynced -> pull remote)
   Future<void> syncData() async {
     if (_isSyncing) return;
     _isSyncing = true;
-    
+
     try {
       if (!await isConnected()) {
         print('[SyncService] No internet connection. Skipping sync.');
@@ -42,12 +43,14 @@ class SyncService {
   Future<void> pushLocalChanges() async {
     final dbHelper = DbHelper.instance;
     final apiService = ApiService.instance;
-    
+
     final unsyncedList = await dbHelper.getUnsyncedTransactions();
     if (unsyncedList.isEmpty) return;
 
-    print('[SyncService] Pushing ${unsyncedList.length} unsynced transactions...');
-    
+    print(
+      '[SyncService] Pushing ${unsyncedList.length} unsynced transactions...',
+    );
+
     // Retrieve family code once if we have family transactions
     String? familyCode;
     if (unsyncedList.any((t) => t.type == 'Family')) {
@@ -62,14 +65,16 @@ class SyncService {
       try {
         final isFamily = transaction.type == 'Family';
         final sheetName = isFamily ? 'Family_Expenses' : 'Personal_Expenses';
-        
+
         final expensePayload = {
           'date': transaction.date,
           'amount': transaction.amount,
           'category': transaction.category,
           'note': transaction.note,
           'isPaid': transaction.isPaid,
-          'type': isFamily ? 'Expense' : transaction.type, // 'Expense' or 'Income'
+          'type': isFamily
+              ? 'Expense'
+              : transaction.type, // 'Expense' or 'Income'
         };
 
         final success = await apiService.createTransaction(
@@ -80,10 +85,14 @@ class SyncService {
 
         if (success) {
           await dbHelper.markAsSynced(transaction.id!);
-          print('[SyncService] Transaction #${transaction.id} synced successfully.');
+          print(
+            '[SyncService] Transaction #${transaction.id} synced successfully.',
+          );
         }
       } catch (e) {
-        print('[SyncService] Failed to push transaction #${transaction.id}: $e');
+        print(
+          '[SyncService] Failed to push transaction #${transaction.id}: $e',
+        );
       }
     }
   }
@@ -93,7 +102,7 @@ class SyncService {
     final dbHelper = DbHelper.instance;
     final apiService = ApiService.instance;
     final email = await apiService.getUserEmail();
-    
+
     if (email == null) return;
 
     print('[SyncService] Pulling remote transactions...');
@@ -135,34 +144,40 @@ class SyncService {
       // 2. Insert fresh personal remote items
       for (final item in remotePersonal) {
         final type = item['type'] == 'Income' ? 'Income' : 'Expense';
-        await dbHelper.insertTransaction(TransactionModel(
-          date: item['date'],
-          amount: (item['amount'] as num).toDouble(),
-          category: item['category'] ?? 'General',
-          note: item['note'] ?? '',
-          isPaid: item['isPaid'] == true,
-          type: type,
-          synced: true,
-        ));
+        await dbHelper.insertTransaction(
+          TransactionModel(
+            date: item['date'],
+            amount: (item['amount'] as num).toDouble(),
+            category: item['category'] ?? 'General',
+            note: item['note'] ?? '',
+            isPaid: item['isPaid'] == true,
+            type: type,
+            synced: true,
+          ),
+        );
       }
 
       // 3. Insert fresh family remote items
       if (hasFamily) {
         for (final item in remoteFamily) {
-          await dbHelper.insertTransaction(TransactionModel(
-            date: item['date'],
-            amount: (item['amount'] as num).toDouble(),
-            category: item['category'] ?? 'General',
-            note: item['note'] ?? '',
-            isPaid: true,
-            type: 'Family',
-            addedBy: item['addedBy'],
-            familyCode: item['familyCode'],
-            synced: true,
-          ));
+          await dbHelper.insertTransaction(
+            TransactionModel(
+              date: item['date'],
+              amount: (item['amount'] as num).toDouble(),
+              category: item['category'] ?? 'General',
+              note: item['note'] ?? '',
+              isPaid: true,
+              type: 'Family',
+              addedBy: item['addedBy'],
+              familyCode: item['familyCode'],
+              synced: true,
+            ),
+          );
         }
       }
-      print('[SyncService] Local database successfully aligned with Google Sheets.');
+      print(
+        '[SyncService] Local database successfully aligned with Google Sheets.',
+      );
     }
   }
 }

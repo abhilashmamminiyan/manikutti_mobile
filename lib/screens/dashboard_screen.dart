@@ -19,7 +19,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<TransactionModel> _transactions = [];
   bool _isLoading = false;
   String _filter = 'All'; // 'All' | 'Personal' | 'Family'
-  
+
   double _totalIncome = 0;
   double _totalPersonalExpenses = 0;
   double _totalFamilyExpenses = 0;
@@ -63,12 +63,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Join Family Sanctuary', style: TextStyle(fontFamily: 'Manrope', fontWeight: FontWeight.bold)),
+              title: const Text(
+                'Join Family Sanctuary',
+                style: TextStyle(
+                  fontFamily: 'Manrope',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Enter the invitation code sent to your email by your admin to join your family ledger:'),
+                  const Text(
+                    'Enter the invitation code sent to your email by your admin to join your family ledger:',
+                  ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: tokenController,
@@ -80,7 +88,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   if (error.isNotEmpty) ...[
                     const SizedBox(height: 12),
-                    Text(error, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                    Text(
+                      error,
+                      style: const TextStyle(color: Colors.red, fontSize: 13),
+                    ),
                   ],
                 ],
               ),
@@ -92,35 +103,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: const Text('Logout'),
                 ),
                 ElevatedButton(
-                  onPressed: loading ? null : () async {
-                    final token = tokenController.text.trim();
-                    if (token.isEmpty) return;
-                    setState(() {
-                      loading = true;
-                      error = '';
-                    });
-                    try {
-                      final success = await ApiService.instance.acceptInvitation(token);
-                      if (success) {
-                        if (mounted) {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Successfully joined family group!')),
-                          );
-                          _loadData();
-                        }
-                      } else {
-                        setState(() => error = 'Failed to join. Invalid or expired token.');
-                      }
-                    } catch (e) {
-                      setState(() => error = e.toString().replaceAll('Exception: ', ''));
-                    } finally {
-                      setState(() => loading = false);
-                    }
-                  },
-                  child: loading 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Join'),
+                  onPressed: loading
+                      ? null
+                      : () async {
+                          final token = tokenController.text.trim();
+                          if (token.isEmpty) return;
+                          setState(() {
+                            loading = true;
+                            error = '';
+                          });
+                          try {
+                            final success = await ApiService.instance
+                                .acceptInvitation(token);
+                            if (success) {
+                              if (mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Successfully joined family group!',
+                                    ),
+                                  ),
+                                );
+                                _loadData();
+                              }
+                            } else {
+                              setState(
+                                () => error =
+                                    'Failed to join. Invalid or expired token.',
+                              );
+                            }
+                          } catch (e) {
+                            setState(
+                              () => error = e.toString().replaceAll(
+                                'Exception: ',
+                                '',
+                              ),
+                            );
+                          } finally {
+                            setState(() => loading = false);
+                          }
+                        },
+                  child: loading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Join'),
                 ),
               ],
             );
@@ -138,7 +171,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _transactions = list;
       });
       _recalculateFamilyTotals();
-      
+
       await _fetchFamilyDuesAndNotifications();
     } catch (e) {
       print('Error loading data: $e');
@@ -153,17 +186,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final familyInfo = await ApiService.instance.getFamilyInfo();
       if (familyInfo != null && familyInfo['familyCode'] != null) {
         _familyCode = familyInfo['familyCode'];
-        
-        final expenses = await ApiService.instance.fetchMonthlyExpenses(_familyCode!);
-        final notifs = await ApiService.instance.fetchNotifications(_familyCode!);
+
+        final expenses = await ApiService.instance.fetchMonthlyExpenses(
+          _familyCode!,
+        );
+        final notifs = await ApiService.instance.fetchNotifications(
+          _familyCode!,
+        );
         final membersList = familyInfo['members'] as List<dynamic>? ?? [];
-        
+
         setState(() {
           _monthlyExpenses = expenses;
           _notifications = notifs;
           _familyMembers = membersList;
         });
- 
+
         _recalculateFamilyTotals();
         await _syncLocalNotifications(expenses);
       }
@@ -181,14 +218,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final dueDay = item['dueDay'] as int;
       final assignedTo = item['assignedTo'] as String?;
       final lastPaidDateStr = item['lastPaidDate'] as String?;
-      
-      final isAssignedToMe = assignedTo?.toLowerCase() == _userEmail?.toLowerCase();
-      
+
+      final isAssignedToMe =
+          assignedTo?.toLowerCase() == _userEmail?.toLowerCase();
+
       bool isPaidThisMonth = false;
       if (lastPaidDateStr != null && lastPaidDateStr.isNotEmpty) {
         try {
           final lastPaid = DateTime.parse(lastPaidDateStr);
-          isPaidThisMonth = lastPaid.month == today.month && lastPaid.year == today.year;
+          isPaidThisMonth =
+              lastPaid.month == today.month && lastPaid.year == today.year;
         } catch (_) {}
       }
 
@@ -196,7 +235,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         await NotificationService.instance.scheduleMonthlyReminder(
           id: id,
           title: 'Payment Due: $title',
-          body: 'Your commitment for $title (₹${amount.toStringAsFixed(0)}) is due today.',
+          body:
+              'Your commitment for $title (₹${amount.toStringAsFixed(0)}) is due today.',
           dueDay: dueDay,
         );
       } else {
@@ -209,7 +249,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() => _isLoading = true);
     try {
       final paidDate = DateTime.now().toUtc().toIso8601String();
-      final success = await ApiService.instance.markMonthlyExpensePaid(id, paidDate);
+      final success = await ApiService.instance.markMonthlyExpensePaid(
+        id,
+        paidDate,
+      );
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Payment registered successfully!')),
@@ -231,13 +274,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final today = DateTime.now();
     return _monthlyExpenses.any((item) {
       final assignedTo = item['assignedTo'] as String?;
-      final isAssignedToMe = assignedTo?.toLowerCase() == _userEmail?.toLowerCase();
+      final isAssignedToMe =
+          assignedTo?.toLowerCase() == _userEmail?.toLowerCase();
       final lastPaidDateStr = item['lastPaidDate'] as String?;
       bool isPaidThisMonth = false;
       if (lastPaidDateStr != null && lastPaidDateStr.isNotEmpty) {
         try {
           final lastPaid = DateTime.parse(lastPaidDateStr);
-          isPaidThisMonth = lastPaid.month == today.month && lastPaid.year == today.year;
+          isPaidThisMonth =
+              lastPaid.month == today.month && lastPaid.year == today.year;
         } catch (_) {}
       }
       return isAssignedToMe && !isPaidThisMonth && item['status'] != 'Paid';
@@ -267,23 +312,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         children: [
                           const Text(
                             'Family Activity Feed',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Manrope'),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Manrope',
+                            ),
                           ),
                           GestureDetector(
                             onTap: () async {
-                              await NotificationService.instance.showImmediateNotification(
-                                id: 999,
-                                title: 'System Notification Test',
-                                body: 'This is a test notification in your drawer!',
-                              );
+                              await NotificationService.instance
+                                  .showImmediateNotification(
+                                    id: 999,
+                                    title: 'System Notification Test',
+                                    body:
+                                        'This is a test notification in your drawer!',
+                                  );
                             },
                             child: const Text(
                               'Tap here to test drawer notification',
                               style: TextStyle(
-                                fontSize: 12, 
-                                color: Color(0xFF006972), 
+                                fontSize: 12,
+                                color: Color(0xFF006972),
                                 decoration: TextDecoration.underline,
-                                fontWeight: FontWeight.bold
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
@@ -327,19 +378,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 leading: Container(
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF10B981).withOpacity(0.1),
+                                    color: const Color(
+                                      0xFF10B981,
+                                    ).withOpacity(0.1),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(Icons.check_circle_outline, color: Color(0xFF10B981)),
+                                  child: const Icon(
+                                    Icons.check_circle_outline,
+                                    color: Color(0xFF10B981),
+                                  ),
                                 ),
                                 title: Text(
                                   notif['message'] ?? '',
-                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
                                 ),
-                                 subtitle: Text(
-                                   '$timeAgo${notif['createdBy'] != null ? ' • By ${_getMemberNickname(notif['createdBy'])}' : ''}',
-                                   style: const TextStyle(fontSize: 10, color: Colors.grey),
-                                 ),
+                                subtitle: Text(
+                                  '$timeAgo${notif['createdBy'] != null ? ' • By ${_getMemberNickname(notif['createdBy'])}' : ''}',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               );
                             },
                           ),
@@ -355,7 +417,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _showProfileBottomSheet() {
     final myNickname = _getMemberNickname(_userEmail ?? '');
-    
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -383,13 +445,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 backgroundColor: const Color(0xFF006972),
                 child: Text(
                   myNickname.isNotEmpty ? myNickname[0].toUpperCase() : 'U',
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Manrope'),
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontFamily: 'Manrope',
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 myNickname,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Manrope'),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Manrope',
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -405,11 +476,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _handleLogout();
                   },
                   icon: const Icon(Icons.logout, color: Colors.red),
-                  label: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: const BorderSide(color: Colors.redAccent),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ),
               ),
@@ -441,7 +520,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Text(
                   'Net Savings (Personal)',
-                  style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 Icon(Icons.savings_outlined, color: Colors.white70),
               ],
@@ -463,15 +546,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Personal Income', style: TextStyle(color: Colors.white60, fontSize: 11)),
-                    Text('₹${_totalIncome.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Personal Income',
+                      style: TextStyle(color: Colors.white60, fontSize: 11),
+                    ),
+                    Text(
+                      '₹${_totalIncome.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Personal Spend', style: TextStyle(color: Colors.white60, fontSize: 11)),
-                    Text('₹${_totalPersonalExpenses.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Personal Spend',
+                      style: TextStyle(color: Colors.white60, fontSize: 11),
+                    ),
+                    Text(
+                      '₹${_totalPersonalExpenses.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -506,7 +607,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Text(
                   'Family Prosperity Summary',
-                  style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 Icon(Icons.people_alt_outlined, color: Colors.white70),
               ],
@@ -528,15 +633,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Family Pool Expenses', style: TextStyle(color: Colors.white60, fontSize: 11)),
-                    Text('₹${_totalFamilyExpenses.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Family Pool Expenses',
+                      style: TextStyle(color: Colors.white60, fontSize: 11),
+                    ),
+                    Text(
+                      '₹${_totalFamilyExpenses.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Regular Commitments', style: TextStyle(color: Colors.white60, fontSize: 11)),
-                    Text('₹${_totalRegularExpenses.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Regular Commitments',
+                      style: TextStyle(color: Colors.white60, fontSize: 11),
+                    ),
+                    Text(
+                      '₹${_totalRegularExpenses.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -567,14 +690,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     bool isRegularCommitmentPayment(TransactionModel t) {
       final noteLower = t.note.toLowerCase().trim();
       if (noteLower.isEmpty) return false;
-      
+
       for (final item in _monthlyExpenses) {
         final title = (item['title'] as String).toLowerCase().trim();
         final cleanTitle = title.replaceAll('emi:', '').trim();
-        final linkedLoan = (item['linkedLoan'] as String?)?.toLowerCase().trim() ?? '';
-        
-        if (noteLower == title || 
-            noteLower == cleanTitle || 
+        final linkedLoan =
+            (item['linkedLoan'] as String?)?.toLowerCase().trim() ?? '';
+
+        if (noteLower == title ||
+            noteLower == cleanTitle ||
             (linkedLoan.isNotEmpty && noteLower == linkedLoan) ||
             noteLower.contains(cleanTitle) ||
             (linkedLoan.isNotEmpty && noteLower.contains(linkedLoan))) {
@@ -620,7 +744,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _triggerSync() async {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Syncing changes with Google Sheets...'), duration: Duration(seconds: 1)),
+      const SnackBar(
+        content: Text('Syncing changes with Google Sheets...'),
+        duration: Duration(seconds: 1),
+      ),
     );
     await SyncService.instance.syncData();
     await _loadData();
@@ -639,7 +766,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<TransactionModel> get _filteredTransactions {
     if (_filter == 'All') return _transactions;
     if (_filter == 'Personal') {
-      return _transactions.where((t) => t.type == 'Expense' || t.type == 'Income').toList();
+      return _transactions
+          .where((t) => t.type == 'Expense' || t.type == 'Income')
+          .toList();
     }
     return _transactions.where((t) => t.type == 'Family').toList();
   }
@@ -720,7 +849,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
+            MaterialPageRoute(
+              builder: (context) => const AddTransactionScreen(),
+            ),
           );
           if (result == true) {
             _loadData();
@@ -769,7 +900,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     width: _currentPage == index ? 16.0 : 8.0,
                     height: 8.0,
                     decoration: BoxDecoration(
-                      color: _currentPage == index ? theme.primaryColor : Colors.grey[400],
+                      color: _currentPage == index
+                          ? theme.primaryColor
+                          : Colors.grey[400],
                       borderRadius: BorderRadius.circular(4),
                     ),
                   );
@@ -799,24 +932,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     final status = item['status'] as String;
                     final assignedTo = item['assignedTo'] as String?;
                     final lastPaidDateStr = item['lastPaidDate'] as String?;
-                    
-                    final isAssignedToMe = assignedTo?.toLowerCase() == _userEmail?.toLowerCase();
-                    
+
+                    final isAssignedToMe =
+                        assignedTo?.toLowerCase() == _userEmail?.toLowerCase();
+
                     final today = DateTime.now();
                     bool isPaidThisMonth = false;
                     if (lastPaidDateStr != null && lastPaidDateStr.isNotEmpty) {
                       try {
                         final lastPaid = DateTime.parse(lastPaidDateStr);
-                        isPaidThisMonth = lastPaid.month == today.month && lastPaid.year == today.year;
+                        isPaidThisMonth =
+                            lastPaid.month == today.month &&
+                            lastPaid.year == today.year;
                       } catch (_) {}
                     }
-                    
+
                     final paid = isPaidThisMonth || status == 'Paid';
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Row(
@@ -824,12 +962,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: (isAssignedToMe ? theme.primaryColor : Colors.grey).withOpacity(0.1),
+                                color:
+                                    (isAssignedToMe
+                                            ? theme.primaryColor
+                                            : Colors.grey)
+                                        .withOpacity(0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 Icons.account_balance_outlined,
-                                color: isAssignedToMe ? theme.primaryColor : Colors.grey,
+                                color: isAssignedToMe
+                                    ? theme.primaryColor
+                                    : Colors.grey,
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -839,12 +983,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   Text(
                                     title,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     'Due Day: $dueDay • ${isAssignedToMe ? "Assigned to You" : "Assigned to ${assignedTo?.split('@')[0] ?? 'Family'}"}',
-                                    style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 11,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -854,42 +1004,71 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               children: [
                                 Text(
                                   '₹${amount.toStringAsFixed(0)}',
-                                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 15,
+                                  ),
                                 ),
                                 const SizedBox(height: 6),
                                 if (paid)
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF10B981).withOpacity(0.1),
+                                      color: const Color(
+                                        0xFF10B981,
+                                      ).withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Text(
                                       'PAID',
-                                      style: TextStyle(color: Color(0xFF10B981), fontSize: 9, fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                        color: Color(0xFF10B981),
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   )
                                 else if (isAssignedToMe)
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
                                       minimumSize: Size.zero,
-                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
                                     ),
-                                    onPressed: () => _markPaid(item['id'] as int),
-                                    child: const Text('Pay', style: TextStyle(fontSize: 11)),
+                                    onPressed: () =>
+                                        _markPaid(item['id'] as int),
+                                    child: const Text(
+                                      'Pay',
+                                      style: TextStyle(fontSize: 11),
+                                    ),
                                   )
                                 else
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Colors.amber.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Text(
                                       'UNPAID',
-                                      style: TextStyle(color: Colors.amber, fontSize: 9, fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                        color: Colors.amber,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                               ],
@@ -902,7 +1081,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
               const SizedBox(height: 28),
-              
+
               // Filter Chips
               Row(
                 children: ['All', 'Personal', 'Family'].map((name) {
@@ -913,21 +1092,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       label: Text(
                         name,
                         style: TextStyle(
-                          color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700]),
+                          color: isSelected
+                              ? Colors.white
+                              : (isDark ? Colors.grey[300] : Colors.grey[700]),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       selected: isSelected,
                       onSelected: (_) => setState(() => _filter = name),
                       selectedColor: theme.primaryColor,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       showCheckmark: false,
                     ),
                   );
                 }).toList(),
               ),
               const SizedBox(height: 16),
-              
+
               // Recent Transactions Headline
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -941,22 +1124,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   if (_isLoading)
-                    const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                 ],
               ),
               const SizedBox(height: 12),
-              
+
               // Transactions List
               _filteredTransactions.isEmpty
                   ? Padding(
                       padding: const EdgeInsets.symmetric(vertical: 40.0),
                       child: Column(
                         children: [
-                          Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey[400]),
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'No transactions recorded locally yet.',
-                            style: TextStyle(color: Colors.grey[500], fontSize: 13),
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       ),
@@ -967,17 +1161,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       itemCount: _filteredTransactions.length,
                       itemBuilder: (context, index) {
                         final t = _filteredTransactions[index];
-                        final formattedDate = DateFormat('MMM dd, yyyy').format(DateTime.parse(t.date));
-                        
+                        final formattedDate = DateFormat(
+                          'MMM dd, yyyy',
+                        ).format(DateTime.parse(t.date));
+
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12),
-                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          color: isDark
+                              ? const Color(0xFF1E293B)
+                              : Colors.white,
                           child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
                             leading: Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: _getCategoryColor(t.type).withOpacity(0.1),
+                                color: _getCategoryColor(
+                                  t.type,
+                                ).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
@@ -990,7 +1193,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 Expanded(
                                   child: Text(
                                     t.note.isNotEmpty ? t.note : t.category,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
                                   ),
                                 ),
                                 Text(
@@ -998,7 +1204,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.w900,
                                     fontSize: 16,
-                                    color: t.type == 'Income' ? Colors.green : (t.type == 'Family' ? Colors.blue : Colors.red),
+                                    color: t.type == 'Income'
+                                        ? Colors.green
+                                        : (t.type == 'Family'
+                                              ? Colors.blue
+                                              : Colors.red),
                                   ),
                                 ),
                               ],
@@ -1006,24 +1216,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 6.0),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     '$formattedDate • ${t.type}',
-                                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 12,
+                                    ),
                                   ),
                                   Row(
                                     children: [
-                                      if (t.type == 'Family' && t.addedBy != null) ...[
+                                      if (t.type == 'Family' &&
+                                          t.addedBy != null) ...[
                                         Text(
                                           'By: ${_getMemberNickname(t.addedBy!)} ',
-                                          style: TextStyle(color: Colors.grey[500], fontSize: 10, fontStyle: FontStyle.italic),
+                                          style: TextStyle(
+                                            color: Colors.grey[500],
+                                            fontSize: 10,
+                                            fontStyle: FontStyle.italic,
+                                          ),
                                         ),
                                       ],
                                       Icon(
-                                        t.synced ? Icons.cloud_done : Icons.cloud_off,
+                                        t.synced
+                                            ? Icons.cloud_done
+                                            : Icons.cloud_off,
                                         size: 14,
-                                        color: t.synced ? Colors.green : Colors.amber,
+                                        color: t.synced
+                                            ? Colors.green
+                                            : Colors.amber,
                                       ),
                                     ],
                                   ),
@@ -1042,4 +1265,3 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 }
-

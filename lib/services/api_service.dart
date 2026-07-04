@@ -8,9 +8,10 @@ import 'package:flutter/foundation.dart';
 class ApiService {
   static final ApiService instance = ApiService._init();
   final _secureStorage = const FlutterSecureStorage();
-  
-  static const String _defaultBaseUrl = 'https://manikutti.vercel.app'; // Default to Vercel production deployment.
-  
+
+  static const String _defaultBaseUrl =
+      'https://manikutti.vercel.app'; // Default to Vercel production deployment.
+
   ApiService._init();
 
   Future<String> getBaseUrl() async {
@@ -24,11 +25,14 @@ class ApiService {
   Future<void> setBaseUrl(String url) async {
     final prefs = await SharedPreferences.getInstance();
     String formattedUrl = url.trim();
-    if (formattedUrl.isNotEmpty && !formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-      final isLocal = formattedUrl.contains('localhost') || 
-                      formattedUrl.startsWith('192.168.') || 
-                      formattedUrl.startsWith('10.') || 
-                      formattedUrl.startsWith('127.0.0.1');
+    if (formattedUrl.isNotEmpty &&
+        !formattedUrl.startsWith('http://') &&
+        !formattedUrl.startsWith('https://')) {
+      final isLocal =
+          formattedUrl.contains('localhost') ||
+          formattedUrl.startsWith('192.168.') ||
+          formattedUrl.startsWith('10.') ||
+          formattedUrl.startsWith('127.0.0.1');
       formattedUrl = isLocal ? 'http://$formattedUrl' : 'https://$formattedUrl';
     }
     await prefs.setString('api_base_url', formattedUrl);
@@ -88,7 +92,11 @@ class ApiService {
     }
   }
 
-  Future<bool> verifyOTP(String email, String otp, String verificationToken) async {
+  Future<bool> verifyOTP(
+    String email,
+    String otp,
+    String verificationToken,
+  ) async {
     final baseUrl = await getBaseUrl();
     try {
       final response = await http.post(
@@ -199,10 +207,7 @@ class ApiService {
       final response = await http.post(
         Uri.parse('$baseUrl/api/sheets/family'),
         headers: headers,
-        body: jsonEncode({
-          'action': 'accept',
-          'token': token,
-        }),
+        body: jsonEncode({'action': 'accept', 'token': token}),
       );
 
       if (response.statusCode == 200) {
@@ -228,7 +233,9 @@ class ApiService {
         final body = jsonDecode(response.body);
         return body['items'] ?? [];
       } else {
-        throw Exception('Failed to fetch monthly expenses: ${response.statusCode}');
+        throw Exception(
+          'Failed to fetch monthly expenses: ${response.statusCode}',
+        );
       }
     } catch (e) {
       rethrow;
@@ -242,10 +249,7 @@ class ApiService {
       final response = await http.patch(
         Uri.parse('$baseUrl/api/sheets/monthly'),
         headers: headers,
-        body: jsonEncode({
-          'id': id,
-          'paidDate': paidDate,
-        }),
+        body: jsonEncode({'id': id, 'paidDate': paidDate}),
       );
 
       if (response.statusCode == 200) {
@@ -271,7 +275,9 @@ class ApiService {
         final body = jsonDecode(response.body);
         return body['notifications'] ?? [];
       } else {
-        throw Exception('Failed to fetch notifications: ${response.statusCode}');
+        throw Exception(
+          'Failed to fetch notifications: ${response.statusCode}',
+        );
       }
     } catch (e) {
       rethrow;

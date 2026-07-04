@@ -22,11 +22,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   bool _isLoading = false;
 
   final List<String> _expenseCategories = [
-    'Food', 'Housing', 'Transport', 'Leisure', 'Health', 'Shopping', 'Investment'
+    'Food',
+    'Housing',
+    'Transport',
+    'Leisure',
+    'Health',
+    'Shopping',
+    'Investment',
   ];
 
   final List<String> _incomeCategories = [
-    'Salary', 'Kadam', 'Investment', 'Other'
+    'Salary',
+    'Kadam',
+    'Investment',
+    'Other',
   ];
 
   @override
@@ -77,7 +86,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     try {
       final email = await ApiService.instance.getUserEmail();
-      
+
       final transaction = TransactionModel(
         date: _selectedDate.toIso8601String(),
         amount: amount,
@@ -90,14 +99,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       );
 
       await DbHelper.instance.insertTransaction(transaction);
-      
+
       if (mounted) {
         Navigator.pop(context, true); // Returns true to trigger refresh
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -109,9 +118,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Transaction'),
-      ),
+      appBar: AppBar(title: const Text('Add Transaction')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -124,15 +131,30 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: _buildTypeButton('Expense', 'Personal Exp', Icons.arrow_outward, Colors.red),
+                      child: _buildTypeButton(
+                        'Expense',
+                        'Personal Exp',
+                        Icons.arrow_outward,
+                        Colors.red,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _buildTypeButton('Income', 'Personal Inc', Icons.call_received, Colors.green),
+                      child: _buildTypeButton(
+                        'Income',
+                        'Personal Inc',
+                        Icons.call_received,
+                        Colors.green,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _buildTypeButton('Family', 'Family Exp', Icons.people_outline, Colors.blue),
+                      child: _buildTypeButton(
+                        'Family',
+                        'Family Exp',
+                        Icons.people_outline,
+                        Colors.blue,
+                      ),
                     ),
                   ],
                 ),
@@ -141,16 +163,23 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 // Amount Input
                 TextFormField(
                   controller: _amountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                   decoration: const InputDecoration(
                     labelText: 'Amount (₹)',
                     hintText: '0.00',
                     prefixIcon: Icon(Icons.currency_rupee),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Please enter an amount';
-                    if (double.tryParse(value) == null) return 'Please enter a valid number';
+                    if (value == null || value.isEmpty)
+                      return 'Please enter an amount';
+                    if (double.tryParse(value) == null)
+                      return 'Please enter a valid number';
                     return null;
                   },
                 ),
@@ -173,25 +202,41 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   onTap: () => _selectDate(context),
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 18,
+                    ),
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF1E293B) : Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                      border: Border.all(
+                        color: isDark
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.calendar_today_outlined, color: theme.primaryColor),
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              color: theme.primaryColor,
+                            ),
                             const SizedBox(width: 12),
-                            const Text('Transaction Date', style: TextStyle(fontWeight: FontWeight.w600)),
+                            const Text(
+                              'Transaction Date',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
                           ],
                         ),
                         Text(
                           DateFormat('MMM dd, yyyy').format(_selectedDate),
-                          style: TextStyle(fontWeight: FontWeight.bold, color: theme.primaryColor),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: theme.primaryColor,
+                          ),
                         ),
                       ],
                     ),
@@ -202,7 +247,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 // Category Title
                 const Text(
                   'Select Category',
-                  style: TextStyle(fontFamily: 'Manrope', fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontFamily: 'Manrope',
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 12),
 
@@ -231,12 +280,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? theme.primaryColor.withOpacity(0.15)
-                              : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                              : (isDark
+                                    ? const Color(0xFF1E293B)
+                                    : Colors.white),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isSelected
                                 ? theme.primaryColor
-                                : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                                : (isDark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFE2E8F0)),
                             width: isSelected ? 2 : 1,
                           ),
                         ),
@@ -246,9 +299,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              color: isSelected 
-                                  ? theme.primaryColor 
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? theme.primaryColor
                                   : (isDark ? Colors.white70 : Colors.black87),
                             ),
                           ),
@@ -266,7 +321,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Text('Save Transaction'),
                 ),
@@ -278,7 +336,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  Widget _buildTypeButton(String type, String label, IconData icon, Color color) {
+  Widget _buildTypeButton(
+    String type,
+    String label,
+    IconData icon,
+    Color color,
+  ) {
     final isSelected = _transactionType == type;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -293,13 +356,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? color.withOpacity(0.15) 
+          color: isSelected
+              ? color.withOpacity(0.15)
               : (isDark ? const Color(0xFF1E293B) : Colors.white),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected 
-                ? color 
+            color: isSelected
+                ? color
                 : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             width: isSelected ? 2 : 1,
           ),
