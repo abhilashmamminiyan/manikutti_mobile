@@ -214,4 +214,67 @@ class ApiService {
       return false;
     }
   }
+
+  Future<List<dynamic>> fetchMonthlyExpenses(String familyCode) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/sheets/monthly?familyCode=$familyCode'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['items'] ?? [];
+      } else {
+        throw Exception('Failed to fetch monthly expenses: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<bool> markMonthlyExpensePaid(int id, String paidDate) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/api/sheets/monthly'),
+        headers: headers,
+        body: jsonEncode({
+          'id': id,
+          'paidDate': paidDate,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<List<dynamic>> fetchNotifications(String familyCode) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/sheets/notifications?familyCode=$familyCode'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['notifications'] ?? [];
+      } else {
+        throw Exception('Failed to fetch notifications: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
