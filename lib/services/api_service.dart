@@ -48,19 +48,12 @@ class ApiService {
 
   Future<void> saveUserEmail(String email) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_emailKey, email);
+    await prefs.setString('user_email', email);
   }
 
   Future<String?> getUserEmail() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_emailKey);
-  }
-
-  Future<void> clearSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_emailKey);
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_familyCodeKey);
+    return prefs.getString('user_email');
   }
 
   Future<void> clearSession() async {
