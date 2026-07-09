@@ -1,4 +1,6 @@
 # This is a single-document YAML test case for Firebase App Testing Agent
+appId: com.abhilash.manikutti
+---
 # This is a Maestro (mobile.dev) compatible test case YAML file
 # You can run this using a test agent in Firebase or locally using Maestro
 
