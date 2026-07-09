@@ -10,8 +10,45 @@ on:
 
 jobs:
   lint-and-analyze:
-    name: lint-and-analyze
+    name: Lint & Analyze
     runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ─────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Set up Flutter ───────────────────────────────────────────────────
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.4"
+          channel: stable
+          cache: true
+
+      # ── 3. Install dependencies ─────────────────────────────────────────────
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      # ── 4. Dart format check ────────────────────────────────────────────────
+      - name: Check Dart formatting
+        run: dart format --output=none --set-exit-if-changed lib/
+
+      # ── 5. Flutter analyze ──────────────────────────────────────────────────
+      - name: Run Flutter analyzer
+        run: flutter analyze --fatal-infos || true
+        # Note: --fatal-infos treats infos as errors; using '|| true' to warn
+        # without blocking the PR until existing warnings are cleaned up.
+        # Remove '|| true' once all existing warnings are resolved.
+
+      # ── 6. Run tests (if any) ───────────────────────────────────────────────
+      - name: Run unit tests
+        run: flutter test || echo "No tests found or tests failed — skipping"
+
+  build-debug:
+    name: Build Debug APK
+    runs-on: ubuntu-latest
+    needs: lint-and-analyze          # Only runs if lint-and-analyze job passed
 
     steps:
       # ── 1. Checkout ─────────────────────────────────────────────────────────
@@ -37,22 +74,7 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
-      # ── 5. Dart format check ────────────────────────────────────────────────
-      - name: Check Dart formatting
-        run: dart format --output=none --set-exit-if-changed lib/
-
-      # ── 6. Flutter analyze ──────────────────────────────────────────────────
-      - name: Run Flutter analyzer
-        run: flutter analyze --fatal-infos || true
-        # Note: --fatal-infos treats infos as errors; using '|| true' to warn
-        # without blocking the PR until existing warnings are cleaned up.
-        # Remove '|| true' once all existing warnings are resolved.
-
-      # ── 7. Run tests (if any) ───────────────────────────────────────────────
-      - name: Run unit tests
-        run: flutter test || echo "No tests found or tests failed — skipping"
-
-      # ── 8. Verify Build ─────────────────────────────────────────────────────
+      # ── 5. Verify Build ─────────────────────────────────────────────────────
       - name: Verify APK Build (Debug)
         run: flutter build apk --debug
 
@@ -60,7 +82,7 @@ jobs:
   auto-merge:
     name: Auto-merge PR
     runs-on: ubuntu-latest
-    needs: lint-and-analyze          # Only runs if lint-and-analyze job passed
+    needs: build-debug               # Only runs if build-debug job passed
     if: github.event_name == 'pull_request'  # Only on PRs, not feature pushes
 
     permissions:
