@@ -7,6 +7,8 @@ import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
@@ -74,10 +76,42 @@ void main() async {
   runApp(MyApp(isLoggedIn: isLoggedIn));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final bool isLoggedIn;
 
   const MyApp({super.key, required this.isLoggedIn});
+
+  static void setLocale(BuildContext context, Locale newLocale) {
+    _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    state?.setLocale(newLocale);
+  }
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  Locale? _locale;
+
+  void setLocale(Locale locale) {
+    setState(() {
+      _locale = locale;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocale();
+  }
+
+  Future<void> _loadLocale() async {
+    final prefs = await SharedPreferences.getInstance();
+    final languageCode = prefs.getString('languageCode') ?? 'en';
+    setState(() {
+      _locale = Locale(languageCode);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +121,10 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system, // Auto adapts to light/dark system mode
-      home: isLoggedIn ? const DashboardScreen() : const LoginScreen(),
+      locale: _locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: widget.isLoggedIn ? const DashboardScreen() : const LoginScreen(),
     );
   }
 }
