@@ -17,9 +17,7 @@ class NotificationService {
     tz.initializeTimeZones();
 
     // Android Settings: Using default launcher icon
-    const androidSettings = AndroidInitializationSettings(
-      '@mipmap/launcher_icon',
-    );
+    const androidSettings = AndroidInitializationSettings('app_icon');
 
     // iOS Settings
     const iosSettings = DarwinInitializationSettings(
