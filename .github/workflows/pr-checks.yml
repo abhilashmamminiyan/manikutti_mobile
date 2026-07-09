@@ -52,6 +52,10 @@ jobs:
       - name: Run unit tests
         run: flutter test || echo "No tests found or tests failed — skipping"
 
+      # ── 8. Verify Build ─────────────────────────────────────────────────────
+      - name: Verify APK Build (Debug)
+        run: flutter build apk --debug
+
   # ── Auto-merge after all checks pass ─────────────────────────────────────────
   auto-merge:
     name: Auto-merge PR
