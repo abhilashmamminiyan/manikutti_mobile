@@ -7,8 +7,10 @@ import '../services/api_service.dart';
 import '../services/sync_service.dart';
 import '../services/notification_service.dart';
 import 'login_screen.dart';
+import 'login_screen.dart';
 import 'add_transaction_screen.dart';
-
+import '../widgets/app_drawer.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -823,10 +825,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manikutti Dashboard'),
+        title: Text(l10n.dashboard),
         actions: [
           Stack(
             children: [
