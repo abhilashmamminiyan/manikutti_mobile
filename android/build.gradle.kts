@@ -23,11 +23,17 @@ tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
 
-// Force all subproject Kotlin tasks to target JVM 17 to match the app's Java sourceCompatibility
+// Force all subproject tasks to target JVM 17 to match the app's Java sourceCompatibility
 subprojects {
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    afterEvaluate {
+        tasks.withType<JavaCompile>().configureEach {
+            sourceCompatibility = "17"
+            targetCompatibility = "17"
+        }
+        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+            compilerOptions {
+                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+            }
         }
     }
 }
