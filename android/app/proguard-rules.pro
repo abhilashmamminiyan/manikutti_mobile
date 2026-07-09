@@ -7,3 +7,4 @@
 -keep class androidx.lifecycle.** { *; }
 -keep class androidx.work.** { *; }
 -keep class com.flutter_secure_storage.** { *; }
+-dontwarn com.google.android.play.core.**
