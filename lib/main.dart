@@ -44,26 +44,32 @@ void callbackDispatcher() {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize notification service
-  await NotificationService.instance.initialize();
+  bool isLoggedIn = false;
 
-  // Initialize workmanager background sync task
   try {
-    await Workmanager().initialize(callbackDispatcher);
-    await Workmanager().registerPeriodicTask(
-      "fetch_notifications_job",
-      "fetchNotificationsTask",
-      frequency: const Duration(minutes: 15),
-      existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
-    );
-  } catch (e) {
-    print('Failed to register Workmanager: $e');
-  }
+    // Initialize notification service
+    await NotificationService.instance.initialize();
 
-  // Check if session token and email exists
-  final email = await ApiService.instance.getUserEmail();
-  final token = await ApiService.instance.getSessionToken();
-  final isLoggedIn = email != null && token != null;
+    // Initialize workmanager background sync task
+    try {
+      await Workmanager().initialize(callbackDispatcher);
+      await Workmanager().registerPeriodicTask(
+        "fetch_notifications_job",
+        "fetchNotificationsTask",
+        frequency: const Duration(minutes: 15),
+        existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
+      );
+    } catch (e) {
+      print('Failed to register Workmanager: $e');
+    }
+
+    // Check if session token and email exists
+    final email = await ApiService.instance.getUserEmail();
+    final token = await ApiService.instance.getSessionToken();
+    isLoggedIn = email != null && token != null;
+  } catch (e, stackTrace) {
+    print('Initialization error in main: $e\n$stackTrace');
+  }
 
   runApp(MyApp(isLoggedIn: isLoggedIn));
 }
