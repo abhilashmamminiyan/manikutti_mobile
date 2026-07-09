@@ -11,9 +11,7 @@ class BillsDashboard extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.bills)),
       drawer: const AppDrawer(),
-      body: Center(
-        child: Text(l10n.bills),
-      ),
+      body: Center(child: Text(l10n.bills)),
     );
   }
 }

@@ -11,6 +11,7 @@ import 'login_screen.dart';
 import 'add_transaction_screen.dart';
 import '../widgets/app_drawer.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 

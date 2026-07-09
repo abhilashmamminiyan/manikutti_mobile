@@ -78,9 +78,9 @@ void main() async {
 
 class MyApp extends StatefulWidget {
   final bool isLoggedIn;
-  
+
   const MyApp({super.key, required this.isLoggedIn});
-  
+
   static void setLocale(BuildContext context, Locale newLocale) {
     _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
     state?.setLocale(newLocale);
@@ -104,7 +104,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     _loadLocale();
   }
-  
+
   Future<void> _loadLocale() async {
     final prefs = await SharedPreferences.getInstance();
     final languageCode = prefs.getString('languageCode') ?? 'en';

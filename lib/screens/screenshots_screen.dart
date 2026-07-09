@@ -11,9 +11,7 @@ class ScreenshotsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.screenshots)),
       drawer: const AppDrawer(),
-      body: Center(
-        child: Text(l10n.screenshots),
-      ),
+      body: Center(child: Text(l10n.screenshots)),
     );
   }
 }

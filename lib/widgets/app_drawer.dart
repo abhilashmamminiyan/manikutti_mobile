@@ -14,15 +14,13 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: const BoxDecoration(
-              color: Color(0xFF006972),
-            ),
+            decoration: const BoxDecoration(color: Color(0xFF006972)),
             child: Text(
               l10n.appTitle,
               style: const TextStyle(

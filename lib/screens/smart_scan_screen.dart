@@ -27,21 +27,26 @@ class _SmartScanScreenState extends State<SmartScanScreen> {
       });
 
       final inputImage = InputImage.fromFilePath(image.path);
-      final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
-      final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
-      
+      final textRecognizer = TextRecognizer(
+        script: TextRecognitionScript.latin,
+      );
+      final RecognizedText recognizedText = await textRecognizer.processImage(
+        inputImage,
+      );
+
       String text = recognizedText.text;
-      
+
       // Basic extraction via Regex (Custom logic for Google Pay)
       final amountExp = RegExp(r'₹\s?([0-9,]+(\.[0-9]{1,2})?)');
       final amountMatch = amountExp.firstMatch(text);
       String extractedAmount = amountMatch?.group(1) ?? 'Not found';
 
       setState(() {
-        _scannedText = 'Raw Text:\n$text\n\nExtracted Amount: ₹$extractedAmount';
+        _scannedText =
+            'Raw Text:\n$text\n\nExtracted Amount: ₹$extractedAmount';
         _isScanning = false;
       });
-      
+
       textRecognizer.close();
     } catch (e) {
       setState(() {
