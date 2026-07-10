@@ -50,10 +50,8 @@ class _AppLockScreenState extends State<AppLockScreen> {
       if (canAuthenticate) {
         authenticated = await auth.authenticate(
           localizedReason: 'Please authenticate to unlock Manikutti Finance',
-          options: const AuthenticationOptions(
-            stickyAuth: true,
-            biometricOnly: false,
-          ),
+          persistAcrossBackgrounding: true,
+          biometricOnly: false,
         );
       }
     } on PlatformException catch (e) {
