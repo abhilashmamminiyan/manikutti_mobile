@@ -38,10 +38,20 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
-      # ── 6. Build release APK ───────────────────────────────────────────────────
+      # ── 6. Decode Keystore ─────────────────────────────────────────────────────
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
+
+      # ── 7. Build release APK ───────────────────────────────────────────────────
       # Build number = GitHub Actions run number (auto-increments on every push)
       # Version name stays as defined in pubspec.yaml
       - name: Build release APK
+        env:
+          KEYSTORE_FILE: release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           BUILD_NUM=$(git rev-list --count HEAD)
           flutter build apk --release \

@@ -3,6 +3,7 @@ import '../l10n/app_localizations.dart';
 import '../widgets/app_drawer.dart';
 import '../main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'setup_app_lock_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -33,6 +34,17 @@ class SettingsScreen extends StatelessWidget {
                 }
               },
             ),
+          ),
+          ListTile(
+            title: const Text('App Lock'),
+            subtitle: const Text('Require PIN or Biometrics'),
+            trailing: const Icon(Icons.security),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SetupAppLockScreen()),
+              );
+            },
           ),
         ],
       ),

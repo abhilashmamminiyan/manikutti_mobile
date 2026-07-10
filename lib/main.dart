@@ -8,6 +8,7 @@ import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 
 import 'l10n/app_localizations.dart';
+import 'screens/app_lock_screen.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -90,8 +91,10 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Locale? _locale;
+  bool _isLocked = false;
+  bool _lockEnabledInPrefs = false;
 
   void setLocale(Locale locale) {
     setState(() {
@@ -102,7 +105,37 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadLocale();
+    _checkInitialLockState();
+  }
+
+  Future<void> _checkInitialLockState() async {
+    final prefs = await SharedPreferences.getInstance();
+    _lockEnabledInPrefs = prefs.getBool('app_lock_enabled') ?? false;
+    // Only lock if the user is already logged in
+    if (_lockEnabledInPrefs && widget.isLoggedIn) {
+      setState(() {
+        _isLocked = true;
+      });
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _checkLockStatusForBackground();
+    }
+  }
+
+  Future<void> _checkLockStatusForBackground() async {
+    final prefs = await SharedPreferences.getInstance();
+    _lockEnabledInPrefs = prefs.getBool('app_lock_enabled') ?? false;
+    if (_lockEnabledInPrefs && widget.isLoggedIn) {
+      setState(() {
+        _isLocked = true;
+      });
+    }
   }
 
   Future<void> _loadLocale() async {
@@ -111,6 +144,12 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _locale = Locale(languageCode);
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override
@@ -124,6 +163,18 @@ class _MyAppState extends State<MyApp> {
       locale: _locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) {
+        if (_isLocked) {
+          return AppLockScreen(
+            onUnlock: () {
+              setState(() {
+                _isLocked = false;
+              });
+            },
+          );
+        }
+        return child!;
+      },
       home: widget.isLoggedIn ? const DashboardScreen() : const LoginScreen(),
     );
   }
