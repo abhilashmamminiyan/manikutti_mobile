@@ -5,7 +5,7 @@ import 'package:local_auth/local_auth.dart';
 
 class AppLockScreen extends StatefulWidget {
   final VoidCallback onUnlock;
-  
+
   const AppLockScreen({super.key, required this.onUnlock});
 
   @override
@@ -16,7 +16,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
   final _storage = const FlutterSecureStorage();
   final LocalAuthentication auth = LocalAuthentication();
   final TextEditingController _pinController = TextEditingController();
-  
+
   String _savedPin = '';
   String _errorMessage = '';
   bool _isAuthenticating = false;
@@ -32,7 +32,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
     if (pin != null && pin.length == 4) {
       _savedPin = pin;
     }
-    
+
     // Automatically trigger biometrics if available
     _authenticateWithBiometrics();
   }
@@ -44,8 +44,9 @@ class _AppLockScreenState extends State<AppLockScreen> {
         _isAuthenticating = true;
       });
       final bool canAuthenticateWithBiometrics = await auth.canCheckBiometrics;
-      final bool canAuthenticate = canAuthenticateWithBiometrics || await auth.isDeviceSupported();
-      
+      final bool canAuthenticate =
+          canAuthenticateWithBiometrics || await auth.isDeviceSupported();
+
       if (canAuthenticate) {
         authenticated = await auth.authenticate(
           localizedReason: 'Please authenticate to unlock Manikutti Finance',
@@ -120,7 +121,9 @@ class _AppLockScreenState extends State<AppLockScreen> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 24, letterSpacing: 8.0),
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     errorText: _errorMessage.isEmpty ? null : _errorMessage,
                     counterText: "", // Hide character counter
                   ),
@@ -135,15 +138,22 @@ class _AppLockScreenState extends State<AppLockScreen> {
                   onPressed: _verifyPin,
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: const Text('Unlock', style: TextStyle(fontSize: 18)),
                 ),
                 const SizedBox(height: 24),
                 TextButton.icon(
-                  onPressed: _isAuthenticating ? null : _authenticateWithBiometrics,
+                  onPressed: _isAuthenticating
+                      ? null
+                      : _authenticateWithBiometrics,
                   icon: const Icon(Icons.fingerprint, size: 32),
-                  label: const Text('Use Biometrics', style: TextStyle(fontSize: 16)),
+                  label: const Text(
+                    'Use Biometrics',
+                    style: TextStyle(fontSize: 16),
+                  ),
                 ),
               ],
             ),

@@ -26,7 +26,7 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
     final prefs = await SharedPreferences.getInstance();
     final isEnabled = prefs.getBool('app_lock_enabled') ?? false;
     final savedPin = await _storage.read(key: 'app_lock_pin');
-    
+
     setState(() {
       _isLockEnabled = isEnabled;
       _hasSavedPin = savedPin != null && savedPin.length == 4;
@@ -35,7 +35,7 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
 
   Future<void> _toggleLock(bool value) async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     if (!value) {
       // Disabling lock
       await prefs.setBool('app_lock_enabled', false);
@@ -47,9 +47,9 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
         _errorMessage = '';
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('App Lock disabled.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('App Lock disabled.')));
       }
     } else {
       // Prompt user to enter a new PIN before enabling
@@ -71,7 +71,7 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
     final prefs = await SharedPreferences.getInstance();
     await _storage.write(key: 'app_lock_pin', value: pin);
     await prefs.setBool('app_lock_enabled', true);
-    
+
     setState(() {
       _errorMessage = '';
       _hasSavedPin = true;
@@ -101,8 +101,13 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SwitchListTile(
-              title: const Text('Enable App Lock', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              subtitle: const Text('Require a 4-digit PIN or Biometric unlock when opening the app.'),
+              title: const Text(
+                'Enable App Lock',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text(
+                'Require a 4-digit PIN or Biometric unlock when opening the app.',
+              ),
               value: _isLockEnabled,
               onChanged: _toggleLock,
             ),
@@ -144,13 +149,16 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
                     Expanded(
                       child: Text(
                         'App Lock is active. Your PIN is saved securely.',
-                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              )
-            ]
+              ),
+            ],
           ],
         ),
       ),

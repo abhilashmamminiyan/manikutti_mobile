@@ -42,7 +42,9 @@ class SettingsScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SetupAppLockScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const SetupAppLockScreen(),
+                ),
               );
             },
           ),
