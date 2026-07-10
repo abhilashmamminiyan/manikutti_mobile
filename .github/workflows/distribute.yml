@@ -15,6 +15,8 @@ jobs:
       # ── 1. Checkout ──────────────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # ── 2. Set up Java (required for Android builds) ─────────────────────────
       - name: Set up Java 17
@@ -22,6 +24,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          cache: 'gradle'
 
       # ── 3. Set up Flutter ─────────────────────────────────────────────────────
       - name: Set up Flutter
@@ -40,8 +43,9 @@ jobs:
       # Version name stays as defined in pubspec.yaml
       - name: Build release APK
         run: |
+          BUILD_NUM=$(git rev-list --count HEAD)
           flutter build apk --release \
-            --build-number=${{ github.run_number }}
+            --build-number=$BUILD_NUM
 
       # ── 7. Upload to Firebase App Distribution ─────────────────────────────────
       - name: Upload to Firebase App Distribution
@@ -52,5 +56,5 @@ jobs:
           groups: family
           file: build/app/outputs/flutter-apk/app-release.apk
           releaseNotes: |
-            Build #${{ github.run_number }} — ${{ github.event.head_commit.message }}
+            Build run #${{ github.run_number }} — ${{ github.event.head_commit.message }}
             Commit: ${{ github.sha }}

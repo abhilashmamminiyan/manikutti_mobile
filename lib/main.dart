@@ -7,7 +7,7 @@ import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'l10n/app_localizations.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
