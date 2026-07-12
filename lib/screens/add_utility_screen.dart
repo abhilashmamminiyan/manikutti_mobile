@@ -51,7 +51,7 @@ class _AddUtilityScreenState extends State<AddUtilityScreen> {
 
     try {
       final validity = '${_validityAmountController.text} $_validityUnit';
-      
+
       final utility = {
         'title': _titleController.text.trim(),
         'amount': double.parse(_amountController.text),
@@ -70,9 +70,9 @@ class _AddUtilityScreenState extends State<AddUtilityScreen> {
         throw Exception('Failed to save utility');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -105,7 +105,9 @@ class _AddUtilityScreenState extends State<AddUtilityScreen> {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _amountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: const InputDecoration(
                     labelText: 'Amount (₹)',
                     prefixIcon: Icon(Icons.currency_rupee),
@@ -113,7 +115,7 @@ class _AddUtilityScreenState extends State<AddUtilityScreen> {
                   validator: (value) => value!.isEmpty ? 'Enter amount' : null,
                 ),
                 const SizedBox(height: 20),
-                
+
                 Row(
                   children: [
                     Expanded(
@@ -125,7 +127,8 @@ class _AddUtilityScreenState extends State<AddUtilityScreen> {
                           labelText: 'Validity Duration',
                           prefixIcon: Icon(Icons.timer),
                         ),
-                        validator: (value) => value!.isEmpty ? 'Required' : null,
+                        validator: (value) =>
+                            value!.isEmpty ? 'Required' : null,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -149,18 +152,23 @@ class _AddUtilityScreenState extends State<AddUtilityScreen> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 20),
                 InkWell(
                   onTap: () => _selectDate(context),
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 18,
+                    ),
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF1E293B) : Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                        color: isDark
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
                       ),
                     ),
                     child: Row(
@@ -168,24 +176,35 @@ class _AddUtilityScreenState extends State<AddUtilityScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.calendar_today_outlined, color: theme.primaryColor),
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              color: theme.primaryColor,
+                            ),
                             const SizedBox(width: 12),
-                            const Text('Paid On Date', style: TextStyle(fontWeight: FontWeight.w600)),
+                            const Text(
+                              'Paid On Date',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
                           ],
                         ),
                         Text(
                           DateFormat('MMM dd, yyyy').format(_selectedDate),
-                          style: TextStyle(fontWeight: FontWeight.bold, color: theme.primaryColor),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: theme.primaryColor,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
                 CheckboxListTile(
                   title: const Text('Mark as Expense in Personal Sheet'),
-                  subtitle: const Text('Automatically logs this payment to your expenses.'),
+                  subtitle: const Text(
+                    'Automatically logs this payment to your expenses.',
+                  ),
                   value: _logExpense,
                   onChanged: (val) {
                     setState(() => _logExpense = val ?? false);
@@ -204,14 +223,18 @@ class _AddUtilityScreenState extends State<AddUtilityScreen> {
                     prefixIcon: Icon(Icons.edit_note),
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleSave,
                   child: _isLoading
                       ? const SizedBox(
-                          width: 20, height: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Text('Save Utility'),
                 ),

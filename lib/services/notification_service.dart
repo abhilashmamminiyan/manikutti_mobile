@@ -112,7 +112,10 @@ class NotificationService {
     required String body,
     required DateTime nextDueDate,
   }) async {
-    final tz.TZDateTime scheduledDate = tz.TZDateTime.from(nextDueDate, tz.local);
+    final tz.TZDateTime scheduledDate = tz.TZDateTime.from(
+      nextDueDate,
+      tz.local,
+    );
 
     if (scheduledDate.isBefore(tz.TZDateTime.now(tz.local))) return;
 
@@ -134,7 +137,8 @@ class NotificationService {
       scheduledDate,
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       payload: 'utility_$id',
     );
     print(

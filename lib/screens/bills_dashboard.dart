@@ -33,9 +33,9 @@ class _BillsDashboardState extends State<BillsDashboard> {
       _scheduleNotifications();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading utilities: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading utilities: $e')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -53,7 +53,9 @@ class _BillsDashboardState extends State<BillsDashboard> {
 
   void _scheduleNotifications() {
     final isMalayalam = Localizations.localeOf(context).languageCode == 'ml';
-    final bodyStr = isMalayalam ? 'റീചാർജ് ചെയ്തോ?' : 'Have you paid the recharge?';
+    final bodyStr = isMalayalam
+        ? 'റീചാർജ് ചെയ്തോ?'
+        : 'Have you paid the recharge?';
 
     for (var util in _utilities) {
       if (util.nextDueDate.isNotEmpty && util.id != null) {
@@ -75,7 +77,7 @@ class _BillsDashboardState extends State<BillsDashboard> {
   void _showPayDialog(UtilityBill util) {
     DateTime selectedDate = DateTime.now();
     bool logExpense = util.logExpense;
-    
+
     showDialog(
       context: context,
       builder: (context) {
@@ -90,7 +92,9 @@ class _BillsDashboardState extends State<BillsDashboard> {
                   const SizedBox(height: 16),
                   ListTile(
                     title: const Text('Paid On'),
-                    subtitle: Text(DateFormat('MMM dd, yyyy').format(selectedDate)),
+                    subtitle: Text(
+                      DateFormat('MMM dd, yyyy').format(selectedDate),
+                    ),
                     trailing: const Icon(Icons.calendar_today),
                     onTap: () async {
                       final picked = await showDatePicker(
@@ -99,13 +103,15 @@ class _BillsDashboardState extends State<BillsDashboard> {
                         firstDate: DateTime(2020),
                         lastDate: DateTime(2030),
                       );
-                      if (picked != null) setStateSB(() => selectedDate = picked);
+                      if (picked != null)
+                        setStateSB(() => selectedDate = picked);
                     },
                   ),
                   CheckboxListTile(
                     title: const Text('Log as Expense'),
                     value: logExpense,
-                    onChanged: (val) => setStateSB(() => logExpense = val ?? false),
+                    onChanged: (val) =>
+                        setStateSB(() => logExpense = val ?? false),
                   ),
                 ],
               ),
@@ -135,92 +141,114 @@ class _BillsDashboardState extends State<BillsDashboard> {
             );
           },
         );
-      }
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       appBar: AppBar(title: const Text('Utilities & Bills')),
       drawer: const AppDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _utilities.isEmpty
-              ? const Center(child: Text('No utilities found.'))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _utilities.length,
-                  itemBuilder: (context, index) {
-                    final util = _utilities[index];
-                    final daysLeft = _calculateDaysLeft(util.nextDueDate);
-                    final isOverdue = daysLeft != null && daysLeft < 0;
+          ? const Center(child: Text('No utilities found.'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _utilities.length,
+              itemBuilder: (context, index) {
+                final util = _utilities[index];
+                final daysLeft = _calculateDaysLeft(util.nextDueDate);
+                final isOverdue = daysLeft != null && daysLeft < 0;
 
-                    return Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                return Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    util.title,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                                  ),
+                            Expanded(
+                              child: Text(
+                                util.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
                                 ),
-                                if (daysLeft != null)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: isOverdue ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      isOverdue ? '${daysLeft.abs()} Days Overdue' : '$daysLeft Days Left',
-                                      style: TextStyle(
-                                        color: isOverdue ? Colors.red : Colors.green,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                              ],
+                              ),
                             ),
-                            const SizedBox(height: 8),
-                            Text('₹${util.amount} / ${util.validity}'),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Next Due: ${util.nextDueDate.isNotEmpty ? DateFormat('MMM dd, yyyy').format(DateTime.parse(util.nextDueDate)) : 'Unknown'}',
-                                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                            if (daysLeft != null)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
                                 ),
-                                ElevatedButton.icon(
-                                  onPressed: () => _showPayDialog(util),
-                                  icon: const Icon(Icons.check_circle_outline, size: 16),
-                                  label: const Text('Mark Paid'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: theme.primaryColor.withOpacity(0.1),
-                                    foregroundColor: theme.primaryColor,
-                                    elevation: 0,
+                                decoration: BoxDecoration(
+                                  color: isOverdue
+                                      ? Colors.red.withOpacity(0.1)
+                                      : Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  isOverdue
+                                      ? '${daysLeft.abs()} Days Overdue'
+                                      : '$daysLeft Days Left',
+                                  style: TextStyle(
+                                    color: isOverdue
+                                        ? Colors.red
+                                        : Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
                                   ),
-                                )
-                              ],
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text('₹${util.amount} / ${util.validity}'),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Next Due: ${util.nextDueDate.isNotEmpty ? DateFormat('MMM dd, yyyy').format(DateTime.parse(util.nextDueDate)) : 'Unknown'}',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () => _showPayDialog(util),
+                              icon: const Icon(
+                                Icons.check_circle_outline,
+                                size: 16,
+                              ),
+                              label: const Text('Mark Paid'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.primaryColor.withOpacity(
+                                  0.1,
+                                ),
+                                foregroundColor: theme.primaryColor,
+                                elevation: 0,
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           final result = await Navigator.push(
