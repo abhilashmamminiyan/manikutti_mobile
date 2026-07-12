@@ -106,6 +106,42 @@ class NotificationService {
     );
   }
 
+  Future<void> scheduleUtilityReminder({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime nextDueDate,
+  }) async {
+    final tz.TZDateTime scheduledDate = tz.TZDateTime.from(nextDueDate, tz.local);
+
+    if (scheduledDate.isBefore(tz.TZDateTime.now(tz.local))) return;
+
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'utility_channel',
+        'Utility Reminders',
+        channelDescription: 'Reminders for utility recharges',
+        importance: Importance.max,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
+    );
+
+    await _localNotifications.zonedSchedule(
+      id,
+      title,
+      body,
+      scheduledDate,
+      details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      payload: 'utility_$id',
+    );
+    print(
+      '[NotificationService] Scheduled utility notification #$id for $scheduledDate',
+    );
+  }
+
   Future<void> cancelNotification(int id) async {
     await _localNotifications.cancel(id);
     print('[NotificationService] Cancelled notification #$id');
