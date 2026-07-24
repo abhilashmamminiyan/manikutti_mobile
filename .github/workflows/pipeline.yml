@@ -4,9 +4,6 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       deploy_to_firebase:
@@ -43,7 +40,7 @@ jobs:
       - name: Run unit tests
         run: flutter test || echo "No tests found or tests skipped"
 
-  # ── 2. Build Production App ────────────────────────────────────────────────
+  # ── 2. Build Production App (Single Build) ─────────────────────────────────
   build-production-app:
     name: Build Production APK
     runs-on: ubuntu-latest
@@ -92,36 +89,18 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 7
 
-  # ── 3. Auto-merge PR ───────────────────────────────────────────────────────
-  auto-merge-pr:
-    name: Auto-merge PR
-    runs-on: ubuntu-latest
-    needs: build-production-app
-    if: github.event_name == 'pull_request'
-
-    permissions:
-      contents: write
-      pull-requests: write
-
-    steps:
-      - name: Auto-merge PR when checks pass
-        run: gh pr merge "${{ github.event.pull_request.number }}" --squash --auto || echo "PR is already closed or merged."
-        env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-
-  # ── 4. Manual Trigger: Deploy to Firebase ─────────────────────────────────
+  # ── 3. Deploy to Firebase App Distribution (Uses Single Build Artifact) ───────
   deploy-to-firebase:
     name: Deploy to Firebase App Distribution
     runs-on: ubuntu-latest
     needs: build-production-app
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy_to_firebase == true
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.deploy_to_firebase == true)
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download APK Artifact
+      - name: Download Production APK Artifact
         uses: actions/download-artifact@v4
         with:
           name: app-release-apk
@@ -135,5 +114,23 @@ jobs:
           groups: family
           file: build/app/outputs/flutter-apk/app-release.apk
           releaseNotes: |
-            Production release manually deployed via GitHub Actions workflow run #${{ github.run_number }}
+            Production release deployed via single pipeline run #${{ github.run_number }}
             Commit: ${{ github.sha }}
+
+  # ── 4. Auto-merge PR ───────────────────────────────────────────────────────
+  auto-merge-pr:
+    name: Auto-merge PR
+    runs-on: ubuntu-latest
+    needs: [build-production-app, deploy-to-firebase]
+    if: github.event_name == 'pull_request'
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Auto-merge PR when all steps pass
+        run: gh pr merge "${{ github.event.pull_request.number }}" --squash --auto || echo "PR is already closed or merged."
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GH_REPO: ${{ github.repository }}
