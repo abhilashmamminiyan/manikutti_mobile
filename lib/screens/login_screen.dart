@@ -163,7 +163,8 @@ class _LoginScreenState extends State<LoginScreen> {
             setState(() {
               _isOtpStep = false;
               _isPinStep = true;
-              _successMessage = 'Email verified! Set up a 4-digit PIN for instant app access.';
+              _successMessage =
+                  'Email verified! Set up a 4-digit PIN for instant app access.';
             });
           }
         }
@@ -275,8 +276,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 _isPinStep
                     ? 'Create a 4-digit security PIN to quickly unlock your app in the future.'
                     : _isOtpStep
-                        ? 'Enter the 6-digit code sent to your email.'
-                        : 'Track your personal & family expenses in one sacred space.',
+                    ? 'Enter the 6-digit code sent to your email.'
+                    : 'Track your personal & family expenses in one sacred space.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,

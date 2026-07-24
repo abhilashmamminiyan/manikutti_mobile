@@ -71,7 +71,8 @@ void main() async {
     final token = await ApiService.instance.getSessionToken();
     final hasPin = await ApiService.instance.hasPin();
 
-    isLoggedIn = (email != null && email.isNotEmpty) && (token != null || hasPin);
+    isLoggedIn =
+        (email != null && email.isNotEmpty) && (token != null || hasPin);
   } catch (e, stackTrace) {
     print('Initialization error in main: $e\n$stackTrace');
   }
