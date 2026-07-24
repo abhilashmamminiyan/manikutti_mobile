@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
 class SetupAppLockScreen extends StatefulWidget {
   const SetupAppLockScreen({super.key});
@@ -10,7 +10,6 @@ class SetupAppLockScreen extends StatefulWidget {
 }
 
 class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
-  final _storage = const FlutterSecureStorage();
   bool _isLockEnabled = false;
   final TextEditingController _pinController = TextEditingController();
   String _errorMessage = '';
@@ -23,23 +22,21 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
   }
 
   Future<void> _loadLockState() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isEnabled = prefs.getBool('app_lock_enabled') ?? false;
-    final savedPin = await _storage.read(key: 'app_lock_pin');
+    final savedPin = await ApiService.instance.getPin();
+    final hasPin = savedPin != null && savedPin.length == 4;
 
     setState(() {
-      _isLockEnabled = isEnabled;
-      _hasSavedPin = savedPin != null && savedPin.length == 4;
+      _isLockEnabled = hasPin;
+      _hasSavedPin = hasPin;
     });
   }
 
   Future<void> _toggleLock(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-
     if (!value) {
       // Disabling lock
+      final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('app_lock_enabled', false);
-      await _storage.delete(key: 'app_lock_pin');
+      await prefs.remove('app_lock_pin');
       setState(() {
         _isLockEnabled = false;
         _hasSavedPin = false;
@@ -68,9 +65,7 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    await _storage.write(key: 'app_lock_pin', value: pin);
-    await prefs.setBool('app_lock_enabled', true);
+    await ApiService.instance.savePin(pin);
 
     setState(() {
       _errorMessage = '';

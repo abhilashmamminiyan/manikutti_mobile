@@ -39,35 +39,90 @@ class ApiService {
   }
 
   Future<void> saveSessionToken(String token) async {
-    await _secureStorage.write(key: 'session_token', value: token);
+    try {
+      await _secureStorage.write(key: 'session_token', value: token);
+    } catch (e) {
+      print('Error writing session token to secure storage: $e');
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('session_token', token);
   }
 
   Future<String?> getSessionToken() async {
-    return await _secureStorage.read(key: 'session_token');
+    try {
+      final token = await _secureStorage.read(key: 'session_token');
+      if (token != null && token.isNotEmpty) return token;
+    } catch (e) {
+      print('Error reading session token from secure storage: $e');
+    }
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('session_token');
   }
 
   Future<void> saveUserEmail(String email) async {
+    try {
+      await _secureStorage.write(key: 'user_email', value: email);
+    } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_email', email);
   }
 
   Future<String?> getUserEmail() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('user_email');
+    final emailFromPrefs = prefs.getString('user_email');
+    if (emailFromPrefs != null && emailFromPrefs.isNotEmpty) {
+      return emailFromPrefs;
+    }
+    try {
+      return await _secureStorage.read(key: 'user_email');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> savePin(String pin) async {
+    try {
+      await _secureStorage.write(key: 'app_lock_pin', value: pin);
+    } catch (_) {}
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('app_lock_pin', pin);
+    await prefs.setBool('app_lock_enabled', true);
+  }
+
+  Future<String?> getPin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final pinFromPrefs = prefs.getString('app_lock_pin');
+    if (pinFromPrefs != null && pinFromPrefs.length == 4) {
+      return pinFromPrefs;
+    }
+    try {
+      return await _secureStorage.read(key: 'app_lock_pin');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> hasPin() async {
+    final pin = await getPin();
+    return pin != null && pin.length == 4;
   }
 
   Future<void> clearSession() async {
+    try {
+      await _secureStorage.delete(key: 'session_token');
+      await _secureStorage.delete(key: 'user_email');
+      await _secureStorage.delete(key: 'app_lock_pin');
+    } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_email');
     await prefs.remove('session_token');
     await prefs.remove('family_code');
+    await prefs.remove('app_lock_pin');
+    await prefs.remove('app_lock_enabled');
   }
 
   Future<void> clearAuth() async {
-    await _secureStorage.delete(key: 'session_token');
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user_email');
-    await prefs.remove('family_code');
+    await clearSession();
   }
 
   Future<Map<String, String>> _getHeaders() async {
