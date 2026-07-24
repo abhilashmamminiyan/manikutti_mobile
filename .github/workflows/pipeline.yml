@@ -16,7 +16,7 @@ on:
         default: true
 
 jobs:
-  # ── 1. Lint & Analyze ──────────────────────────────────────────────────────
+  # ── 1. Lint & Analyze (Runs on Push & PR) ──────────────────────────────────
   lint-and-analyze:
     name: lint-and-analyze
     runs-on: ubuntu-latest
@@ -43,11 +43,12 @@ jobs:
       - name: Run unit tests
         run: flutter test || echo "No tests found or tests skipped"
 
-  # ── 2. Build Production App ────────────────────────────────────────────────
+  # ── 2. Build Production App (Only on PR & Workflow Dispatch) ───────────────
   build-production-app:
     name: Build Production APK
     runs-on: ubuntu-latest
     needs: lint-and-analyze
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout repository
@@ -121,7 +122,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download APK Artifact
+      - name: Download Production APK Artifact
         uses: actions/download-artifact@v4
         with:
           name: app-release-apk
@@ -135,5 +136,5 @@ jobs:
           groups: family
           file: build/app/outputs/flutter-apk/app-release.apk
           releaseNotes: |
-            Production release manually deployed via GitHub Actions workflow run #${{ github.run_number }}
+            Production release manually deployed via workflow run #${{ github.run_number }}
             Commit: ${{ github.sha }}
