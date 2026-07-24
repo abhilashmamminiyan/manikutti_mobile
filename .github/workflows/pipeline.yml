@@ -19,7 +19,7 @@ on:
 jobs:
   # ── 1. Lint & Analyze ──────────────────────────────────────────────────────
   lint-and-analyze:
-    name: Lint & Analyze
+    name: lint-and-analyze
     runs-on: ubuntu-latest
 
     steps:
