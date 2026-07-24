@@ -15,12 +15,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _otpController = TextEditingController();
   final _urlController = TextEditingController();
+  final _pinController = TextEditingController();
+  final _confirmPinController = TextEditingController();
 
   bool _isLoading = false;
   String _errorMessage = '';
   String _successMessage = '';
   String? _verificationToken;
   bool _isOtpStep = false;
+  bool _isPinStep = false;
 
   @override
   void initState() {
@@ -38,6 +41,8 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _otpController.dispose();
     _urlController.dispose();
+    _pinController.dispose();
+    _confirmPinController.dispose();
     super.dispose();
   }
 
@@ -146,17 +151,62 @@ class _LoginScreenState extends State<LoginScreen> {
         // Run initial synchronization cycle in background
         SyncService.instance.syncData();
 
+        final hasSavedPin = await ApiService.instance.hasPin();
+
         if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const DashboardScreen()),
-          );
+          if (hasSavedPin) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            );
+          } else {
+            setState(() {
+              _isOtpStep = false;
+              _isPinStep = true;
+              _successMessage =
+                  'Email verified! Set up a 4-digit PIN for instant app access.';
+            });
+          }
         }
       }
     } catch (e) {
       setState(
         () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
       );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleSavePin() async {
+    final pin = _pinController.text.trim();
+    final confirmPin = _confirmPinController.text.trim();
+
+    if (pin.length != 4 || int.tryParse(pin) == null) {
+      setState(() => _errorMessage = 'Please enter a valid 4-digit PIN.');
+      return;
+    }
+
+    if (pin != confirmPin) {
+      setState(() => _errorMessage = 'PINs do not match. Please re-enter.');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      await ApiService.instance.savePin(pin);
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+      }
+    } catch (e) {
+      setState(() => _errorMessage = 'Failed to save PIN: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -223,7 +273,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                _isOtpStep
+                _isPinStep
+                    ? 'Create a 4-digit security PIN to quickly unlock your app in the future.'
+                    : _isOtpStep
                     ? 'Enter the 6-digit code sent to your email.'
                     : 'Track your personal & family expenses in one sacred space.',
                 textAlign: TextAlign.center,
@@ -297,7 +349,59 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
 
               // Input Form
-              if (!_isOtpStep) ...[
+              if (_isPinStep) ...[
+                TextField(
+                  controller: _pinController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 4,
+                  obscureText: true,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 10,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Enter 4-Digit Security PIN',
+                    hintText: '****',
+                    counterText: '',
+                    prefixIcon: Icon(Icons.security),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _confirmPinController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 4,
+                  obscureText: true,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 10,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Confirm 4-Digit PIN',
+                    hintText: '****',
+                    counterText: '',
+                    prefixIcon: Icon(Icons.lock_reset),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _handleSavePin,
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Save PIN & Access App'),
+                ),
+              ] else if (!_isOtpStep) ...[
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -356,6 +460,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () {
                     setState(() {
                       _isOtpStep = false;
+                      _isPinStep = false;
                       _otpController.clear();
                       _errorMessage = '';
                       _successMessage = '';
