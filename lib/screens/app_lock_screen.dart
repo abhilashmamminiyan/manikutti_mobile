@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
+import '../services/api_service.dart';
+import 'login_screen.dart';
 
 class AppLockScreen extends StatefulWidget {
   final VoidCallback onUnlock;
@@ -13,11 +14,11 @@ class AppLockScreen extends StatefulWidget {
 }
 
 class _AppLockScreenState extends State<AppLockScreen> {
-  final _storage = const FlutterSecureStorage();
   final LocalAuthentication auth = LocalAuthentication();
   final TextEditingController _pinController = TextEditingController();
 
   String _savedPin = '';
+  String _userEmail = '';
   String _errorMessage = '';
   bool _isAuthenticating = false;
 
@@ -28,9 +29,15 @@ class _AppLockScreenState extends State<AppLockScreen> {
   }
 
   Future<void> _loadPinAndAuthenticate() async {
-    final pin = await _storage.read(key: 'app_lock_pin');
+    final pin = await ApiService.instance.getPin();
+    final email = await ApiService.instance.getUserEmail();
     if (pin != null && pin.length == 4) {
       _savedPin = pin;
+    }
+    if (email != null) {
+      setState(() {
+        _userEmail = email;
+      });
     }
 
     // Automatically trigger biometrics if available
@@ -81,6 +88,40 @@ class _AppLockScreenState extends State<AppLockScreen> {
     }
   }
 
+  Future<void> _handleForgotPin() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset PIN / Relogin'),
+        content: const Text(
+          'Do you want to clear saved credentials and log in again using Email & OTP?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text('Reset & Relogin'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await ApiService.instance.clearAuth();
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _pinController.dispose();
@@ -105,10 +146,21 @@ class _AppLockScreenState extends State<AppLockScreen> {
                   'App Locked',
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
+                if (_userEmail.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    _userEmail,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blueGrey,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 8),
                 const Text(
-                  'Enter your 4-digit PIN to unlock',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                  'Enter your 4-digit Security PIN to unlock',
+                  style: TextStyle(fontSize: 15, color: Colors.grey),
                 ),
                 const SizedBox(height: 32),
                 TextField(
@@ -142,16 +194,22 @@ class _AppLockScreenState extends State<AppLockScreen> {
                   ),
                   child: const Text('Unlock', style: TextStyle(fontSize: 18)),
                 ),
-                const SizedBox(height: 24),
-                TextButton.icon(
-                  onPressed: _isAuthenticating
-                      ? null
-                      : _authenticateWithBiometrics,
-                  icon: const Icon(Icons.fingerprint, size: 32),
-                  label: const Text(
-                    'Use Biometrics',
-                    style: TextStyle(fontSize: 16),
-                  ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: _isAuthenticating
+                          ? null
+                          : _authenticateWithBiometrics,
+                      icon: const Icon(Icons.fingerprint, size: 24),
+                      label: const Text('Biometrics'),
+                    ),
+                    TextButton(
+                      onPressed: _handleForgotPin,
+                      child: const Text('Forgot PIN?'),
+                    ),
+                  ],
                 ),
               ],
             ),

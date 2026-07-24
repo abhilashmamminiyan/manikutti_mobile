@@ -66,10 +66,13 @@ void main() async {
       print('Failed to register Workmanager: $e');
     }
 
-    // Check if session token and email exists
+    // Check if session token/PIN and email exists
     final email = await ApiService.instance.getUserEmail();
     final token = await ApiService.instance.getSessionToken();
-    isLoggedIn = email != null && token != null;
+    final hasPin = await ApiService.instance.hasPin();
+
+    isLoggedIn =
+        (email != null && email.isNotEmpty) && (token != null || hasPin);
   } catch (e, stackTrace) {
     print('Initialization error in main: $e\n$stackTrace');
   }
@@ -94,7 +97,6 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Locale? _locale;
   bool _isLocked = false;
-  bool _lockEnabledInPrefs = false;
 
   void setLocale(Locale locale) {
     setState(() {
@@ -111,10 +113,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   Future<void> _checkInitialLockState() async {
-    final prefs = await SharedPreferences.getInstance();
-    _lockEnabledInPrefs = prefs.getBool('app_lock_enabled') ?? false;
-    // Only lock if the user is already logged in
-    if (_lockEnabledInPrefs && widget.isLoggedIn) {
+    final hasPin = await ApiService.instance.hasPin();
+    if (widget.isLoggedIn && hasPin) {
       setState(() {
         _isLocked = true;
       });
@@ -129,9 +129,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   Future<void> _checkLockStatusForBackground() async {
-    final prefs = await SharedPreferences.getInstance();
-    _lockEnabledInPrefs = prefs.getBool('app_lock_enabled') ?? false;
-    if (_lockEnabledInPrefs && widget.isLoggedIn) {
+    final hasPin = await ApiService.instance.hasPin();
+    if (widget.isLoggedIn && hasPin) {
       setState(() {
         _isLocked = true;
       });
