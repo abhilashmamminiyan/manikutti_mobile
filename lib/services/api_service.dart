@@ -49,14 +49,18 @@ class ApiService {
   }
 
   Future<String?> getSessionToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final tokenFromPrefs = prefs.getString('session_token');
+    if (tokenFromPrefs != null && tokenFromPrefs.isNotEmpty) {
+      return tokenFromPrefs;
+    }
     try {
       final token = await _secureStorage.read(key: 'session_token');
       if (token != null && token.isNotEmpty) return token;
     } catch (e) {
       print('Error reading session token from secure storage: $e');
     }
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('session_token');
+    return null;
   }
 
   Future<void> saveUserEmail(String email) async {
@@ -140,7 +144,7 @@ class ApiService {
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/otp/send'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email}),
+        body: jsonEncode({'email': email, 'clientType': 'mobile'}),
       );
 
       final body = jsonDecode(response.body);

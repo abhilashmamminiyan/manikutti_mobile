@@ -73,17 +73,19 @@ void main() async {
 
     isLoggedIn =
         (email != null && email.isNotEmpty) && (token != null || hasPin);
+
+    runApp(MyApp(isLoggedIn: isLoggedIn, hasPin: hasPin));
   } catch (e, stackTrace) {
     print('Initialization error in main: $e\n$stackTrace');
+    runApp(const MyApp(isLoggedIn: false, hasPin: false));
   }
-
-  runApp(MyApp(isLoggedIn: isLoggedIn));
 }
 
 class MyApp extends StatefulWidget {
   final bool isLoggedIn;
+  final bool hasPin;
 
-  const MyApp({super.key, required this.isLoggedIn});
+  const MyApp({super.key, required this.isLoggedIn, required this.hasPin});
 
   static void setLocale(BuildContext context, Locale newLocale) {
     _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
@@ -96,7 +98,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Locale? _locale;
-  bool _isLocked = false;
+  late bool _isLocked = widget.isLoggedIn && widget.hasPin;
 
   void setLocale(Locale locale) {
     setState(() {
