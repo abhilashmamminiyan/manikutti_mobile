@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - "feature/**"
   workflow_dispatch:
     inputs:
       deploy_to_firebase:
