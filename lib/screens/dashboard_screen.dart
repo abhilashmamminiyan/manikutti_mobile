@@ -10,6 +10,8 @@ import 'login_screen.dart';
 import 'add_transaction_screen.dart';
 import 'bills_dashboard.dart';
 import 'loans_emi_screen.dart';
+import 'home_loan_screen.dart';
+import 'mobile_recharges_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
@@ -1216,6 +1218,128 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Expanded(
                               child: Text(
                                 l10n.loansAndEmi,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const HomeLoanScreen(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppTheme.darkSurfaceContainerLowest
+                              : AppTheme.surfaceContainerLowest,
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: AppTheme.ambientCardShadow,
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF2C3233)
+                                : AppTheme.outlineVariant.withOpacity(0.18),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary.withOpacity(0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.home_work_rounded,
+                                size: 18,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                l10n.homeLoan,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const MobileRechargesScreen(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppTheme.darkSurfaceContainerLowest
+                              : AppTheme.surfaceContainerLowest,
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: AppTheme.ambientCardShadow,
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF2C3233)
+                                : AppTheme.outlineVariant.withOpacity(0.18),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.indigo.withOpacity(0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.phone_android_rounded,
+                                size: 18,
+                                color: Colors.indigo,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                l10n.mobileRecharges,
                                 style: theme.textTheme.labelMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
                                 ),

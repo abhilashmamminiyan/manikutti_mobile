@@ -43,5 +43,17 @@
   "principalPaid": "Principal Paid",
   "interestPaid": "Interest Paid",
   "remainingBalance": "Remaining Balance",
-  "noRepaymentsYet": "No repayments logged yet"
+  "noRepaymentsYet": "No repayments logged yet",
+  "mobileRecharges": "Mobile Recharges",
+  "mobileRecharge": "Mobile Recharge",
+  "addMobileRecharge": "Add Mobile Recharge",
+  "editMobileRecharge": "Edit Mobile Recharge",
+  "validityTill": "Validity Till",
+  "planLastRecharged": "Plan Last Recharged",
+  "operator": "Operator",
+  "phoneNumber": "Phone Number",
+  "personName": "Contact / SIM Name",
+  "rechargeNow": "Recharge Now",
+  "rechargedToday": "Recharged Today",
+  "markRecharged": "Mark Recharged"
 }

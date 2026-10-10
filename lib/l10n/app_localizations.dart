@@ -361,6 +361,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No repayments logged yet'**
   String get noRepaymentsYet;
+
+  /// No description provided for @mobileRecharges.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile Recharges'**
+  String get mobileRecharges;
+
+  /// No description provided for @mobileRecharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile Recharge'**
+  String get mobileRecharge;
+
+  /// No description provided for @addMobileRecharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Mobile Recharge'**
+  String get addMobileRecharge;
+
+  /// No description provided for @editMobileRecharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Mobile Recharge'**
+  String get editMobileRecharge;
+
+  /// No description provided for @validityTill.
+  ///
+  /// In en, this message translates to:
+  /// **'Validity Till'**
+  String get validityTill;
+
+  /// No description provided for @planLastRecharged.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan Last Recharged'**
+  String get planLastRecharged;
+
+  /// No description provided for @operator.
+  ///
+  /// In en, this message translates to:
+  /// **'Operator'**
+  String get operator;
+
+  /// No description provided for @phoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number'**
+  String get phoneNumber;
+
+  /// No description provided for @personName.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact / SIM Name'**
+  String get personName;
+
+  /// No description provided for @rechargeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Recharge Now'**
+  String get rechargeNow;
+
+  /// No description provided for @rechargedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Recharged Today'**
+  String get rechargedToday;
+
+  /// No description provided for @markRecharged.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark Recharged'**
+  String get markRecharged;
 }
 
 class _AppLocalizationsDelegate
