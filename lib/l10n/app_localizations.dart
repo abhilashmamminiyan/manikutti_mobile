@@ -283,6 +283,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Description'**
   String get description;
+
+  /// No description provided for @loansAndEmi.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans & EMI'**
+  String get loansAndEmi;
+
+  /// No description provided for @loans.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans'**
+  String get loans;
+
+  /// No description provided for @emis.
+  ///
+  /// In en, this message translates to:
+  /// **'EMIs & Commitments'**
+  String get emis;
+
+  /// No description provided for @activeEmis.
+  ///
+  /// In en, this message translates to:
+  /// **'Active EMIs'**
+  String get activeEmis;
+
+  /// No description provided for @familyLoans.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Loans'**
+  String get familyLoans;
+
+  /// No description provided for @addLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Loan'**
+  String get addLoan;
+
+  /// No description provided for @addEmi.
+  ///
+  /// In en, this message translates to:
+  /// **'Add EMI'**
+  String get addEmi;
 }
 
 class _AppLocalizationsDelegate

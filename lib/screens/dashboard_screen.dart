@@ -8,6 +8,8 @@ import '../services/sync_service.dart';
 import '../services/notification_service.dart';
 import 'login_screen.dart';
 import 'add_transaction_screen.dart';
+import 'bills_dashboard.dart';
+import 'loans_emi_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
@@ -1104,6 +1106,129 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   );
                 }),
+              ),
+              const SizedBox(height: 16),
+              // Quick Access Hub
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const BillsDashboard(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppTheme.darkSurfaceContainerLowest
+                              : AppTheme.surfaceContainerLowest,
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: AppTheme.ambientCardShadow,
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF2C3233)
+                                : AppTheme.outlineVariant.withOpacity(0.18),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.receipt_long_rounded,
+                                size: 18,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                l10n.bills,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const LoansEmiScreen(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppTheme.darkSurfaceContainerLowest
+                              : AppTheme.surfaceContainerLowest,
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: AppTheme.ambientCardShadow,
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF2C3233)
+                                : AppTheme.outlineVariant.withOpacity(0.18),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.secondary.withOpacity(0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.account_balance_rounded,
+                                size: 18,
+                                color: AppTheme.secondary,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                l10n.loansAndEmi,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               // Regular Commitments Section
               if (_monthlyExpenses.isNotEmpty) ...[
