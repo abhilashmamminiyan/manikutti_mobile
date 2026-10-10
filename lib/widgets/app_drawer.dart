@@ -7,96 +7,258 @@ import '../screens/bills_dashboard.dart';
 import '../screens/screenshots_screen.dart';
 import '../services/api_service.dart';
 import '../screens/login_screen.dart';
+import '../theme/app_theme.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
+  Widget _buildDrawerItem({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 4.0),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isDestructive
+                        ? AppTheme.error.withOpacity(0.1)
+                        : (isDark
+                            ? AppTheme.darkSurfaceContainer
+                            : AppTheme.surfaceContainerLow),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: isDestructive
+                        ? AppTheme.error
+                        : (isDark ? AppTheme.darkOnSurface : AppTheme.primary),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isDestructive
+                          ? AppTheme.error
+                          : (isDark ? AppTheme.darkOnSurface : AppTheme.onSurface),
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: isDark ? AppTheme.darkOnSurfaceVariant.withOpacity(0.5) : AppTheme.outlineVariant,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(color: Color(0xFF006972)),
-            child: Text(
-              l10n.appTitle,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontFamily: 'Manrope',
-                fontWeight: FontWeight.bold,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.horizontal(right: Radius.circular(28)),
+      ),
+      backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.surface,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Editorial Drawer Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.heroCardGradient,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: AppTheme.editorialShadow,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.18),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.account_balance_wallet_rounded,
+                          color: Colors.white,
+                          size: 26,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppTheme.secondaryContainer,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'SANCTUARY',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: AppTheme.onSecondaryContainer,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 9,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            l10n.appTitle,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.dashboard_outlined),
-            title: Text(l10n.dashboard),
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const DashboardScreen()),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.receipt_long_outlined),
-            title: Text(l10n.bills),
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const BillsDashboard()),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.document_scanner_outlined),
-            title: Text(l10n.smartScan),
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const SmartScanScreen()),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.image_outlined),
-            title: Text(l10n.screenshots),
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const ScreenshotsScreen()),
-              );
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.settings_outlined),
-            title: Text(l10n.settings),
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout_outlined),
-            title: Text(l10n.logout),
-            onTap: () async {
-              await ApiService.instance.clearSession();
-              if (context.mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  (route) => false,
-                );
-              }
-            },
-          ),
-        ],
+            const SizedBox(height: 8),
+
+            // Navigation List
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.dashboard_rounded,
+                    title: l10n.dashboard,
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.receipt_long_rounded,
+                    title: l10n.bills,
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const BillsDashboard()),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.document_scanner_rounded,
+                    title: l10n.smartScan,
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SmartScanScreen()),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.image_search_rounded,
+                    title: l10n.screenshots,
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ScreenshotsScreen()),
+                      );
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    child: Divider(
+                      color: isDark ? const Color(0xFF2C3233) : AppTheme.outlineVariant.withOpacity(0.25),
+                      thickness: 1,
+                    ),
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.settings_rounded,
+                    title: l10n.settings,
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.logout_rounded,
+                    title: l10n.logout,
+                    isDestructive: true,
+                    onTap: () async {
+                      await ApiService.instance.clearSession();
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          (route) => false,
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            // Subtle Footer
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'The Heritage Ledger • Offline First',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: isDark ? AppTheme.darkOnSurfaceVariant.withOpacity(0.5) : AppTheme.outlineVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
