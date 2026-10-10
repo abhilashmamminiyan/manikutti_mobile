@@ -33,6 +33,7 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
 
   Future<void> _toggleLock(bool value) async {
     if (!value) {
+      // Disabling lock
       await ApiService.instance.clearPin();
       setState(() {
         _isLockEnabled = false;
