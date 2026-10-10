@@ -153,7 +153,6 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
 
   void _showQuickRechargeDialog(MobileRecharge recharge) {
     int additionalDays = 28;
-    double newAmount = recharge.planLastRecharged;
     bool logExpense = recharge.logExpense;
 
     showDialog(
@@ -283,18 +282,24 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
 
                   await DbHelper.instance.updateMobileRecharge(updated);
 
-                  if (updated.notifyExpiry && updated.id != null) {
-                    final notificationId = 30000 + (updated.id! % 10000);
-                    await NotificationService.instance
-                        .scheduleRechargeExpiryReminder(
-                          id: notificationId,
-                          name: updated.name,
-                          operatorName: updated.operator,
-                          phoneNumber: updated.phoneNumber,
-                          amount: updated.planLastRecharged,
-                          expiryDate: newExpiry,
-                          daysBefore: updated.reminderDaysBefore,
-                        );
+                  try {
+                    if (updated.notifyExpiry && updated.id != null) {
+                      final notificationId = 30000 + (updated.id! % 10000);
+                      await NotificationService.instance
+                          .scheduleRechargeExpiryReminder(
+                            id: notificationId,
+                            name: updated.name,
+                            operatorName: updated.operator,
+                            phoneNumber: updated.phoneNumber,
+                            amount: updated.planLastRecharged,
+                            expiryDate: newExpiry,
+                            daysBefore: updated.reminderDaysBefore,
+                          );
+                    }
+                  } catch (notifErr) {
+                    print(
+                      '[MobileRechargesScreen] Non-critical notification reminder error: $notifErr',
+                    );
                   }
 
                   ApiService.instance
