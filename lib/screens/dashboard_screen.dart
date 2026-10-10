@@ -7,10 +7,10 @@ import '../services/api_service.dart';
 import '../services/sync_service.dart';
 import '../services/notification_service.dart';
 import 'login_screen.dart';
-import 'login_screen.dart';
 import 'add_transaction_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_theme.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -520,172 +520,347 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildPersonalCard(ThemeData theme) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: EdgeInsets.zero,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [theme.primaryColor, theme.primaryColor.withBlue(150)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Net Savings (Personal)',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+    final netBalance = _totalIncome - _totalPersonalExpenses;
+    return Container(
+      decoration: BoxDecoration(
+        gradient: AppTheme.heroCardGradient,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppTheme.editorialShadow,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 22.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
                 ),
-                Icon(Icons.savings_outlined, color: Colors.white70),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '₹${(_totalIncome - _totalPersonalExpenses).toStringAsFixed(2)}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontFamily: 'Manrope',
-                fontWeight: FontWeight.w900,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.secondaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'PERSONAL SANCTUARY',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'AVAILABLE BALANCE',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: Colors.white.withOpacity(0.7),
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.5,
+                  fontSize: 10,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '₹${netBalance.toStringAsFixed(2)}',
+                style: theme.textTheme.displaySmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                  fontSize: 32,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
             ),
-            const SizedBox(height: 20),
-            Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    const Text(
-                      'Personal Income',
-                      style: TextStyle(color: Colors.white60, fontSize: 11),
-                    ),
-                    Text(
-                      '₹${_totalIncome.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle,
                       ),
+                      child: const Icon(
+                        Icons.arrow_downward_rounded,
+                        color: AppTheme.secondaryContainer,
+                        size: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Income',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.65),
+                            fontSize: 10,
+                          ),
+                        ),
+                        Text(
+                          '₹${_totalIncome.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Container(
+                  width: 1,
+                  height: 24,
+                  color: Colors.white.withOpacity(0.15),
+                ),
+                Row(
                   children: [
-                    const Text(
-                      'Personal Spend',
-                      style: TextStyle(color: Colors.white60, fontSize: 11),
-                    ),
-                    Text(
-                      '₹${_totalPersonalExpenses.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle,
                       ),
+                      child: const Icon(
+                        Icons.arrow_upward_rounded,
+                        color: Color(0xFFFF8A80),
+                        size: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Spent',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.65),
+                            fontSize: 10,
+                          ),
+                        ),
+                        Text(
+                          '₹${_totalPersonalExpenses.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildFamilyCard(ThemeData theme, bool isDark) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: EdgeInsets.zero,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              isDark ? const Color(0xFF1E293B) : const Color(0xFF0F172A),
-              isDark ? const Color(0xFF334155) : const Color(0xFF1E293B),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+    final totalPoolSpent = _totalFamilyExpenses + _totalPaidRegularExpenses;
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF1E282A), const Color(0xFF131A1B)]
+              : [const Color(0xFF1E2A38), const Color(0xFF0F172A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Family Prosperity Summary',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppTheme.editorialShadow,
+        border: Border.all(
+          color: AppTheme.secondaryContainer.withOpacity(0.2),
+          width: 1.5,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 22.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
                 ),
-                Icon(Icons.people_alt_outlined, color: Colors.white70),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '₹${(_totalFamilyExpenses + _totalPaidRegularExpenses).toStringAsFixed(2)}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontFamily: 'Manrope',
-                fontWeight: FontWeight.w900,
+                decoration: BoxDecoration(
+                  color: AppTheme.secondaryContainer.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.secondaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'FAMILY LEDGER POOL',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppTheme.secondaryContainer,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.diversity_3_rounded,
+                  color: AppTheme.secondaryContainer,
+                  size: 18,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'TOTAL POOL OUTFLOW',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: Colors.white.withOpacity(0.7),
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.5,
+                  fontSize: 10,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '₹${totalPoolSpent.toStringAsFixed(2)}',
+                style: theme.textTheme.displaySmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                  fontSize: 32,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
             ),
-            const SizedBox(height: 20),
-            Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Family Pool Expenses',
-                      style: TextStyle(color: Colors.white60, fontSize: 11),
+                    Text(
+                      'Shared Pool',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.65),
+                        fontSize: 10,
+                      ),
                     ),
                     Text(
-                      '₹${_totalFamilyExpenses.toStringAsFixed(2)}',
+                      '₹${_totalFamilyExpenses.toStringAsFixed(0)}',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
                       ),
                     ),
                   ],
                 ),
+                Container(
+                  width: 1,
+                  height: 24,
+                  color: Colors.white.withOpacity(0.15),
+                ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Regular Commitments',
-                      style: TextStyle(color: Colors.white60, fontSize: 11),
+                    Text(
+                      'Regular Dues',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.65),
+                        fontSize: 10,
+                      ),
                     ),
                     Text(
-                      '₹${_totalRegularExpenses.toStringAsFixed(2)}',
+                      '₹${_totalRegularExpenses.toStringAsFixed(0)}',
                       style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        color: AppTheme.secondaryContainer,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
                       ),
                     ),
                   ],
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -971,189 +1146,241 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                     final paid = isPaidThisMonth || status == 'Paid';
 
-                    return Card(
+                    return Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppTheme.darkSurfaceContainerLowest
+                            : AppTheme.surfaceContainerLowest,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: AppTheme.ambientCardShadow,
+                        border: Border.all(
+                          color: isDark
+                              ? const Color(0xFF2C3233)
+                              : AppTheme.outlineVariant.withOpacity(0.18),
+                        ),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color:
-                                    (isAssignedToMe
-                                            ? theme.primaryColor
-                                            : Colors.grey)
-                                        .withOpacity(0.1),
-                                shape: BoxShape.circle,
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.secondaryContainer.withOpacity(
+                                0.2,
                               ),
-                              child: Icon(
-                                Icons.account_balance_outlined,
-                                color: isAssignedToMe
-                                    ? theme.primaryColor
-                                    : Colors.grey,
-                              ),
+                              shape: BoxShape.circle,
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    title,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Due Day: $dueDay • ${isAssignedToMe ? "Assigned to You" : "Assigned to ${assignedTo?.split('@')[0] ?? 'Family'}"}',
-                                    style: TextStyle(
-                                      color: Colors.grey[500],
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            child: const Icon(
+                              Icons.calendar_today_rounded,
+                              color: AppTheme.secondary,
+                              size: 20,
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '₹${amount.toStringAsFixed(0)}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 15,
+                                  title,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark
+                                        ? AppTheme.darkOnSurface
+                                        : AppTheme.onSurface,
                                   ),
                                 ),
-                                const SizedBox(height: 6),
-                                if (paid)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
+                                const SizedBox(height: 3),
+                                Text(
+                                  'Due on day $dueDay • ${isAssignedToMe ? "Assigned to You" : "Assigned to ${assignedTo?.split('@')[0] ?? 'Family'}"}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: isDark
+                                        ? AppTheme.darkOnSurfaceVariant
+                                        : AppTheme.onSurfaceVariant.withOpacity(
+                                            0.7,
+                                          ),
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '₹${amount.toStringAsFixed(0)}',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: isDark
+                                      ? AppTheme.darkOnSurface
+                                      : AppTheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              if (paid)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF10B981,
+                                    ).withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Text(
+                                    'PAID',
+                                    style: TextStyle(
+                                      color: Color(0xFF10B981),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.5,
                                     ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFF10B981,
-                                      ).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Text(
-                                      'PAID',
-                                      style: TextStyle(
-                                        color: Color(0xFF10B981),
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  )
-                                else if (isAssignedToMe)
-                                  ElevatedButton(
+                                  ),
+                                )
+                              else if (isAssignedToMe)
+                                Container(
+                                  decoration: BoxDecoration(
+                                    gradient: AppTheme.primaryGradient,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
+                                        horizontal: 14,
                                         vertical: 6,
                                       ),
                                       minimumSize: Size.zero,
                                       tapTargetSize:
                                           MaterialTapTargetSize.shrinkWrap,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                     ),
                                     onPressed: () =>
                                         _markPaid(item['id'] as int),
                                     child: const Text(
                                       'Pay',
-                                      style: TextStyle(fontSize: 11),
-                                    ),
-                                  )
-                                else
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.amber.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Text(
-                                      'UNPAID',
                                       style: TextStyle(
-                                        color: Colors.amber,
-                                        fontSize: 9,
+                                        fontSize: 11,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
-                              ],
-                            ),
-                          ],
-                        ),
+                                )
+                              else
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.secondaryContainer
+                                        .withOpacity(0.25),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Text(
+                                    'PENDING',
+                                    style: TextStyle(
+                                      color: AppTheme.onSecondaryContainer,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
                       ),
                     );
                   },
                 ),
               ],
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
 
-              // Filter Chips
-              Row(
-                children: ['All', 'Personal', 'Family'].map((name) {
-                  final isSelected = _filter == name;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: ChoiceChip(
-                      label: Text(
-                        name,
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : (isDark ? Colors.grey[300] : Colors.grey[700]),
-                          fontWeight: FontWeight.bold,
+              // Stitch Editorial Segmented Pill Selector
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppTheme.darkSurfaceContainer
+                      : AppTheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: ['All', 'Personal', 'Family'].map((name) {
+                    final isSelected = _filter == name;
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _filter = name),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? (isDark
+                                      ? AppTheme.primaryContainer
+                                      : AppTheme.primary)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: isSelected
+                                ? AppTheme.subtleFloatShadow
+                                : null,
+                          ),
+                          child: Center(
+                            child: Text(
+                              name,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: isSelected
+                                    ? (isDark
+                                          ? AppTheme.onPrimaryContainer
+                                          : Colors.white)
+                                    : (isDark
+                                          ? AppTheme.darkOnSurfaceVariant
+                                          : AppTheme.onSurfaceVariant),
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      selected: isSelected,
-                      onSelected: (_) => setState(() => _filter = name),
-                      selectedColor: theme.primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      showCheckmark: false,
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
               // Recent Transactions Headline
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Transactions Log',
-                    style: TextStyle(
-                      fontFamily: 'Manrope',
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
                     ),
                   ),
                   if (_isLoading)
                     const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.primary,
+                      ),
                     ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               // Transactions List
               _filteredTransactions.isEmpty
@@ -1161,17 +1388,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 40.0),
                       child: Column(
                         children: [
-                          Icon(
-                            Icons.receipt_long_outlined,
-                            size: 64,
-                            color: Colors.grey[400],
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppTheme.darkSurfaceContainer
+                                  : AppTheme.surfaceContainerLow,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.receipt_long_rounded,
+                              size: 40,
+                              color: AppTheme.outline,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No transactions recorded locally yet.',
-                            style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 13,
+                            'No transactions recorded in this sanctuary yet.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: AppTheme.outline,
                             ),
                           ),
                         ],
@@ -1187,94 +1422,112 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           'MMM dd, yyyy',
                         ).format(DateTime.parse(t.date));
 
-                        return Card(
+                        return Container(
                           margin: const EdgeInsets.only(bottom: 12),
-                          color: isDark
-                              ? const Color(0xFF1E293B)
-                              : Colors.white,
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppTheme.darkSurfaceContainerLowest
+                                : AppTheme.surfaceContainerLowest,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: AppTheme.ambientCardShadow,
+                            border: Border.all(
+                              color: isDark
+                                  ? const Color(0xFF2C3233)
+                                  : AppTheme.outlineVariant.withOpacity(0.18),
                             ),
-                            leading: Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: _getCategoryColor(
-                                  t.type,
-                                ).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: _getCategoryColor(
+                                    t.type,
+                                  ).withOpacity(0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  _getCategoryIcon(t.category),
+                                  color: _getCategoryColor(t.type),
+                                  size: 20,
+                                ),
                               ),
-                              child: Icon(
-                                _getCategoryIcon(t.category),
-                                color: _getCategoryColor(t.type),
-                              ),
-                            ),
-                            title: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    t.note.isNotEmpty ? t.note : t.category,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      t.note.isNotEmpty ? t.note : t.category,
+                                      style: theme.textTheme.titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: isDark
+                                                ? AppTheme.darkOnSurface
+                                                : AppTheme.onSurface,
+                                          ),
                                     ),
-                                  ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          '$formattedDate • ${t.type}',
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: isDark
+                                                    ? AppTheme
+                                                          .darkOnSurfaceVariant
+                                                    : AppTheme.onSurfaceVariant
+                                                          .withOpacity(0.7),
+                                                fontSize: 11,
+                                              ),
+                                        ),
+                                        if (t.type == 'Family' &&
+                                            t.addedBy != null) ...[
+                                          Text(
+                                            ' • ${_getMemberNickname(t.addedBy!)}',
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: AppTheme.primary,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  '${t.type == 'Income' ? '+' : '-'}₹${t.amount.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 16,
-                                    color: t.type == 'Income'
-                                        ? Colors.green
-                                        : (t.type == 'Family'
-                                              ? Colors.blue
-                                              : Colors.red),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 6.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    '$formattedDate • ${t.type}',
-                                    style: TextStyle(
-                                      color: Colors.grey[500],
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      if (t.type == 'Family' &&
-                                          t.addedBy != null) ...[
-                                        Text(
-                                          'By: ${_getMemberNickname(t.addedBy!)} ',
-                                          style: TextStyle(
-                                            color: Colors.grey[500],
-                                            fontSize: 10,
-                                            fontStyle: FontStyle.italic,
-                                          ),
+                                    '${t.type == 'Income' ? '+' : '-'}₹${t.amount.toStringAsFixed(2)}',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          color: t.type == 'Income'
+                                              ? const Color(0xFF10B981)
+                                              : (t.type == 'Family'
+                                                    ? AppTheme.primary
+                                                    : AppTheme.error),
                                         ),
-                                      ],
-                                      Icon(
-                                        t.synced
-                                            ? Icons.cloud_done
-                                            : Icons.cloud_off,
-                                        size: 14,
-                                        color: t.synced
-                                            ? Colors.green
-                                            : Colors.amber,
-                                      ),
-                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Icon(
+                                    t.synced
+                                        ? Icons.cloud_done_rounded
+                                        : Icons.cloud_off_rounded,
+                                    size: 14,
+                                    color: t.synced
+                                        ? const Color(0xFF10B981)
+                                        : AppTheme.secondary,
                                   ),
                                 ],
                               ),
-                            ),
+                            ],
                           ),
                         );
                       },

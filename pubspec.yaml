@@ -53,6 +53,7 @@ dependencies:
     sdk: flutter
   image_picker: ^1.2.3
   local_auth: ^3.0.2
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
