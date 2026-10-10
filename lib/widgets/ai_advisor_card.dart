@@ -44,7 +44,8 @@ class _AiAdvisorCardState extends State<AiAdvisorCard> {
         }
       } else {
         setState(() {
-          _errorMessage = result?['error'] ?? 'നിർദ്ദേശങ്ങൾ ലഭ്യമാക്കാൻ കഴിഞ്ഞില്ല.';
+          _errorMessage =
+              result?['error'] ?? 'നിർദ്ദേശങ്ങൾ ലഭ്യമാക്കാൻ കഴിഞ്ഞില്ല.';
           _isLoading = false;
         });
       }
@@ -76,7 +77,9 @@ class _AiAdvisorCardState extends State<AiAdvisorCard> {
                 color: isDark
                     ? AppTheme.darkSurfaceContainer
                     : AppTheme.surfaceContainerLowest,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
                 boxShadow: AppTheme.editorialShadow,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -117,7 +120,9 @@ class _AiAdvisorCardState extends State<AiAdvisorCard> {
                               'മണിക്കുട്ടി AI ഉപദേശങ്ങൾ',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : AppTheme.onSurface,
+                                color: isDark
+                                    ? Colors.white
+                                    : AppTheme.onSurface,
                               ),
                             ),
                             Text(
@@ -149,10 +154,14 @@ class _AiAdvisorCardState extends State<AiAdvisorCard> {
                             margin: const EdgeInsets.only(bottom: 12),
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: AppTheme.secondaryContainer.withValues(alpha: 0.18),
+                              color: AppTheme.secondaryContainer.withValues(
+                                alpha: 0.18,
+                              ),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: AppTheme.secondary.withValues(alpha: 0.3),
+                                color: AppTheme.secondary.withValues(
+                                  alpha: 0.3,
+                                ),
                               ),
                             ),
                             child: Row(
@@ -178,7 +187,8 @@ class _AiAdvisorCardState extends State<AiAdvisorCard> {
                           ),
 
                         // Top categories chips
-                        if (_topCategories != null && _topCategories!.isNotEmpty) ...[
+                        if (_topCategories != null &&
+                            _topCategories!.isNotEmpty) ...[
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Text(
@@ -198,7 +208,10 @@ class _AiAdvisorCardState extends State<AiAdvisorCard> {
                               return Chip(
                                 label: Text(
                                   '$name: ₹$amt',
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                                 backgroundColor: isDark
                                     ? const Color(0xFF233235)
@@ -216,19 +229,29 @@ class _AiAdvisorCardState extends State<AiAdvisorCard> {
                         if (_isCached) ...[
                           Container(
                             margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.blueGrey.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.bolt, size: 16, color: Colors.teal),
+                                const Icon(
+                                  Icons.bolt,
+                                  size: 16,
+                                  color: Colors.teal,
+                                ),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     '15 മിനിറ്റ് കാഷെ ചെയ്ത വിവരങ്ങൾ (അടുത്ത അപ്ഡേറ്റ്: ${_nextRefreshInMinutes ?? 15} മിനിറ്റിൽ)',
-                                    style: const TextStyle(fontSize: 11, color: Colors.blueGrey),
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.blueGrey,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -357,8 +380,8 @@ class _AiAdvisorCardState extends State<AiAdvisorCard> {
                 _isLoading
                     ? 'വിശകലനം ചെയ്യുന്നു...'
                     : _adviceText == null
-                        ? 'നിർദ്ദേശങ്ങൾ നേടുക (AI Insights)'
-                        : 'നിർദ്ദേശങ്ങൾ വീണ്ടും കാണുക',
+                    ? 'നിർദ്ദേശങ്ങൾ നേടുക (AI Insights)'
+                    : 'നിർദ്ദേശങ്ങൾ വീണ്ടും കാണുക',
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 13,

@@ -773,10 +773,8 @@ class ApiService {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
       return null;
-    } catch (e) {
-      print('Error fetching AI expense advice: $e');
+    } catch (_) {
       return null;
     }
   }
 }
-
