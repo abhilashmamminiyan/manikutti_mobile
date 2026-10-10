@@ -6,27 +6,14 @@ import '../services/sync_service.dart';
 import '../theme/app_theme.dart';
 import 'add_transaction_screen.dart';
 
-enum DateFilterPreset {
-  allTime,
-  thisMonth,
-  lastMonth,
-  customRange,
-}
+enum DateFilterPreset { allTime, thisMonth, lastMonth, customRange }
 
-enum SortOption {
-  dateDesc,
-  dateAsc,
-  amountDesc,
-  amountAsc,
-}
+enum SortOption { dateDesc, dateAsc, amountDesc, amountAsc }
 
 class TransactionsLogScreen extends StatefulWidget {
   final String initialFilter; // 'All' | 'Personal' | 'Family'
 
-  const TransactionsLogScreen({
-    super.key,
-    this.initialFilter = 'All',
-  });
+  const TransactionsLogScreen({super.key, this.initialFilter = 'All'});
 
   @override
   State<TransactionsLogScreen> createState() => _TransactionsLogScreenState();
@@ -119,7 +106,8 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
 
   Future<void> _pickCustomDateRange() async {
     final now = DateTime.now();
-    final initialRange = _customDateRange ??
+    final initialRange =
+        _customDateRange ??
         DateTimeRange(
           start: DateTime(now.year, now.month, 1),
           end: DateTime(now.year, now.month, now.day),
@@ -134,9 +122,9 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: AppTheme.primary,
-                  onPrimary: Colors.white,
-                ),
+              primary: AppTheme.primary,
+              onPrimary: Colors.white,
+            ),
           ),
           child: child!,
         );
@@ -268,10 +256,16 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                 ),
                 const SizedBox(height: 8),
                 ListTile(
-                  leading: const Icon(Icons.arrow_downward_rounded, color: AppTheme.primary),
+                  leading: const Icon(
+                    Icons.arrow_downward_rounded,
+                    color: AppTheme.primary,
+                  ),
                   title: const Text('Amount: High to Low'),
                   trailing: _sortOption == SortOption.amountDesc
-                      ? const Icon(Icons.check_circle_rounded, color: AppTheme.primary)
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppTheme.primary,
+                        )
                       : null,
                   onTap: () {
                     setState(() => _sortOption = SortOption.amountDesc);
@@ -279,10 +273,16 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.arrow_upward_rounded, color: AppTheme.primary),
+                  leading: const Icon(
+                    Icons.arrow_upward_rounded,
+                    color: AppTheme.primary,
+                  ),
                   title: const Text('Amount: Low to High'),
                   trailing: _sortOption == SortOption.amountAsc
-                      ? const Icon(Icons.check_circle_rounded, color: AppTheme.primary)
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppTheme.primary,
+                        )
                       : null,
                   onTap: () {
                     setState(() => _sortOption = SortOption.amountAsc);
@@ -291,10 +291,16 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                 ),
                 const Divider(),
                 ListTile(
-                  leading: const Icon(Icons.calendar_today_rounded, color: AppTheme.secondary),
+                  leading: const Icon(
+                    Icons.calendar_today_rounded,
+                    color: AppTheme.secondary,
+                  ),
                   title: const Text('Date: Newest First'),
                   trailing: _sortOption == SortOption.dateDesc
-                      ? const Icon(Icons.check_circle_rounded, color: AppTheme.secondary)
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppTheme.secondary,
+                        )
                       : null,
                   onTap: () {
                     setState(() => _sortOption = SortOption.dateDesc);
@@ -302,10 +308,16 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.history_rounded, color: AppTheme.secondary),
+                  leading: const Icon(
+                    Icons.history_rounded,
+                    color: AppTheme.secondary,
+                  ),
                   title: const Text('Date: Oldest First'),
                   trailing: _sortOption == SortOption.dateAsc
-                      ? const Icon(Icons.check_circle_rounded, color: AppTheme.secondary)
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppTheme.secondary,
+                        )
                       : null,
                   onTap: () {
                     setState(() => _sortOption = SortOption.dateAsc);
@@ -369,9 +381,7 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
         onPressed: () async {
           final added = await Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const AddTransactionScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
           );
           if (added == true || mounted) {
             _loadTransactions();
@@ -386,7 +396,10 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 12.0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -405,7 +418,10 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                                 },
                               )
                             : null,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 16,
+                        ),
                         filled: true,
                         fillColor: isDark
                             ? AppTheme.darkSurfaceContainer
@@ -415,7 +431,8 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                           borderSide: BorderSide.none,
                         ),
                       ),
-                      onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                      onChanged: (val) =>
+                          setState(() => _searchQuery = val.trim()),
                     ),
                     const SizedBox(height: 12),
 
@@ -436,12 +453,14 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                               onTap: () => setState(() => _typeFilter = name),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 180),
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   color: isSelected
                                       ? (isDark
-                                          ? AppTheme.primaryContainer
-                                          : AppTheme.primary)
+                                            ? AppTheme.primaryContainer
+                                            : AppTheme.primary)
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(10),
                                   boxShadow: isSelected
@@ -451,18 +470,22 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                                 child: Center(
                                   child: Text(
                                     name,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: isSelected
-                                          ? (isDark
-                                              ? AppTheme.onPrimaryContainer
-                                              : Colors.white)
-                                          : (isDark
-                                              ? AppTheme.darkOnSurfaceVariant
-                                              : AppTheme.onSurfaceVariant),
-                                      fontWeight: isSelected
-                                          ? FontWeight.w700
-                                          : FontWeight.w600,
-                                    ),
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: isSelected
+                                              ? (isDark
+                                                    ? AppTheme
+                                                          .onPrimaryContainer
+                                                    : Colors.white)
+                                              : (isDark
+                                                    ? AppTheme
+                                                          .darkOnSurfaceVariant
+                                                    : AppTheme
+                                                          .onSurfaceVariant),
+                                          fontWeight: isSelected
+                                              ? FontWeight.w700
+                                              : FontWeight.w600,
+                                        ),
                                   ),
                                 ),
                               ),
@@ -502,24 +525,32 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                                   : AppTheme.primary,
                             ),
                             label: Text(
-                              _dateFilter == DateFilterPreset.customRange && _customDateRange != null
+                              _dateFilter == DateFilterPreset.customRange &&
+                                      _customDateRange != null
                                   ? '${DateFormat('MMM dd').format(_customDateRange!.start)} - ${DateFormat('MMM dd').format(_customDateRange!.end)}'
                                   : 'Custom Range',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: _dateFilter == DateFilterPreset.customRange
+                                color:
+                                    _dateFilter == DateFilterPreset.customRange
                                     ? Colors.white
-                                    : (isDark ? AppTheme.darkOnSurface : AppTheme.onSurface),
+                                    : (isDark
+                                          ? AppTheme.darkOnSurface
+                                          : AppTheme.onSurface),
                               ),
                             ),
-                            backgroundColor: _dateFilter == DateFilterPreset.customRange
+                            backgroundColor:
+                                _dateFilter == DateFilterPreset.customRange
                                 ? AppTheme.primary
-                                : (isDark ? AppTheme.darkSurfaceContainer : AppTheme.surfaceContainerLow),
+                                : (isDark
+                                      ? AppTheme.darkSurfaceContainer
+                                      : AppTheme.surfaceContainerLow),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                               side: BorderSide(
-                                color: _dateFilter == DateFilterPreset.customRange
+                                color:
+                                    _dateFilter == DateFilterPreset.customRange
                                     ? AppTheme.primary
                                     : Colors.transparent,
                               ),
@@ -548,11 +579,16 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                           borderRadius: BorderRadius.circular(10),
                           onTap: _showSortBottomSheet,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: isDark
                                   ? AppTheme.darkSurfaceContainer
-                                  : AppTheme.surfaceContainerHigh.withOpacity(0.5),
+                                  : AppTheme.surfaceContainerHigh.withOpacity(
+                                      0.5,
+                                    ),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: AppTheme.primary.withOpacity(0.2),
@@ -561,7 +597,11 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.sort_rounded, size: 16, color: AppTheme.primary),
+                                const Icon(
+                                  Icons.sort_rounded,
+                                  size: 16,
+                                  color: AppTheme.primary,
+                                ),
                                 const SizedBox(width: 6),
                                 Text(
                                   _getSortLabel(),
@@ -572,7 +612,11 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                const Icon(Icons.arrow_drop_down, size: 16, color: AppTheme.primary),
+                                const Icon(
+                                  Icons.arrow_drop_down,
+                                  size: 16,
+                                  color: AppTheme.primary,
+                                ),
                               ],
                             ),
                           ),
@@ -583,7 +627,10 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
 
                     // Overview Card of Filtered Data
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: isDark
                             ? AppTheme.darkSurfaceContainerLowest
@@ -656,7 +703,9 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                               Text(
                                 'Net Difference',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: (totalIncome - totalSpent) >= 0 ? Colors.green : Colors.redAccent,
+                                  color: (totalIncome - totalSpent) >= 0
+                                      ? Colors.green
+                                      : Colors.redAccent,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 11,
                                 ),
@@ -667,7 +716,9 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 16,
-                                  color: (totalIncome - totalSpent) >= 0 ? Colors.green : Colors.redAccent,
+                                  color: (totalIncome - totalSpent) >= 0
+                                      ? Colors.green
+                                      : Colors.redAccent,
                                 ),
                               ),
                             ],
@@ -738,131 +789,144 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 90),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final t = transactions[index];
-                      DateTime? parsedDate;
-                      try {
-                        parsedDate = DateTime.parse(t.date).toLocal();
-                      } catch (_) {}
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final t = transactions[index];
+                    DateTime? parsedDate;
+                    try {
+                      parsedDate = DateTime.parse(t.date).toLocal();
+                    } catch (_) {}
 
-                      final formattedDate = parsedDate != null
-                          ? DateFormat('MMM dd, yyyy').format(parsedDate)
-                          : t.date;
+                    final formattedDate = parsedDate != null
+                        ? DateFormat('MMM dd, yyyy').format(parsedDate)
+                        : t.date;
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppTheme.darkSurfaceContainerLowest
+                            : AppTheme.surfaceContainerLowest,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: AppTheme.ambientCardShadow,
+                        border: Border.all(
                           color: isDark
-                              ? AppTheme.darkSurfaceContainerLowest
-                              : AppTheme.surfaceContainerLowest,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: AppTheme.ambientCardShadow,
-                          border: Border.all(
-                            color: isDark
-                                ? const Color(0xFF2C3233)
-                                : AppTheme.outlineVariant.withOpacity(0.18),
-                          ),
+                              ? const Color(0xFF2C3233)
+                              : AppTheme.outlineVariant.withOpacity(0.18),
                         ),
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: _getCategoryColor(t.type).withOpacity(0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                _getCategoryIcon(t.category),
-                                color: _getCategoryColor(t.type),
-                                size: 20,
-                              ),
+                      ),
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _getCategoryColor(
+                                t.type,
+                              ).withOpacity(0.12),
+                              shape: BoxShape.circle,
                             ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    t.note.isNotEmpty ? t.note : t.category,
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: isDark
-                                          ? AppTheme.darkOnSurface
-                                          : AppTheme.onSurface,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Text(
-                                        '$formattedDate • ${t.type}',
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: isDark
-                                              ? AppTheme.darkOnSurfaceVariant
-                                              : AppTheme.onSurfaceVariant.withOpacity(0.7),
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                      if (t.type == 'Family' && t.addedBy != null) ...[
-                                        Text(
-                                          ' • By ${t.addedBy!.split('@').first}',
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: isDark
-                                                ? AppTheme.darkOnSurfaceVariant
-                                                : AppTheme.onSurfaceVariant.withOpacity(0.7),
-                                            fontSize: 10,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ],
-                              ),
+                            child: Icon(
+                              _getCategoryIcon(t.category),
+                              color: _getCategoryColor(t.type),
+                              size: 20,
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${t.type == 'Income' ? '+' : '-'}₹${t.amount.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 15,
-                                    color: t.type == 'Income'
-                                        ? Colors.green
-                                        : (t.type == 'Family' ? Colors.blue : Colors.redAccent),
+                                  t.note.isNotEmpty ? t.note : t.category,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark
+                                        ? AppTheme.darkOnSurface
+                                        : AppTheme.onSurface,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Row(
-                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(
-                                      t.synced ? Icons.cloud_done : Icons.cloud_off,
-                                      size: 13,
-                                      color: t.synced ? Colors.green : Colors.amber,
-                                    ),
-                                    const SizedBox(width: 4),
                                     Text(
-                                      t.synced ? 'Synced' : 'Pending',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: t.synced ? Colors.green : Colors.amber,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                      '$formattedDate • ${t.type}',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: isDark
+                                                ? AppTheme.darkOnSurfaceVariant
+                                                : AppTheme.onSurfaceVariant
+                                                      .withOpacity(0.7),
+                                            fontSize: 11,
+                                          ),
                                     ),
+                                    if (t.type == 'Family' &&
+                                        t.addedBy != null) ...[
+                                      Text(
+                                        ' • By ${t.addedBy!.split('@').first}',
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: isDark
+                                                  ? AppTheme
+                                                        .darkOnSurfaceVariant
+                                                  : AppTheme.onSurfaceVariant
+                                                        .withOpacity(0.7),
+                                              fontSize: 10,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      );
-                    },
-                    childCount: transactions.length,
-                  ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${t.type == 'Income' ? '+' : '-'}₹${t.amount.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                  color: t.type == 'Income'
+                                      ? Colors.green
+                                      : (t.type == 'Family'
+                                            ? Colors.blue
+                                            : Colors.redAccent),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    t.synced
+                                        ? Icons.cloud_done
+                                        : Icons.cloud_off,
+                                    size: 13,
+                                    color: t.synced
+                                        ? Colors.green
+                                        : Colors.amber,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    t.synced ? 'Synced' : 'Pending',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: t.synced
+                                          ? Colors.green
+                                          : Colors.amber,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  }, childCount: transactions.length),
                 ),
               ),
           ],

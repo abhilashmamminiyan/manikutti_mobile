@@ -935,7 +935,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // 3. Sum up transactions for the current calendar month
     for (final t in _transactions) {
       final tDate = DateTime.tryParse(t.date)?.toLocal();
-      if (tDate != null && tDate.year == today.year && tDate.month == today.month) {
+      if (tDate != null &&
+          tDate.year == today.year &&
+          tDate.month == today.month) {
         if (t.type == 'Income') {
           income += t.amount;
         } else if (t.type == 'Expense') {
@@ -1692,9 +1694,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => TransactionsLogScreen(
-                            initialFilter: _filter,
-                          ),
+                          builder: (_) =>
+                              TransactionsLogScreen(initialFilter: _filter),
                         ),
                       );
                       if (mounted) {
