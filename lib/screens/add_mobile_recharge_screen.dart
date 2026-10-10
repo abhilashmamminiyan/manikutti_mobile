@@ -12,7 +12,8 @@ class AddMobileRechargeScreen extends StatefulWidget {
   const AddMobileRechargeScreen({super.key, this.initialRecharge});
 
   @override
-  State<AddMobileRechargeScreen> createState() => _AddMobileRechargeScreenState();
+  State<AddMobileRechargeScreen> createState() =>
+      _AddMobileRechargeScreenState();
 }
 
 class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
@@ -31,7 +32,13 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
   bool _logExpense = false;
   bool _isSaving = false;
 
-  final List<String> _operators = const ['Jio', 'Airtel', 'Vi', 'BSNL', 'Other'];
+  final List<String> _operators = const [
+    'Jio',
+    'Airtel',
+    'Vi',
+    'BSNL',
+    'Other',
+  ];
 
   static Color getOperatorColor(String operator) {
     switch (operator.toLowerCase()) {
@@ -55,16 +62,20 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
     if (init != null) {
       _nameController.text = init.name;
       _phoneController.text = init.phoneNumber;
-      _amountController.text =
-          init.planLastRecharged > 0 ? init.planLastRecharged.toStringAsFixed(0) : '';
+      _amountController.text = init.planLastRecharged > 0
+          ? init.planLastRecharged.toStringAsFixed(0)
+          : '';
       _planDescController.text = init.planDescription;
       _noteController.text = init.note;
-      _selectedOperator = _operators.contains(init.operator) ? init.operator : 'Other';
+      _selectedOperator = _operators.contains(init.operator)
+          ? init.operator
+          : 'Other';
       _reminderDaysBefore = init.reminderDaysBefore;
       _notifyExpiry = init.notifyExpiry;
       _logExpense = init.logExpense;
       if (init.validityTill.isNotEmpty) {
-        _validityTillDate = DateTime.tryParse(init.validityTill) ?? _validityTillDate;
+        _validityTillDate =
+            DateTime.tryParse(init.validityTill) ?? _validityTillDate;
       }
       if (init.lastRechargedDate.isNotEmpty) {
         _lastRechargedDate =
@@ -155,15 +166,21 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
           daysBefore: _reminderDaysBefore,
         );
       } else {
-        await NotificationService.instance.cancelRechargeReminder(notificationId);
+        await NotificationService.instance.cancelRechargeReminder(
+          notificationId,
+        );
       }
 
       // Sync with Cloud Sheets in background
       final syncPayload = recharge.copyWith(id: rechargeId).toJson();
       if (widget.initialRecharge == null) {
-        ApiService.instance.addMobileRecharge(syncPayload).catchError((_) => false);
+        ApiService.instance
+            .addMobileRecharge(syncPayload)
+            .catchError((_) => false);
       } else {
-        ApiService.instance.updateMobileRecharge(syncPayload).catchError((_) => false);
+        ApiService.instance
+            .updateMobileRecharge(syncPayload)
+            .catchError((_) => false);
       }
 
       if (mounted) {
@@ -171,9 +188,9 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save recharge: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to save recharge: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -283,8 +300,9 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Please enter a name' : null,
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? 'Please enter a name'
+                      : null,
                 ),
                 const SizedBox(height: 16),
 
@@ -335,9 +353,12 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
                       label: Text(
                         op,
                         style: TextStyle(
-                          color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected
+                              ? Colors.white
+                              : theme.colorScheme.onSurface,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                       selected: isSelected,
@@ -374,8 +395,9 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Enter amount' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Enter amount'
+                            : null,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -412,29 +434,42 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
                   onTap: _pickValidityDate,
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       color: isDark
                           ? AppTheme.darkSurfaceContainer
                           : AppTheme.surfaceContainerLowest,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark ? const Color(0xFF3E484A) : AppTheme.outlineVariant,
+                        color: isDark
+                            ? const Color(0xFF3E484A)
+                            : AppTheme.outlineVariant,
                       ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.event_available_rounded, color: AppTheme.primary),
+                        const Icon(
+                          Icons.event_available_rounded,
+                          color: AppTheme.primary,
+                        ),
                         const SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
                               'Expiry Date',
-                              style: TextStyle(fontSize: 11, color: Colors.grey),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey,
+                              ),
                             ),
                             Text(
-                              DateFormat('EEE, MMM dd, yyyy').format(_validityTillDate),
+                              DateFormat(
+                                'EEE, MMM dd, yyyy',
+                              ).format(_validityTillDate),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -483,14 +518,19 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
                   onTap: _pickLastRechargedDate,
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: isDark
                           ? AppTheme.darkSurfaceContainer
                           : AppTheme.surfaceContainerLowest,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark ? const Color(0xFF3E484A) : AppTheme.outlineVariant,
+                        color: isDark
+                            ? const Color(0xFF3E484A)
+                            : AppTheme.outlineVariant,
                       ),
                     ),
                     child: Row(
@@ -525,7 +565,9 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
                         : AppTheme.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isDark ? const Color(0xFF3E484A) : AppTheme.outlineVariant,
+                      color: isDark
+                          ? const Color(0xFF3E484A)
+                          : AppTheme.outlineVariant,
                     ),
                   ),
                   child: Column(
@@ -534,7 +576,9 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
                         children: [
                           Icon(
                             Icons.notifications_active_outlined,
-                            color: _notifyExpiry ? AppTheme.primary : Colors.grey,
+                            color: _notifyExpiry
+                                ? AppTheme.primary
+                                : Colors.grey,
                           ),
                           const SizedBox(width: 12),
                           const Expanded(
@@ -550,7 +594,10 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
                                 ),
                                 Text(
                                   'Alerts you before validity ends',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               ],
                             ),
@@ -558,7 +605,8 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
                           Switch(
                             value: _notifyExpiry,
                             activeColor: AppTheme.primary,
-                            onChanged: (val) => setState(() => _notifyExpiry = val),
+                            onChanged: (val) =>
+                                setState(() => _notifyExpiry = val),
                           ),
                         ],
                       ),
@@ -569,16 +617,31 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
                           children: [
                             const Text(
                               'Remind me:',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                             DropdownButton<int>(
                               value: _reminderDaysBefore,
                               underline: const SizedBox(),
                               items: const [
-                                DropdownMenuItem(value: 0, child: Text('On expiry day')),
-                                DropdownMenuItem(value: 1, child: Text('1 day before')),
-                                DropdownMenuItem(value: 2, child: Text('2 days before')),
-                                DropdownMenuItem(value: 3, child: Text('3 days before')),
+                                DropdownMenuItem(
+                                  value: 0,
+                                  child: Text('On expiry day'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 1,
+                                  child: Text('1 day before'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 2,
+                                  child: Text('2 days before'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 3,
+                                  child: Text('3 days before'),
+                                ),
                               ],
                               onChanged: (val) {
                                 if (val != null) {
@@ -597,7 +660,9 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
                 // Log Expense Switch
                 SwitchListTile(
                   title: const Text('Record in Personal Expenses'),
-                  subtitle: const Text('Add recharge amount to your expense log'),
+                  subtitle: const Text(
+                    'Add recharge amount to your expense log',
+                  ),
                   value: _logExpense,
                   activeColor: AppTheme.primary,
                   contentPadding: EdgeInsets.zero,

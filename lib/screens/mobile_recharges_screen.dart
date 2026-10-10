@@ -20,7 +20,14 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
   bool _isLoading = true;
   String _selectedFilter = 'All';
 
-  final List<String> _filters = const ['All', 'Expiring Soon', 'Jio', 'Airtel', 'Vi', 'BSNL'];
+  final List<String> _filters = const [
+    'All',
+    'Expiring Soon',
+    'Jio',
+    'Airtel',
+    'Vi',
+    'BSNL',
+  ];
 
   @override
   void initState() {
@@ -45,7 +52,9 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
     try {
       final cloudData = await ApiService.instance.fetchMobileRecharges();
       if (cloudData.isNotEmpty) {
-        final cloudList = cloudData.map((j) => MobileRecharge.fromJson(j)).toList();
+        final cloudList = cloudData
+            .map((j) => MobileRecharge.fromJson(j))
+            .toList();
         if (mounted) {
           setState(() {
             _recharges = cloudList;
@@ -99,9 +108,13 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
   List<MobileRecharge> get _filteredRecharges {
     if (_selectedFilter == 'All') return _recharges;
     if (_selectedFilter == 'Expiring Soon') {
-      return _recharges.where((r) => r.isExpiringSoon || r.isExpiringToday || r.isExpired).toList();
+      return _recharges
+          .where((r) => r.isExpiringSoon || r.isExpiringToday || r.isExpired)
+          .toList();
     }
-    return _recharges.where((r) => r.operator.toLowerCase() == _selectedFilter.toLowerCase()).toList();
+    return _recharges
+        .where((r) => r.operator.toLowerCase() == _selectedFilter.toLowerCase())
+        .toList();
   }
 
   Future<void> _deleteRecharge(MobileRecharge recharge) async {
@@ -109,7 +122,9 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Recharge'),
-        content: Text('Are you sure you want to remove ${recharge.name} (${recharge.phoneNumber})?'),
+        content: Text(
+          'Are you sure you want to remove ${recharge.name} (${recharge.phoneNumber})?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -129,7 +144,9 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
     await DbHelper.instance.deleteMobileRecharge(recharge.id!);
     final notificationId = 30000 + (recharge.id! % 10000);
     await NotificationService.instance.cancelRechargeReminder(notificationId);
-    ApiService.instance.deleteMobileRecharge(recharge.id!).catchError((_) => false);
+    ApiService.instance
+        .deleteMobileRecharge(recharge.id!)
+        .catchError((_) => false);
 
     _loadRecharges();
   }
@@ -143,15 +160,23 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setSB) {
-          final currentExpiry = DateTime.tryParse(recharge.validityTill) ?? DateTime.now();
-          final baseDate = currentExpiry.isAfter(DateTime.now()) ? currentExpiry : DateTime.now();
+          final currentExpiry =
+              DateTime.tryParse(recharge.validityTill) ?? DateTime.now();
+          final baseDate = currentExpiry.isAfter(DateTime.now())
+              ? currentExpiry
+              : DateTime.now();
           final newExpiry = baseDate.add(Duration(days: additionalDays));
 
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             title: Row(
               children: [
-                Icon(Icons.bolt_rounded, color: _getOperatorColor(recharge.operator)),
+                Icon(
+                  Icons.bolt_rounded,
+                  color: _getOperatorColor(recharge.operator),
+                ),
                 const SizedBox(width: 8),
                 Text('Renew ${recharge.name}'),
               ],
@@ -162,10 +187,16 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
               children: [
                 Text(
                   '${recharge.operator} • ${recharge.phoneNumber}',
-                  style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                  ),
                 ),
                 const SizedBox(height: 16),
-                const Text('Validity Extension:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const Text(
+                  'Validity Extension:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -198,7 +229,10 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                       const Text('New Expiry Date:'),
                       Text(
                         DateFormat('MMM dd, yyyy').format(newExpiry),
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primary,
+                        ),
                       ),
                     ],
                   ),
@@ -206,7 +240,10 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                 const SizedBox(height: 12),
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Record in Expenses', style: TextStyle(fontSize: 14)),
+                  title: const Text(
+                    'Record in Expenses',
+                    style: TextStyle(fontSize: 14),
+                  ),
                   value: logExpense,
                   activeColor: AppTheme.primary,
                   onChanged: (val) => setSB(() => logExpense = val ?? false),
@@ -222,13 +259,17 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 onPressed: () async {
                   Navigator.pop(ctx);
                   final updated = recharge.copyWith(
                     validityTill: DateFormat('yyyy-MM-dd').format(newExpiry),
-                    lastRechargedDate: DateFormat('yyyy-MM-dd').format(DateTime.now()),
+                    lastRechargedDate: DateFormat(
+                      'yyyy-MM-dd',
+                    ).format(DateTime.now()),
                     logExpense: logExpense,
                   );
 
@@ -236,25 +277,30 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
 
                   if (updated.notifyExpiry && updated.id != null) {
                     final notificationId = 30000 + (updated.id! % 10000);
-                    await NotificationService.instance.scheduleRechargeExpiryReminder(
-                      id: notificationId,
-                      name: updated.name,
-                      operatorName: updated.operator,
-                      phoneNumber: updated.phoneNumber,
-                      amount: updated.planLastRecharged,
-                      expiryDate: newExpiry,
-                      daysBefore: updated.reminderDaysBefore,
-                    );
+                    await NotificationService.instance
+                        .scheduleRechargeExpiryReminder(
+                          id: notificationId,
+                          name: updated.name,
+                          operatorName: updated.operator,
+                          phoneNumber: updated.phoneNumber,
+                          amount: updated.planLastRecharged,
+                          expiryDate: newExpiry,
+                          daysBefore: updated.reminderDaysBefore,
+                        );
                   }
 
-                  ApiService.instance.updateMobileRecharge(updated.toJson()).catchError((_) => false);
+                  ApiService.instance
+                      .updateMobileRecharge(updated.toJson())
+                      .catchError((_) => false);
 
                   _loadRecharges();
 
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Recharge renewed till ${DateFormat('MMM dd, yyyy').format(newExpiry)}'),
+                        content: Text(
+                          'Recharge renewed till ${DateFormat('MMM dd, yyyy').format(newExpiry)}',
+                        ),
                         backgroundColor: AppTheme.primary,
                       ),
                     );
@@ -275,8 +321,13 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     final totalSims = _recharges.length;
-    final expiringCount = _recharges.where((r) => r.isExpiringSoon || r.isExpiringToday || r.isExpired).length;
-    final totalSpend = _recharges.fold<double>(0.0, (sum, r) => sum + r.planLastRecharged);
+    final expiringCount = _recharges
+        .where((r) => r.isExpiringSoon || r.isExpiringToday || r.isExpired)
+        .length;
+    final totalSpend = _recharges.fold<double>(
+      0.0,
+      (sum, r) => sum + r.planLastRecharged,
+    );
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.surface,
@@ -306,7 +357,10 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
               ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -328,7 +382,9 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                               title: 'Expiring',
                               value: '$expiringCount',
                               icon: Icons.warning_amber_rounded,
-                              accentColor: expiringCount > 0 ? AppTheme.error : Colors.green,
+                              accentColor: expiringCount > 0
+                                  ? AppTheme.error
+                                  : Colors.green,
                               isDark: isDark,
                             ),
                           ),
@@ -359,11 +415,16 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                                 selected: isSel,
                                 selectedColor: AppTheme.primary,
                                 labelStyle: TextStyle(
-                                  color: isSel ? Colors.white : theme.colorScheme.onSurface,
-                                  fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                                  color: isSel
+                                      ? Colors.white
+                                      : theme.colorScheme.onSurface,
+                                  fontWeight: isSel
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                                 onSelected: (val) {
-                                  if (val) setState(() => _selectedFilter = filter);
+                                  if (val)
+                                    setState(() => _selectedFilter = filter);
                                 },
                               ),
                             );
@@ -380,7 +441,8 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _filteredRecharges.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             final recharge = _filteredRecharges[index];
                             return _buildRechargeCard(recharge, isDark);
@@ -405,7 +467,9 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurfaceContainer : AppTheme.surfaceContainerLowest,
+        color: isDark
+            ? AppTheme.darkSurfaceContainer
+            : AppTheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppTheme.editorialShadow,
         border: Border.all(color: accentColor.withOpacity(0.15)),
@@ -479,7 +543,9 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurfaceContainer : AppTheme.surfaceContainerLowest,
+        color: isDark
+            ? AppTheme.darkSurfaceContainer
+            : AppTheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppTheme.editorialShadow,
         border: Border.all(
@@ -494,7 +560,10 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: opColor,
                   borderRadius: BorderRadius.circular(8),
@@ -522,7 +591,10 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: statusBg,
                   borderRadius: BorderRadius.circular(12),
@@ -559,9 +631,20 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                   message: 'Recharge expiry reminder active',
                   child: Row(
                     children: [
-                      Icon(Icons.notifications_active_rounded, size: 14, color: AppTheme.primary),
+                      Icon(
+                        Icons.notifications_active_rounded,
+                        size: 14,
+                        color: AppTheme.primary,
+                      ),
                       SizedBox(width: 4),
-                      Text('Alert ON', style: TextStyle(fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.bold)),
+                      Text(
+                        'Alert ON',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -573,7 +656,9 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkBackground.withOpacity(0.5) : AppTheme.surfaceContainerLow,
+              color: isDark
+                  ? AppTheme.darkBackground.withOpacity(0.5)
+                  : AppTheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
@@ -582,21 +667,32 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Last Plan', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                    const Text(
+                      'Last Plan',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       '₹${recharge.planLastRecharged.toStringAsFixed(0)} ${recharge.planDescription.isNotEmpty ? '• ${recharge.planDescription}' : ''}',
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text('Validity Till', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                    const Text(
+                      'Validity Till',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
                     const SizedBox(height: 2),
                     Text(
-                      expiry != null ? DateFormat('MMM dd, yyyy').format(expiry) : 'N/A',
+                      expiry != null
+                          ? DateFormat('MMM dd, yyyy').format(expiry)
+                          : 'N/A',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
@@ -619,11 +715,16 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.primary,
                     side: const BorderSide(color: AppTheme.primary),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                   icon: const Icon(Icons.autorenew_rounded, size: 16),
-                  label: const Text('Recharged Today', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    'Recharged Today',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -633,14 +734,19 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                   final updated = await Navigator.push<bool>(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => AddMobileRechargeScreen(initialRecharge: recharge),
+                      builder: (_) =>
+                          AddMobileRechargeScreen(initialRecharge: recharge),
                     ),
                   );
                   if (updated == true) _loadRecharges();
                 },
               ),
               IconButton(
-                icon: const Icon(Icons.delete_outline_rounded, size: 18, color: AppTheme.error),
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  size: 18,
+                  color: AppTheme.error,
+                ),
                 onPressed: () => _deleteRecharge(recharge),
               ),
             ],
@@ -663,7 +769,11 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
               color: AppTheme.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.phone_android_rounded, size: 48, color: AppTheme.primary),
+            child: const Icon(
+              Icons.phone_android_rounded,
+              size: 48,
+              color: AppTheme.primary,
+            ),
           ),
           const SizedBox(height: 16),
           const Text(
@@ -674,21 +784,28 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
           Text(
             'Keep track of family and personal SIM cards, expiry dates, and recharge reminders.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 13),
+            style: TextStyle(
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 20),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
             icon: const Icon(Icons.add_rounded),
             label: const Text('Add First SIM'),
             onPressed: () async {
               final added = await Navigator.push<bool>(
                 context,
-                MaterialPageRoute(builder: (_) => const AddMobileRechargeScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const AddMobileRechargeScreen(),
+                ),
               );
               if (added == true) _loadRecharges();
             },

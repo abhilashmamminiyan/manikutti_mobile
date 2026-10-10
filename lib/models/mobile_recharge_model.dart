@@ -56,24 +56,29 @@ class MobileRecharge {
 
   factory MobileRecharge.fromJson(Map<String, dynamic> json) {
     return MobileRecharge(
-      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      id: json['id'] is int
+          ? json['id']
+          : int.tryParse(json['id']?.toString() ?? ''),
       name: json['name']?.toString() ?? '',
       phoneNumber: json['phoneNumber']?.toString() ?? '',
       operator: json['operator']?.toString() ?? 'Other',
       planLastRecharged: (json['planLastRecharged'] is num)
           ? (json['planLastRecharged'] as num).toDouble()
-          : double.tryParse(json['planLastRecharged']?.toString() ?? '0') ?? 0.0,
+          : double.tryParse(json['planLastRecharged']?.toString() ?? '0') ??
+                0.0,
       planDescription: json['planDescription']?.toString() ?? '',
       validityTill: json['validityTill']?.toString() ?? '',
       lastRechargedDate: json['lastRechargedDate']?.toString() ?? '',
       reminderDaysBefore: json['reminderDaysBefore'] is int
           ? json['reminderDaysBefore']
           : int.tryParse(json['reminderDaysBefore']?.toString() ?? '1') ?? 1,
-      notifyExpiry: json['notifyExpiry'] == true ||
+      notifyExpiry:
+          json['notifyExpiry'] == true ||
           json['notifyExpiry'] == 'true' ||
           json['notifyExpiry'] == 1,
       note: json['note']?.toString() ?? '',
-      logExpense: json['logExpense'] == true ||
+      logExpense:
+          json['logExpense'] == true ||
           json['logExpense'] == 'true' ||
           json['logExpense'] == 1,
     );
