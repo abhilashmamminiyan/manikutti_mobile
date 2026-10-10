@@ -100,4 +100,43 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get description => 'വിവരണം';
+
+  @override
+  String get loansAndEmi => 'വായ്പകളും ഇ.എം.ഐയും';
+
+  @override
+  String get loans => 'വായ്പകൾ';
+
+  @override
+  String get emis => 'ഇ.എം.ഐകൾ';
+
+  @override
+  String get activeEmis => 'സജീവ ഇ.എം.ഐകൾ';
+
+  @override
+  String get familyLoans => 'കുടുംബ വായ്പകൾ';
+
+  @override
+  String get addLoan => 'വായ്പ ചേർക്കുക';
+
+  @override
+  String get addEmi => 'ഇ.എം.ഐ ചേർക്കുക';
+
+  @override
+  String get repaymentHistory => 'തിരിച്ചടവ് ചരിത്രം';
+
+  @override
+  String get addRepayment => 'തിരിച്ചടവ് ചേർക്കുക';
+
+  @override
+  String get principalPaid => 'മുതൽ തിരിച്ചടച്ചത്';
+
+  @override
+  String get interestPaid => 'പലിശ നൽകിയത്';
+
+  @override
+  String get remainingBalance => 'ബാക്കി തുക';
+
+  @override
+  String get noRepaymentsYet => 'തിരിച്ചടവുകൾ ഇതുവരെ ചേർത്തിട്ടില്ല';
 }

@@ -30,5 +30,18 @@
   "medical": "ചികിത്സ",
   "entertainment": "വിനോദം",
   "other": "മറ്റുള്ളവ",
-  "description": "വിവരണം"
+  "description": "വിവരണം",
+  "loansAndEmi": "വായ്പകളും ഇ.എം.ഐയും",
+  "loans": "വായ്പകൾ",
+  "emis": "ഇ.എം.ഐകൾ",
+  "activeEmis": "സജീവ ഇ.എം.ഐകൾ",
+  "familyLoans": "കുടുംബ വായ്പകൾ",
+  "addLoan": "വായ്പ ചേർക്കുക",
+  "addEmi": "ഇ.എം.ഐ ചേർക്കുക",
+  "repaymentHistory": "തിരിച്ചടവ് ചരിത്രം",
+  "addRepayment": "തിരിച്ചടവ് ചേർക്കുക",
+  "principalPaid": "മുതൽ തിരിച്ചടച്ചത്",
+  "interestPaid": "പലിശ നൽകിയത്",
+  "remainingBalance": "ബാക്കി തുക",
+  "noRepaymentsYet": "തിരിച്ചടവുകൾ ഇതുവരെ ചേർത്തിട്ടില്ല"
 }

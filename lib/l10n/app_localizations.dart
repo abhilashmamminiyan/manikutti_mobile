@@ -283,6 +283,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Description'**
   String get description;
+
+  /// No description provided for @loansAndEmi.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans & EMI'**
+  String get loansAndEmi;
+
+  /// No description provided for @loans.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans'**
+  String get loans;
+
+  /// No description provided for @emis.
+  ///
+  /// In en, this message translates to:
+  /// **'EMIs & Commitments'**
+  String get emis;
+
+  /// No description provided for @activeEmis.
+  ///
+  /// In en, this message translates to:
+  /// **'Active EMIs'**
+  String get activeEmis;
+
+  /// No description provided for @familyLoans.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Loans'**
+  String get familyLoans;
+
+  /// No description provided for @addLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Loan'**
+  String get addLoan;
+
+  /// No description provided for @addEmi.
+  ///
+  /// In en, this message translates to:
+  /// **'Add EMI'**
+  String get addEmi;
+
+  /// No description provided for @repaymentHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Repayment History'**
+  String get repaymentHistory;
+
+  /// No description provided for @addRepayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Repayment'**
+  String get addRepayment;
+
+  /// No description provided for @principalPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Principal Paid'**
+  String get principalPaid;
+
+  /// No description provided for @interestPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest Paid'**
+  String get interestPaid;
+
+  /// No description provided for @remainingBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining Balance'**
+  String get remainingBalance;
+
+  /// No description provided for @noRepaymentsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No repayments logged yet'**
+  String get noRepaymentsYet;
 }
 
 class _AppLocalizationsDelegate
