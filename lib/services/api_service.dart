@@ -757,4 +757,24 @@ class ApiService {
       return false;
     }
   }
+
+  /// Fetches AI Financial Advisor advice in Malayalam based on user expenses
+  Future<Map<String, dynamic>?> getAiExpenseAdvice({
+    String sheetName = 'Personal_Expenses',
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/ai/expense-advisor?sheetName=$sheetName'),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
 }
