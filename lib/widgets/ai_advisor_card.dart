@@ -45,7 +45,9 @@ class _AiAdvisorCardState extends State<AiAdvisorCard> {
       } else {
         setState(() {
           _errorMessage =
-              result?['error'] ?? 'നിർദ്ദേശങ്ങൾ ലഭ്യമാക്കാൻ കഴിഞ്ഞില്ല.';
+              result?['error']?.toString() ??
+              result?['message']?.toString() ??
+              'നിർദ്ദേശങ്ങൾ ലഭ്യമാക്കാൻ കഴിഞ്ഞില്ല. വീണ്ടും ശ്രമിക്കുക.';
           _isLoading = false;
         });
       }

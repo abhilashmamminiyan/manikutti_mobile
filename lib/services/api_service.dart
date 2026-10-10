@@ -772,9 +772,18 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
-      return null;
-    } catch (_) {
-      return null;
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic>) {
+          return decoded;
+        }
+      } catch (_) {}
+      return {
+        'success': false,
+        'error': 'സെർവർ പിശക് സംഭവിച്ചു (${response.statusCode})',
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'ഇന്റർനെറ്റ് കണക്ഷൻ പരിശോധിക്കുക.'};
     }
   }
 }
