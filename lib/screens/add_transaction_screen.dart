@@ -122,7 +122,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       appBar: AppBar(
         title: Text(
           'Record Transaction',
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
       body: SafeArea(
@@ -137,7 +139,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkSurfaceContainer : AppTheme.surfaceContainerLow,
+                    color: isDark
+                        ? AppTheme.darkSurfaceContainer
+                        : AppTheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: Row(
@@ -175,11 +179,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkSurfaceContainerLowest : AppTheme.surfaceContainerLowest,
+                    color: isDark
+                        ? AppTheme.darkSurfaceContainerLowest
+                        : AppTheme.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: AppTheme.ambientCardShadow,
                     border: Border.all(
-                      color: isDark ? const Color(0xFF2C3233) : AppTheme.outlineVariant.withOpacity(0.18),
+                      color: isDark
+                          ? const Color(0xFF2C3233)
+                          : AppTheme.outlineVariant.withOpacity(0.18),
                     ),
                   ),
                   child: Column(
@@ -188,7 +196,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       Text(
                         'AMOUNT (INR)',
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: isDark ? AppTheme.darkOnSurfaceVariant : AppTheme.onSurfaceVariant,
+                          color: isDark
+                              ? AppTheme.darkOnSurfaceVariant
+                              : AppTheme.onSurfaceVariant,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.2,
                         ),
@@ -196,7 +206,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _amountController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         style: theme.textTheme.headlineLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
@@ -246,12 +258,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   onTap: () => _selectDate(context),
                   borderRadius: BorderRadius.circular(18),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 16,
+                    ),
                     decoration: BoxDecoration(
-                      color: isDark ? AppTheme.darkSurfaceContainerLowest : AppTheme.surfaceContainerLowest,
+                      color: isDark
+                          ? AppTheme.darkSurfaceContainerLowest
+                          : AppTheme.surfaceContainerLowest,
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
-                        color: isDark ? const Color(0xFF2C3233) : AppTheme.outlineVariant.withOpacity(0.2),
+                        color: isDark
+                            ? const Color(0xFF2C3233)
+                            : AppTheme.outlineVariant.withOpacity(0.2),
                       ),
                     ),
                     child: Row(
@@ -281,9 +300,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           ],
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color: isDark ? AppTheme.darkSurfaceContainer : AppTheme.surfaceContainerLow,
+                            color: isDark
+                                ? AppTheme.darkSurfaceContainer
+                                : AppTheme.surfaceContainerLow,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -337,16 +361,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           color: isSelected
                               ? AppTheme.primary
                               : (isDark
-                                  ? AppTheme.darkSurfaceContainerLowest
-                                  : AppTheme.surfaceContainerLowest),
+                                    ? AppTheme.darkSurfaceContainerLowest
+                                    : AppTheme.surfaceContainerLowest),
                           borderRadius: BorderRadius.circular(14),
-                          boxShadow: isSelected ? AppTheme.subtleFloatShadow : null,
+                          boxShadow: isSelected
+                              ? AppTheme.subtleFloatShadow
+                              : null,
                           border: Border.all(
                             color: isSelected
                                 ? AppTheme.primary
                                 : (isDark
-                                    ? const Color(0xFF2C3233)
-                                    : AppTheme.outlineVariant.withOpacity(0.2)),
+                                      ? const Color(0xFF2C3233)
+                                      : AppTheme.outlineVariant.withOpacity(
+                                          0.2,
+                                        )),
                           ),
                         ),
                         child: Center(
@@ -354,10 +382,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             cat,
                             textAlign: TextAlign.center,
                             style: theme.textTheme.labelMedium?.copyWith(
-                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                              fontWeight: isSelected
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
                               color: isSelected
                                   ? Colors.white
-                                  : (isDark ? AppTheme.darkOnSurface : AppTheme.onSurface),
+                                  : (isDark
+                                        ? AppTheme.darkOnSurface
+                                        : AppTheme.onSurface),
                             ),
                           ),
                         ),
@@ -442,11 +474,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         ),
         child: Column(
           children: [
-            Icon(
-              icon,
-              color: isSelected ? color : AppTheme.outline,
-              size: 18,
-            ),
+            Icon(icon, color: isSelected ? color : AppTheme.outline, size: 18),
             const SizedBox(height: 4),
             Text(
               label,

@@ -140,7 +140,10 @@ class _AppLockScreenState extends State<AppLockScreen> {
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -151,7 +154,9 @@ class _AppLockScreenState extends State<AppLockScreen> {
                       width: 90,
                       height: 90,
                       decoration: BoxDecoration(
-                        color: isDark ? AppTheme.darkSurfaceContainerLowest : AppTheme.surfaceContainerLowest,
+                        color: isDark
+                            ? AppTheme.darkSurfaceContainerLowest
+                            : AppTheme.surfaceContainerLowest,
                         shape: BoxShape.circle,
                         boxShadow: AppTheme.editorialShadow,
                         border: Border.all(
@@ -189,7 +194,10 @@ class _AppLockScreenState extends State<AppLockScreen> {
 
                   Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.secondaryContainer.withOpacity(0.25),
                         borderRadius: BorderRadius.circular(20),
@@ -229,7 +237,9 @@ class _AppLockScreenState extends State<AppLockScreen> {
                     'Enter your 4-digit PIN to access your ledger',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: isDark ? AppTheme.darkOnSurfaceVariant : AppTheme.onSurfaceVariant,
+                      color: isDark
+                          ? AppTheme.darkOnSurfaceVariant
+                          : AppTheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -238,11 +248,15 @@ class _AppLockScreenState extends State<AppLockScreen> {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: isDark ? AppTheme.darkSurfaceContainerLowest : AppTheme.surfaceContainerLowest,
+                      color: isDark
+                          ? AppTheme.darkSurfaceContainerLowest
+                          : AppTheme.surfaceContainerLowest,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: AppTheme.ambientCardShadow,
                       border: Border.all(
-                        color: isDark ? const Color(0xFF2C3233) : AppTheme.outlineVariant.withOpacity(0.2),
+                        color: isDark
+                            ? const Color(0xFF2C3233)
+                            : AppTheme.outlineVariant.withOpacity(0.2),
                       ),
                     ),
                     child: Column(
@@ -260,9 +274,14 @@ class _AppLockScreenState extends State<AppLockScreen> {
                           ),
                           decoration: InputDecoration(
                             hintText: '••••',
-                            errorText: _errorMessage.isEmpty ? null : _errorMessage,
+                            errorText: _errorMessage.isEmpty
+                                ? null
+                                : _errorMessage,
                             counterText: '',
-                            prefixIcon: const Icon(Icons.pin_rounded, color: AppTheme.primary),
+                            prefixIcon: const Icon(
+                              Icons.pin_rounded,
+                              color: AppTheme.primary,
+                            ),
                           ),
                           onChanged: (value) {
                             if (value.length == 4) {
@@ -304,8 +323,14 @@ class _AppLockScreenState extends State<AppLockScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             TextButton.icon(
-                              onPressed: _isAuthenticating ? null : _authenticateWithBiometrics,
-                              icon: const Icon(Icons.fingerprint_rounded, size: 22, color: AppTheme.primary),
+                              onPressed: _isAuthenticating
+                                  ? null
+                                  : _authenticateWithBiometrics,
+                              icon: const Icon(
+                                Icons.fingerprint_rounded,
+                                size: 22,
+                                color: AppTheme.primary,
+                              ),
                               label: Text(
                                 'Biometrics',
                                 style: theme.textTheme.labelLarge?.copyWith(

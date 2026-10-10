@@ -42,9 +42,9 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
         _errorMessage = '';
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('App Lock disabled.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('App Lock disabled.')));
       }
     } else {
       setState(() {
@@ -92,7 +92,9 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
       appBar: AppBar(
         title: Text(
           'Security & App Lock',
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -102,11 +104,15 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: isDark ? AppTheme.darkSurfaceContainerLowest : AppTheme.surfaceContainerLowest,
+                color: isDark
+                    ? AppTheme.darkSurfaceContainerLowest
+                    : AppTheme.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: AppTheme.ambientCardShadow,
                 border: Border.all(
-                  color: isDark ? const Color(0xFF2C3233) : AppTheme.outlineVariant.withOpacity(0.18),
+                  color: isDark
+                      ? const Color(0xFF2C3233)
+                      : AppTheme.outlineVariant.withOpacity(0.18),
                 ),
               ),
               padding: const EdgeInsets.all(20),
@@ -121,7 +127,11 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
                           color: AppTheme.primary.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.shield_rounded, color: AppTheme.primary, size: 24),
+                        child: const Icon(
+                          Icons.shield_rounded,
+                          color: AppTheme.primary,
+                          size: 24,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -138,7 +148,9 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
                             Text(
                               'Require 4-digit PIN or Biometrics on app launch',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: isDark ? AppTheme.darkOnSurfaceVariant : AppTheme.onSurfaceVariant,
+                                color: isDark
+                                    ? AppTheme.darkOnSurfaceVariant
+                                    : AppTheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -159,11 +171,15 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
             if (_isLockEnabled && !_hasSavedPin) ...[
               Container(
                 decoration: BoxDecoration(
-                  color: isDark ? AppTheme.darkSurfaceContainerLowest : AppTheme.surfaceContainerLowest,
+                  color: isDark
+                      ? AppTheme.darkSurfaceContainerLowest
+                      : AppTheme.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: AppTheme.ambientCardShadow,
                   border: Border.all(
-                    color: isDark ? const Color(0xFF2C3233) : AppTheme.outlineVariant.withOpacity(0.18),
+                    color: isDark
+                        ? const Color(0xFF2C3233)
+                        : AppTheme.outlineVariant.withOpacity(0.18),
                   ),
                 ),
                 padding: const EdgeInsets.all(24),
@@ -234,11 +250,17 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF10B981).withOpacity(0.08),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF10B981).withOpacity(0.25)),
+                  border: Border.all(
+                    color: const Color(0xFF10B981).withOpacity(0.25),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.verified_user_rounded, color: Color(0xFF10B981), size: 28),
+                    const Icon(
+                      Icons.verified_user_rounded,
+                      color: Color(0xFF10B981),
+                      size: 28,
+                    ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -256,7 +278,9 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
                           Text(
                             'Your 4-digit PIN is stored securely in encrypted storage.',
                             style: TextStyle(
-                              color: isDark ? AppTheme.darkOnSurfaceVariant : AppTheme.onSurfaceVariant,
+                              color: isDark
+                                  ? AppTheme.darkOnSurfaceVariant
+                                  : AppTheme.onSurfaceVariant,
                               fontSize: 12,
                             ),
                           ),

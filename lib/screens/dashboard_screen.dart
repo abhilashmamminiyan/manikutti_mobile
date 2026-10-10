@@ -536,7 +536,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
@@ -571,7 +574,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: Colors.white.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 18),
+                child: const Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
             ],
           ),
@@ -618,7 +625,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         color: Colors.white.withOpacity(0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.arrow_downward_rounded, color: AppTheme.secondaryContainer, size: 14),
+                      child: const Icon(
+                        Icons.arrow_downward_rounded,
+                        color: AppTheme.secondaryContainer,
+                        size: 14,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Column(
@@ -626,7 +637,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Text(
                           'Income',
-                          style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 10),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.65),
+                            fontSize: 10,
+                          ),
                         ),
                         Text(
                           '₹${_totalIncome.toStringAsFixed(0)}',
@@ -653,7 +667,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         color: Colors.white.withOpacity(0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.arrow_upward_rounded, color: Color(0xFFFF8A80), size: 14),
+                      child: const Icon(
+                        Icons.arrow_upward_rounded,
+                        color: Color(0xFFFF8A80),
+                        size: 14,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Column(
@@ -661,7 +679,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Text(
                           'Spent',
-                          style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 10),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.65),
+                            fontSize: 10,
+                          ),
                         ),
                         Text(
                           '₹${_totalPersonalExpenses.toStringAsFixed(0)}',
@@ -710,7 +731,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.secondaryContainer.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -745,7 +769,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: Colors.white.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.diversity_3_rounded, color: AppTheme.secondaryContainer, size: 18),
+                child: const Icon(
+                  Icons.diversity_3_rounded,
+                  color: AppTheme.secondaryContainer,
+                  size: 18,
+                ),
               ),
             ],
           ),
@@ -789,7 +817,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     Text(
                       'Shared Pool',
-                      style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 10),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.65),
+                        fontSize: 10,
+                      ),
                     ),
                     Text(
                       '₹${_totalFamilyExpenses.toStringAsFixed(0)}',
@@ -811,7 +842,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     Text(
                       'Regular Dues',
-                      style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 10),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.65),
+                        fontSize: 10,
+                      ),
                     ),
                     Text(
                       '₹${_totalRegularExpenses.toStringAsFixed(0)}',
@@ -1115,11 +1149,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: isDark ? AppTheme.darkSurfaceContainerLowest : AppTheme.surfaceContainerLowest,
+                        color: isDark
+                            ? AppTheme.darkSurfaceContainerLowest
+                            : AppTheme.surfaceContainerLowest,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: AppTheme.ambientCardShadow,
                         border: Border.all(
-                          color: isDark ? const Color(0xFF2C3233) : AppTheme.outlineVariant.withOpacity(0.18),
+                          color: isDark
+                              ? const Color(0xFF2C3233)
+                              : AppTheme.outlineVariant.withOpacity(0.18),
                         ),
                       ),
                       padding: const EdgeInsets.all(16.0),
@@ -1128,7 +1166,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppTheme.secondaryContainer.withOpacity(0.2),
+                              color: AppTheme.secondaryContainer.withOpacity(
+                                0.2,
+                              ),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -1146,14 +1186,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   title,
                                   style: theme.textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.w700,
-                                    color: isDark ? AppTheme.darkOnSurface : AppTheme.onSurface,
+                                    color: isDark
+                                        ? AppTheme.darkOnSurface
+                                        : AppTheme.onSurface,
                                   ),
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
                                   'Due on day $dueDay • ${isAssignedToMe ? "Assigned to You" : "Assigned to ${assignedTo?.split('@')[0] ?? 'Family'}"}',
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: isDark ? AppTheme.darkOnSurfaceVariant : AppTheme.onSurfaceVariant.withOpacity(0.7),
+                                    color: isDark
+                                        ? AppTheme.darkOnSurfaceVariant
+                                        : AppTheme.onSurfaceVariant.withOpacity(
+                                            0.7,
+                                          ),
                                     fontSize: 11,
                                   ),
                                 ),
@@ -1167,15 +1213,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 '₹${amount.toStringAsFixed(0)}',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w800,
-                                  color: isDark ? AppTheme.darkOnSurface : AppTheme.onSurface,
+                                  color: isDark
+                                      ? AppTheme.darkOnSurface
+                                      : AppTheme.onSurface,
                                 ),
                               ),
                               const SizedBox(height: 6),
                               if (paid)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF10B981).withOpacity(0.12),
+                                    color: const Color(
+                                      0xFF10B981,
+                                    ).withOpacity(0.12),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Text(
@@ -1198,25 +1251,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.transparent,
                                       shadowColor: Colors.transparent,
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 6,
+                                      ),
                                       minimumSize: Size.zero,
-                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                     ),
-                                    onPressed: () => _markPaid(item['id'] as int),
+                                    onPressed: () =>
+                                        _markPaid(item['id'] as int),
                                     child: const Text(
                                       'Pay',
-                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 )
                               else
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.secondaryContainer.withOpacity(0.25),
+                                    color: AppTheme.secondaryContainer
+                                        .withOpacity(0.25),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Text(
@@ -1243,7 +1308,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: isDark ? AppTheme.darkSurfaceContainer : AppTheme.surfaceContainerLow,
+                  color: isDark
+                      ? AppTheme.darkSurfaceContainer
+                      : AppTheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -1257,19 +1324,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? (isDark ? AppTheme.primaryContainer : AppTheme.primary)
+                                ? (isDark
+                                      ? AppTheme.primaryContainer
+                                      : AppTheme.primary)
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(12),
-                            boxShadow: isSelected ? AppTheme.subtleFloatShadow : null,
+                            boxShadow: isSelected
+                                ? AppTheme.subtleFloatShadow
+                                : null,
                           ),
                           child: Center(
                             child: Text(
                               name,
                               style: theme.textTheme.labelMedium?.copyWith(
                                 color: isSelected
-                                    ? (isDark ? AppTheme.onPrimaryContainer : Colors.white)
-                                    : (isDark ? AppTheme.darkOnSurfaceVariant : AppTheme.onSurfaceVariant),
-                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                                    ? (isDark
+                                          ? AppTheme.onPrimaryContainer
+                                          : Colors.white)
+                                    : (isDark
+                                          ? AppTheme.darkOnSurfaceVariant
+                                          : AppTheme.onSurfaceVariant),
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
                               ),
                             ),
                           ),
@@ -1296,7 +1373,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.primary,
+                      ),
                     ),
                 ],
               ),
@@ -1311,7 +1391,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: isDark ? AppTheme.darkSurfaceContainer : AppTheme.surfaceContainerLow,
+                              color: isDark
+                                  ? AppTheme.darkSurfaceContainer
+                                  : AppTheme.surfaceContainerLow,
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -1343,11 +1425,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: isDark ? AppTheme.darkSurfaceContainerLowest : AppTheme.surfaceContainerLowest,
+                            color: isDark
+                                ? AppTheme.darkSurfaceContainerLowest
+                                : AppTheme.surfaceContainerLowest,
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: AppTheme.ambientCardShadow,
                             border: Border.all(
-                              color: isDark ? const Color(0xFF2C3233) : AppTheme.outlineVariant.withOpacity(0.18),
+                              color: isDark
+                                  ? const Color(0xFF2C3233)
+                                  : AppTheme.outlineVariant.withOpacity(0.18),
                             ),
                           ),
                           padding: const EdgeInsets.all(16.0),
@@ -1356,7 +1442,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: _getCategoryColor(t.type).withOpacity(0.12),
+                                  color: _getCategoryColor(
+                                    t.type,
+                                  ).withOpacity(0.12),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
@@ -1372,29 +1460,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   children: [
                                     Text(
                                       t.note.isNotEmpty ? t.note : t.category,
-                                      style: theme.textTheme.titleSmall?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: isDark ? AppTheme.darkOnSurface : AppTheme.onSurface,
-                                      ),
+                                      style: theme.textTheme.titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: isDark
+                                                ? AppTheme.darkOnSurface
+                                                : AppTheme.onSurface,
+                                          ),
                                     ),
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
                                         Text(
                                           '$formattedDate • ${t.type}',
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: isDark ? AppTheme.darkOnSurfaceVariant : AppTheme.onSurfaceVariant.withOpacity(0.7),
-                                            fontSize: 11,
-                                          ),
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: isDark
+                                                    ? AppTheme
+                                                          .darkOnSurfaceVariant
+                                                    : AppTheme.onSurfaceVariant
+                                                          .withOpacity(0.7),
+                                                fontSize: 11,
+                                              ),
                                         ),
-                                        if (t.type == 'Family' && t.addedBy != null) ...[
+                                        if (t.type == 'Family' &&
+                                            t.addedBy != null) ...[
                                           Text(
                                             ' • ${_getMemberNickname(t.addedBy!)}',
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              color: AppTheme.primary,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: AppTheme.primary,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
                                           ),
                                         ],
                                       ],
@@ -1407,20 +1505,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   Text(
                                     '${t.type == 'Income' ? '+' : '-'}₹${t.amount.toStringAsFixed(2)}',
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                      color: t.type == 'Income'
-                                          ? const Color(0xFF10B981)
-                                          : (t.type == 'Family'
-                                              ? AppTheme.primary
-                                              : AppTheme.error),
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          color: t.type == 'Income'
+                                              ? const Color(0xFF10B981)
+                                              : (t.type == 'Family'
+                                                    ? AppTheme.primary
+                                                    : AppTheme.error),
+                                        ),
                                   ),
                                   const SizedBox(height: 4),
                                   Icon(
-                                    t.synced ? Icons.cloud_done_rounded : Icons.cloud_off_rounded,
+                                    t.synced
+                                        ? Icons.cloud_done_rounded
+                                        : Icons.cloud_off_rounded,
                                     size: 14,
-                                    color: t.synced ? const Color(0xFF10B981) : AppTheme.secondary,
+                                    color: t.synced
+                                        ? const Color(0xFF10B981)
+                                        : AppTheme.secondary,
                                   ),
                                 ],
                               ),

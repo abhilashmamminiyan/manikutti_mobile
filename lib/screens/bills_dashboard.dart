@@ -155,12 +155,16 @@ class _BillsDashboardState extends State<BillsDashboard> {
       appBar: AppBar(
         title: Text(
           'Utilities & Bills',
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
       drawer: const AppDrawer(),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.primary),
+            )
           : _utilities.isEmpty
           ? Center(
               child: Column(
@@ -169,7 +173,9 @@ class _BillsDashboardState extends State<BillsDashboard> {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: isDark ? AppTheme.darkSurfaceContainer : AppTheme.surfaceContainerLow,
+                      color: isDark
+                          ? AppTheme.darkSurfaceContainer
+                          : AppTheme.surfaceContainerLow,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -199,11 +205,15 @@ class _BillsDashboardState extends State<BillsDashboard> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 14),
                   decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkSurfaceContainerLowest : AppTheme.surfaceContainerLowest,
+                    color: isDark
+                        ? AppTheme.darkSurfaceContainerLowest
+                        : AppTheme.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: AppTheme.ambientCardShadow,
                     border: Border.all(
-                      color: isDark ? const Color(0xFF2C3233) : AppTheme.outlineVariant.withOpacity(0.18),
+                      color: isDark
+                          ? const Color(0xFF2C3233)
+                          : AppTheme.outlineVariant.withOpacity(0.18),
                     ),
                   ),
                   padding: const EdgeInsets.all(18),
@@ -218,7 +228,9 @@ class _BillsDashboardState extends State<BillsDashboard> {
                               util.title,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
-                                color: isDark ? AppTheme.darkOnSurface : AppTheme.onSurface,
+                                color: isDark
+                                    ? AppTheme.darkOnSurface
+                                    : AppTheme.onSurface,
                               ),
                             ),
                           ),
@@ -264,7 +276,9 @@ class _BillsDashboardState extends State<BillsDashboard> {
                           Text(
                             'Next Due: ${util.nextDueDate.isNotEmpty ? DateFormat('MMM dd, yyyy').format(DateTime.parse(util.nextDueDate)) : 'Unknown'}',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: isDark ? AppTheme.darkOnSurfaceVariant : AppTheme.onSurfaceVariant.withOpacity(0.7),
+                              color: isDark
+                                  ? AppTheme.darkOnSurfaceVariant
+                                  : AppTheme.onSurfaceVariant.withOpacity(0.7),
                               fontSize: 12,
                             ),
                           ),
@@ -288,7 +302,10 @@ class _BillsDashboardState extends State<BillsDashboard> {
                                 ),
                               ),
                               style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),

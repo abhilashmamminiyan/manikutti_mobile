@@ -30,7 +30,10 @@ class AppDrawer extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 12.0,
+            ),
             child: Row(
               children: [
                 Container(
@@ -39,8 +42,8 @@ class AppDrawer extends StatelessWidget {
                     color: isDestructive
                         ? AppTheme.error.withOpacity(0.1)
                         : (isDark
-                            ? AppTheme.darkSurfaceContainer
-                            : AppTheme.surfaceContainerLow),
+                              ? AppTheme.darkSurfaceContainer
+                              : AppTheme.surfaceContainerLow),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -59,14 +62,18 @@ class AppDrawer extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       color: isDestructive
                           ? AppTheme.error
-                          : (isDark ? AppTheme.darkOnSurface : AppTheme.onSurface),
+                          : (isDark
+                                ? AppTheme.darkOnSurface
+                                : AppTheme.onSurface),
                     ),
                   ),
                 ),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14,
-                  color: isDark ? AppTheme.darkOnSurfaceVariant.withOpacity(0.5) : AppTheme.outlineVariant,
+                  color: isDark
+                      ? AppTheme.darkOnSurfaceVariant.withOpacity(0.5)
+                      : AppTheme.outlineVariant,
                 ),
               ],
             ),
@@ -127,7 +134,10 @@ class AppDrawer extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: AppTheme.secondaryContainer,
                               borderRadius: BorderRadius.circular(12),
@@ -172,7 +182,9 @@ class AppDrawer extends StatelessWidget {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const DashboardScreen(),
+                        ),
                       );
                     },
                   ),
@@ -183,7 +195,9 @@ class AppDrawer extends StatelessWidget {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => const BillsDashboard()),
+                        MaterialPageRoute(
+                          builder: (_) => const BillsDashboard(),
+                        ),
                       );
                     },
                   ),
@@ -194,7 +208,9 @@ class AppDrawer extends StatelessWidget {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => const SmartScanScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const SmartScanScreen(),
+                        ),
                       );
                     },
                   ),
@@ -205,14 +221,21 @@ class AppDrawer extends StatelessWidget {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => const ScreenshotsScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const ScreenshotsScreen(),
+                        ),
                       );
                     },
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     child: Divider(
-                      color: isDark ? const Color(0xFF2C3233) : AppTheme.outlineVariant.withOpacity(0.25),
+                      color: isDark
+                          ? const Color(0xFF2C3233)
+                          : AppTheme.outlineVariant.withOpacity(0.25),
                       thickness: 1,
                     ),
                   ),
@@ -223,7 +246,9 @@ class AppDrawer extends StatelessWidget {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        ),
                       );
                     },
                   ),
@@ -237,7 +262,9 @@ class AppDrawer extends StatelessWidget {
                       if (context.mounted) {
                         Navigator.pushAndRemoveUntil(
                           context,
-                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
                           (route) => false,
                         );
                       }
@@ -253,7 +280,9 @@ class AppDrawer extends StatelessWidget {
               child: Text(
                 'The Heritage Ledger • Offline First',
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: isDark ? AppTheme.darkOnSurfaceVariant.withOpacity(0.5) : AppTheme.outlineVariant,
+                  color: isDark
+                      ? AppTheme.darkOnSurfaceVariant.withOpacity(0.5)
+                      : AppTheme.outlineVariant,
                 ),
               ),
             ),

@@ -260,7 +260,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: 96,
                   height: 96,
                   decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkSurfaceContainerLowest : AppTheme.surfaceContainerLowest,
+                    color: isDark
+                        ? AppTheme.darkSurfaceContainerLowest
+                        : AppTheme.surfaceContainerLowest,
                     shape: BoxShape.circle,
                     boxShadow: AppTheme.editorialShadow,
                     border: Border.all(
@@ -295,11 +297,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 28),
-              
+
               // Editorial Headings
               Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.secondaryContainer.withOpacity(0.25),
                     borderRadius: BorderRadius.circular(20),
@@ -331,9 +336,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? 'Enter the 6-digit verification code sent to your email'
                     : 'Personal & family wealth ledger, thoughtfully unified.',
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  height: 1.5,
-                ),
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
               ),
               const SizedBox(height: 32),
 
@@ -341,11 +344,15 @@ class _LoginScreenState extends State<LoginScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: isDark ? AppTheme.darkSurfaceContainerLowest : AppTheme.surfaceContainerLowest,
+                  color: isDark
+                      ? AppTheme.darkSurfaceContainerLowest
+                      : AppTheme.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: AppTheme.ambientCardShadow,
                   border: Border.all(
-                    color: isDark ? const Color(0xFF2C3233) : AppTheme.outlineVariant.withOpacity(0.2),
+                    color: isDark
+                        ? const Color(0xFF2C3233)
+                        : AppTheme.outlineVariant.withOpacity(0.2),
                   ),
                 ),
                 child: Column(
@@ -354,7 +361,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Error Alert
                     if (_errorMessage.isNotEmpty) ...[
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.error.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(14),
@@ -364,7 +374,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.info_outline_rounded, color: AppTheme.error, size: 20),
+                            const Icon(
+                              Icons.info_outline_rounded,
+                              color: AppTheme.error,
+                              size: 20,
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
@@ -384,11 +398,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Success Alert
                     if (_successMessage.isNotEmpty) ...[
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF00897B).withOpacity(0.08),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFF00897B).withOpacity(0.25)),
+                          border: Border.all(
+                            color: const Color(0xFF00897B).withOpacity(0.25),
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -525,7 +544,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (_hasSavedPin) ...[
                         const SizedBox(height: 16),
                         OutlinedButton.icon(
-                          icon: const Icon(Icons.fingerprint_rounded, color: AppTheme.primary),
+                          icon: const Icon(
+                            Icons.fingerprint_rounded,
+                            color: AppTheme.primary,
+                          ),
                           label: Text(
                             'Quick Unlock with PIN',
                             style: theme.textTheme.labelLarge?.copyWith(
@@ -535,7 +557,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: BorderSide(color: AppTheme.primary.withOpacity(0.3)),
+                            side: BorderSide(
+                              color: AppTheme.primary.withOpacity(0.3),
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(18),
                             ),
@@ -549,7 +573,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                     Navigator.pushAndRemoveUntil(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => const DashboardScreen(),
+                                        builder: (context) =>
+                                            const DashboardScreen(),
                                       ),
                                       (route) => false,
                                     );
@@ -631,12 +656,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              
+
               // Editorial Footer
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.shield_outlined, size: 16, color: AppTheme.outline),
+                  const Icon(
+                    Icons.shield_outlined,
+                    size: 16,
+                    color: AppTheme.outline,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'End-to-End Encrypted & Offline First',

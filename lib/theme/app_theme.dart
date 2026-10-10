@@ -11,18 +11,24 @@ class AppTheme {
   static const Color onPrimaryContainer = Color(0xFF00535B);
 
   static const Color secondary = Color(0xFF735C00); // Sunlight Gold
-  static const Color secondaryContainer = Color(0xFFFDD34D); // Growth / Warm Milestone
+  static const Color secondaryContainer = Color(
+    0xFFFDD34D,
+  ); // Growth / Warm Milestone
   static const Color onSecondary = Color(0xFFFFFFFF);
   static const Color onSecondaryContainer = Color(0xFF725B00);
 
   static const Color surface = Color(0xFFF8F9FA); // Clean expansive canvas
-  static const Color surfaceContainerLow = Color(0xFFF3F4F5); // Grouping / Sectioning
+  static const Color surfaceContainerLow = Color(
+    0xFFF3F4F5,
+  ); // Grouping / Sectioning
   static const Color surfaceContainer = Color(0xFFEDEEEF);
   static const Color surfaceContainerHigh = Color(0xFFE7E8E9);
   static const Color surfaceContainerHighest = Color(0xFFE1E3E4);
   static const Color surfaceContainerLowest = Color(0xFFFFFFFF); // Pop cards
 
-  static const Color onSurface = Color(0xFF191C1D); // Editorial charcoal (never #000000)
+  static const Color onSurface = Color(
+    0xFF191C1D,
+  ); // Editorial charcoal (never #000000)
   static const Color onSurfaceVariant = Color(0xFF3E484A);
   static const Color outline = Color(0xFF6F797B);
   static const Color outlineVariant = Color(0xFFBEC8CA);
@@ -67,11 +73,7 @@ class AppTheme {
   ];
 
   static const List<BoxShadow> subtleFloatShadow = [
-    BoxShadow(
-      color: Color(0x0A191C1D),
-      blurRadius: 16,
-      offset: Offset(0, 4),
-    ),
+    BoxShadow(color: Color(0x0A191C1D), blurRadius: 16, offset: Offset(0, 4)),
   ];
 
   // --- Stitch Gradients ---
@@ -162,12 +164,30 @@ class AppTheme {
           color: onSurfaceVariant,
           fontWeight: FontWeight.w600,
         ),
-        bodyLarge: baseInter.bodyLarge?.copyWith(color: onSurface, fontSize: 16),
-        bodyMedium: baseInter.bodyMedium?.copyWith(color: onSurfaceVariant, fontSize: 14),
-        bodySmall: baseInter.bodySmall?.copyWith(color: onSurfaceVariant, fontSize: 12),
-        labelLarge: baseInter.labelLarge?.copyWith(fontWeight: FontWeight.w600, letterSpacing: 0.5),
-        labelMedium: baseInter.labelMedium?.copyWith(fontWeight: FontWeight.w600, letterSpacing: 1.0),
-        labelSmall: baseInter.labelSmall?.copyWith(fontWeight: FontWeight.w500, letterSpacing: 0.5),
+        bodyLarge: baseInter.bodyLarge?.copyWith(
+          color: onSurface,
+          fontSize: 16,
+        ),
+        bodyMedium: baseInter.bodyMedium?.copyWith(
+          color: onSurfaceVariant,
+          fontSize: 14,
+        ),
+        bodySmall: baseInter.bodySmall?.copyWith(
+          color: onSurfaceVariant,
+          fontSize: 12,
+        ),
+        labelLarge: baseInter.labelLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
+        labelMedium: baseInter.labelMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1.0,
+        ),
+        labelSmall: baseInter.labelSmall?.copyWith(
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.5,
+        ),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -192,8 +212,14 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surfaceContainerLowest,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        hintStyle: GoogleFonts.inter(color: onSurfaceVariant.withOpacity(0.6), fontSize: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
+        hintStyle: GoogleFonts.inter(
+          color: onSurfaceVariant.withOpacity(0.6),
+          fontSize: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: outlineVariant.withOpacity(0.2)),
@@ -217,8 +243,13 @@ class AppTheme {
           foregroundColor: onPrimary,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          textStyle: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.w700),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          textStyle: GoogleFonts.manrope(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       dividerTheme: DividerThemeData(
@@ -255,15 +286,42 @@ class AppTheme {
         onError: Color(0xFF690005),
       ),
       textTheme: baseInter.copyWith(
-        displayLarge: baseManrope.displayLarge?.copyWith(color: darkOnSurface, fontWeight: FontWeight.w800),
-        displayMedium: baseManrope.displayMedium?.copyWith(color: darkOnSurface, fontWeight: FontWeight.w800),
-        displaySmall: baseManrope.displaySmall?.copyWith(color: darkOnSurface, fontWeight: FontWeight.w700),
-        headlineLarge: baseManrope.headlineLarge?.copyWith(color: darkOnSurface, fontWeight: FontWeight.w800),
-        headlineMedium: baseManrope.headlineMedium?.copyWith(color: darkOnSurface, fontWeight: FontWeight.w700),
-        titleLarge: baseManrope.titleLarge?.copyWith(color: darkOnSurface, fontWeight: FontWeight.w700),
-        titleMedium: baseManrope.titleMedium?.copyWith(color: darkOnSurface, fontWeight: FontWeight.w600),
-        bodyLarge: baseInter.bodyLarge?.copyWith(color: darkOnSurface, fontSize: 16),
-        bodyMedium: baseInter.bodyMedium?.copyWith(color: darkOnSurfaceVariant, fontSize: 14),
+        displayLarge: baseManrope.displayLarge?.copyWith(
+          color: darkOnSurface,
+          fontWeight: FontWeight.w800,
+        ),
+        displayMedium: baseManrope.displayMedium?.copyWith(
+          color: darkOnSurface,
+          fontWeight: FontWeight.w800,
+        ),
+        displaySmall: baseManrope.displaySmall?.copyWith(
+          color: darkOnSurface,
+          fontWeight: FontWeight.w700,
+        ),
+        headlineLarge: baseManrope.headlineLarge?.copyWith(
+          color: darkOnSurface,
+          fontWeight: FontWeight.w800,
+        ),
+        headlineMedium: baseManrope.headlineMedium?.copyWith(
+          color: darkOnSurface,
+          fontWeight: FontWeight.w700,
+        ),
+        titleLarge: baseManrope.titleLarge?.copyWith(
+          color: darkOnSurface,
+          fontWeight: FontWeight.w700,
+        ),
+        titleMedium: baseManrope.titleMedium?.copyWith(
+          color: darkOnSurface,
+          fontWeight: FontWeight.w600,
+        ),
+        bodyLarge: baseInter.bodyLarge?.copyWith(
+          color: darkOnSurface,
+          fontSize: 16,
+        ),
+        bodyMedium: baseInter.bodyMedium?.copyWith(
+          color: darkOnSurfaceVariant,
+          fontSize: 14,
+        ),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -288,8 +346,14 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: darkSurfaceContainerLowest,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        hintStyle: GoogleFonts.inter(color: darkOnSurfaceVariant.withOpacity(0.6), fontSize: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
+        hintStyle: GoogleFonts.inter(
+          color: darkOnSurfaceVariant.withOpacity(0.6),
+          fontSize: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Color(0xFF2C3233)),
@@ -309,8 +373,13 @@ class AppTheme {
           foregroundColor: onPrimaryContainer,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          textStyle: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.w700),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          textStyle: GoogleFonts.manrope(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );
