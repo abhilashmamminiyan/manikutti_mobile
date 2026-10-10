@@ -79,11 +79,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
+            final theme = Theme.of(context);
             return AlertDialog(
-              title: const Text(
+              title: Text(
                 'Join Family Sanctuary',
-                style: TextStyle(
-                  fontFamily: 'Manrope',
+                style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -91,8 +91,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
+                  Text(
                     'Enter the invitation code sent to your email by your admin to join your family ledger:',
+                    style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -315,6 +316,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final theme = Theme.of(context);
+            final isDark = theme.brightness == Brightness.dark;
             return Container(
               padding: const EdgeInsets.all(24),
               height: MediaQuery.of(context).size.height * 0.6,
@@ -327,12 +330,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Family Activity Feed',
-                            style: TextStyle(
-                              fontSize: 20,
+                            style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'Manrope',
                             ),
                           ),
                           GestureDetector(
@@ -345,11 +346,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         'This is a test notification in your drawer!',
                                   );
                             },
-                            child: const Text(
+                            child: Text(
                               'Tap here to test drawer notification',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Color(0xFF006972),
+                                color: isDark
+                                    ? AppTheme.primaryContainer
+                                    : AppTheme.primary,
                                 decoration: TextDecoration.underline,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -407,16 +410,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                                 title: Text(
                                   notif['message'] ?? '',
-                                  style: const TextStyle(
+                                  style: theme.textTheme.bodyMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 13,
                                   ),
                                 ),
                                 subtitle: Text(
                                   '$timeAgo${notif['createdBy'] != null ? ' • By ${_getMemberNickname(notif['createdBy'])}' : ''}',
-                                  style: const TextStyle(
+                                  style: theme.textTheme.bodySmall?.copyWith(
                                     fontSize: 10,
-                                    color: Colors.grey,
+                                    color: isDark
+                                        ? AppTheme.darkOnSurfaceVariant
+                                        : Colors.grey,
                                   ),
                                 ),
                               );
@@ -441,6 +446,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
         return Container(
           padding: const EdgeInsets.all(28),
           height: 320,
@@ -452,14 +459,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 24),
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: isDark ? const Color(0xFF3E484A) : Colors.grey[300],
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
               CircleAvatar(
                 radius: 40,
-                backgroundColor: const Color(0xFF006972),
+                backgroundColor: AppTheme.primary,
                 child: Text(
                   myNickname.isNotEmpty ? myNickname[0].toUpperCase() : 'U',
                   style: const TextStyle(
@@ -473,22 +480,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 16),
               Text(
                 myNickname,
-                style: const TextStyle(
-                  fontSize: 20,
+                style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Manrope',
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 _userEmail ?? '',
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isDark
+                      ? AppTheme.darkOnSurfaceVariant
+                      : Colors.grey[600],
+                ),
               ),
               if (_appVersion.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
                   'App Version: $_appVersion',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isDark
+                        ? AppTheme.darkOnSurfaceVariant.withOpacity(0.7)
+                        : Colors.grey[500],
+                  ),
                 ),
               ],
               const Spacer(),
@@ -1357,10 +1370,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Regular Commitments Section
               if (_monthlyExpenses.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                const Text(
+                Text(
                   'Regular Commitments',
-                  style: TextStyle(
-                    fontFamily: 'Manrope',
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1516,6 +1528,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     child: const Text(
                                       'Pay',
                                       style: TextStyle(
+                                        color: Colors.white,
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -1529,14 +1542,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.secondaryContainer
-                                        .withOpacity(0.25),
+                                    color: isDark
+                                        ? const Color(0xFF584400)
+                                        : AppTheme.secondaryContainer
+                                              .withOpacity(0.25),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: const Text(
+                                  child: Text(
                                     'PENDING',
                                     style: TextStyle(
-                                      color: AppTheme.onSecondaryContainer,
+                                      color: isDark
+                                          ? const Color(0xFFFFE087)
+                                          : AppTheme.secondary,
                                       fontSize: 10,
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: 0.5,

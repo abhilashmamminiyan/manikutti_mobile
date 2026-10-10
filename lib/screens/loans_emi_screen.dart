@@ -1164,7 +1164,10 @@ class _LoansEmiScreenState extends State<LoansEmiScreen>
         icon: const Icon(Icons.add_rounded),
         label: Text(
           _tabController.index == 0 ? l10n.addEmi : l10n.addLoan,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         onPressed: () {
           if (_tabController.index == 0) {

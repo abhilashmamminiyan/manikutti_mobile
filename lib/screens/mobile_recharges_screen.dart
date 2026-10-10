@@ -160,6 +160,8 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setSB) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
           final currentExpiry =
               DateTime.tryParse(recharge.validityTill) ?? DateTime.now();
           final baseDate = currentExpiry.isAfter(DateTime.now())
@@ -187,9 +189,9 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
               children: [
                 Text(
                   '${recharge.operator} • ${recharge.phoneNumber}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey,
+                    color: isDark ? AppTheme.darkOnSurfaceVariant : Colors.grey,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -207,7 +209,11 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                       selected: isSel,
                       selectedColor: AppTheme.primary,
                       labelStyle: TextStyle(
-                        color: isSel ? Colors.white : Colors.black87,
+                        color: isSel
+                            ? Colors.white
+                            : (isDark
+                                  ? AppTheme.darkOnSurface
+                                  : AppTheme.onSurface),
                         fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
                       ),
                       onSelected: (val) {
@@ -220,7 +226,9 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceContainerHigh.withOpacity(0.5),
+                    color: isDark
+                        ? AppTheme.darkSurfaceContainer
+                        : AppTheme.surfaceContainerHigh.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(

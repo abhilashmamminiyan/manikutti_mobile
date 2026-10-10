@@ -894,7 +894,10 @@ class _HomeLoanScreenState extends State<HomeLoanScreen> {
         icon: const Icon(Icons.add_rounded),
         label: Text(
           l10n.addRepayment,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         onPressed: _showAddRepaymentDialog,
       ),

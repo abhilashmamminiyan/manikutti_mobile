@@ -97,8 +97,9 @@ class AppTheme {
 
   // --- Light Theme ---
   static ThemeData get lightTheme {
-    final baseInter = GoogleFonts.interTextTheme();
-    final baseManrope = GoogleFonts.manropeTextTheme();
+    final lightBase = ThemeData(brightness: Brightness.light).textTheme;
+    final baseInter = GoogleFonts.interTextTheme(lightBase);
+    final baseManrope = GoogleFonts.manropeTextTheme(lightBase);
 
     return ThemeData(
       useMaterial3: true,
@@ -177,14 +178,17 @@ class AppTheme {
           fontSize: 12,
         ),
         labelLarge: baseInter.labelLarge?.copyWith(
+          color: onSurface,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.5,
         ),
         labelMedium: baseInter.labelMedium?.copyWith(
+          color: onSurfaceVariant,
           fontWeight: FontWeight.w600,
           letterSpacing: 1.0,
         ),
         labelSmall: baseInter.labelSmall?.copyWith(
+          color: onSurfaceVariant,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.5,
         ),
@@ -252,6 +256,22 @@ class AppTheme {
           ),
         ),
       ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: primary,
+        foregroundColor: onPrimary,
+      ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: surfaceContainerLowest,
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: surfaceContainerLowest,
+        surfaceTintColor: Colors.transparent,
+      ),
+      listTileTheme: const ListTileThemeData(
+        iconColor: onSurfaceVariant,
+        textColor: onSurface,
+      ),
       dividerTheme: DividerThemeData(
         color: outlineVariant.withOpacity(0.15),
         thickness: 1,
@@ -262,8 +282,9 @@ class AppTheme {
 
   // --- Dark Theme ---
   static ThemeData get darkTheme {
-    final baseInter = GoogleFonts.interTextTheme();
-    final baseManrope = GoogleFonts.manropeTextTheme();
+    final darkBase = ThemeData(brightness: Brightness.dark).textTheme;
+    final baseInter = GoogleFonts.interTextTheme(darkBase);
+    final baseManrope = GoogleFonts.manropeTextTheme(darkBase);
 
     return ThemeData(
       useMaterial3: true,
@@ -275,8 +296,10 @@ class AppTheme {
         onPrimary: onPrimaryContainer,
         primaryContainer: primary,
         onPrimaryContainer: onPrimary,
-        secondary: secondaryContainer,
-        onSecondary: onSecondaryContainer,
+        secondary: Color(0xFFFFE087),
+        onSecondary: Color(0xFF3E2E00),
+        secondaryContainer: Color(0xFF584400),
+        onSecondaryContainer: Color(0xFFFFE087),
         surface: darkSurface,
         onSurface: darkOnSurface,
         onSurfaceVariant: darkOnSurfaceVariant,
@@ -289,10 +312,12 @@ class AppTheme {
         displayLarge: baseManrope.displayLarge?.copyWith(
           color: darkOnSurface,
           fontWeight: FontWeight.w800,
+          letterSpacing: -1.0,
         ),
         displayMedium: baseManrope.displayMedium?.copyWith(
           color: darkOnSurface,
           fontWeight: FontWeight.w800,
+          letterSpacing: -0.5,
         ),
         displaySmall: baseManrope.displaySmall?.copyWith(
           color: darkOnSurface,
@@ -301,8 +326,13 @@ class AppTheme {
         headlineLarge: baseManrope.headlineLarge?.copyWith(
           color: darkOnSurface,
           fontWeight: FontWeight.w800,
+          letterSpacing: -0.5,
         ),
         headlineMedium: baseManrope.headlineMedium?.copyWith(
+          color: darkOnSurface,
+          fontWeight: FontWeight.w700,
+        ),
+        headlineSmall: baseManrope.headlineSmall?.copyWith(
           color: darkOnSurface,
           fontWeight: FontWeight.w700,
         ),
@@ -314,6 +344,10 @@ class AppTheme {
           color: darkOnSurface,
           fontWeight: FontWeight.w600,
         ),
+        titleSmall: baseManrope.titleSmall?.copyWith(
+          color: darkOnSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
         bodyLarge: baseInter.bodyLarge?.copyWith(
           color: darkOnSurface,
           fontSize: 16,
@@ -321,6 +355,25 @@ class AppTheme {
         bodyMedium: baseInter.bodyMedium?.copyWith(
           color: darkOnSurfaceVariant,
           fontSize: 14,
+        ),
+        bodySmall: baseInter.bodySmall?.copyWith(
+          color: darkOnSurfaceVariant,
+          fontSize: 12,
+        ),
+        labelLarge: baseInter.labelLarge?.copyWith(
+          color: darkOnSurface,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
+        labelMedium: baseInter.labelMedium?.copyWith(
+          color: darkOnSurfaceVariant,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1.0,
+        ),
+        labelSmall: baseInter.labelSmall?.copyWith(
+          color: darkOnSurfaceVariant,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.5,
         ),
       ),
       appBarTheme: AppBarTheme(
@@ -366,6 +419,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: primaryContainer, width: 2),
         ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFFFB4AB), width: 1.5),
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -381,6 +438,38 @@ class AppTheme {
             fontWeight: FontWeight.w700,
           ),
         ),
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: primary,
+        foregroundColor: onPrimary,
+      ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: darkSurface,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: TextStyle(
+          color: darkOnSurface,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          fontFamily: 'Manrope',
+        ),
+        contentTextStyle: TextStyle(
+          color: darkOnSurfaceVariant,
+          fontSize: 14,
+          fontFamily: 'Inter',
+        ),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: darkSurface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      listTileTheme: const ListTileThemeData(
+        iconColor: darkOnSurfaceVariant,
+        textColor: darkOnSurface,
+      ),
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFF2C3233),
+        thickness: 1,
+        space: 1,
       ),
     );
   }
