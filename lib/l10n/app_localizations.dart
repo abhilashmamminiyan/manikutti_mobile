@@ -325,6 +325,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add EMI'**
   String get addEmi;
+
+  /// No description provided for @repaymentHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Repayment History'**
+  String get repaymentHistory;
+
+  /// No description provided for @addRepayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Repayment'**
+  String get addRepayment;
+
+  /// No description provided for @principalPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Principal Paid'**
+  String get principalPaid;
+
+  /// No description provided for @interestPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest Paid'**
+  String get interestPaid;
+
+  /// No description provided for @remainingBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining Balance'**
+  String get remainingBalance;
+
+  /// No description provided for @noRepaymentsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No repayments logged yet'**
+  String get noRepaymentsYet;
 }
 
 class _AppLocalizationsDelegate

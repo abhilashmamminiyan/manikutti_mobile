@@ -573,4 +573,112 @@ class ApiService {
       return false;
     }
   }
+
+  // --- Home Loan Access ---
+  Future<List<dynamic>> fetchHomeLoanHistory(String familyCode) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/sheets/home-loan?familyCode=$familyCode'),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['items'] ?? [];
+      } else {
+        throw Exception(
+          'Failed to fetch home loan history: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<bool> addHomeLoanRepayment({
+    required String date,
+    required double totalPayment,
+    required double principal,
+    required double interest,
+    required double balance,
+    required String familyCode,
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/sheets/home-loan'),
+        headers: headers,
+        body: jsonEncode({
+          'date': date,
+          'totalPayment': totalPayment,
+          'principal': principal,
+          'interest': interest,
+          'balance': balance,
+          'familyCode': familyCode,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> updateHomeLoanRepayment({
+    required int id,
+    required String date,
+    required double totalPayment,
+    required double principal,
+    required double interest,
+    required double balance,
+    required String familyCode,
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/sheets/home-loan'),
+        headers: headers,
+        body: jsonEncode({
+          'id': id,
+          'date': date,
+          'totalPayment': totalPayment,
+          'principal': principal,
+          'interest': interest,
+          'balance': balance,
+          'familyCode': familyCode,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteHomeLoanRepayment(int id) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/sheets/home-loan?id=$id'),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
 }

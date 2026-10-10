@@ -121,4 +121,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addEmi => 'Add EMI';
+
+  @override
+  String get repaymentHistory => 'Repayment History';
+
+  @override
+  String get addRepayment => 'Add Repayment';
+
+  @override
+  String get principalPaid => 'Principal Paid';
+
+  @override
+  String get interestPaid => 'Interest Paid';
+
+  @override
+  String get remainingBalance => 'Remaining Balance';
+
+  @override
+  String get noRepaymentsYet => 'No repayments logged yet';
 }
