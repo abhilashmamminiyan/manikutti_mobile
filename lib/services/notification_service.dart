@@ -63,7 +63,7 @@ class NotificationService {
     required tz.TZDateTime scheduledDate,
     required NotificationDetails notificationDetails,
     required UILocalNotificationDateInterpretation
-        uiLocalNotificationDateInterpretation,
+    uiLocalNotificationDateInterpretation,
     String? payload,
     DateTimeComponents? matchDateTimeComponents,
   }) async {
