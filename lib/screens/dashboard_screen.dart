@@ -13,6 +13,7 @@ import 'loans_emi_screen.dart';
 import 'home_loan_screen.dart';
 import 'mobile_recharges_screen.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/ai_advisor_card.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 
@@ -1367,6 +1368,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 14),
+              const AiAdvisorCard(),
               // Regular Commitments Section
               if (_monthlyExpenses.isNotEmpty) ...[
                 const SizedBox(height: 24),
