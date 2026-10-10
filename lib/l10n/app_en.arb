@@ -37,5 +37,11 @@
   "activeEmis": "Active EMIs",
   "familyLoans": "Family Loans",
   "addLoan": "Add Loan",
-  "addEmi": "Add EMI"
+  "addEmi": "Add EMI",
+  "repaymentHistory": "Repayment History",
+  "addRepayment": "Add Repayment",
+  "principalPaid": "Principal Paid",
+  "interestPaid": "Interest Paid",
+  "remainingBalance": "Remaining Balance",
+  "noRepaymentsYet": "No repayments logged yet"
 }

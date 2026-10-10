@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
+import 'home_loan_screen.dart';
 
 class LoansEmiScreen extends StatefulWidget {
   const LoansEmiScreen({super.key});
@@ -1105,6 +1106,16 @@ class _LoansEmiScreenState extends State<LoansEmiScreen>
           ),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.home_work_rounded),
+            tooltip: l10n.homeLoan,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const HomeLoanScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Refresh',
