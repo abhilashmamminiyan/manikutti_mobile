@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../services/api_service.dart';
 import '../services/sync_service.dart';
 import 'dashboard_screen.dart';
+import 'app_lock_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,11 +25,28 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _verificationToken;
   bool _isOtpStep = false;
   bool _isPinStep = false;
+  bool _hasSavedPin = false;
 
   @override
   void initState() {
     super.initState();
     _loadBaseUrl();
+    _checkSavedCredentials();
+  }
+
+  Future<void> _checkSavedCredentials() async {
+    final email = await ApiService.instance.getUserEmail();
+    final hasPin = await ApiService.instance.hasPin();
+    if (mounted) {
+      setState(() {
+        if (email != null &&
+            email.isNotEmpty &&
+            _emailController.text.isEmpty) {
+          _emailController.text = email;
+        }
+        _hasSavedPin = hasPin;
+      });
+    }
   }
 
   Future<void> _loadBaseUrl() async {
@@ -424,6 +442,37 @@ class _LoginScreenState extends State<LoginScreen> {
                         )
                       : const Text('Send Verification Code'),
                 ),
+                if (_hasSavedPin) ...[
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.security),
+                    label: const Text('Unlock with Security PIN / Biometrics'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AppLockScreen(
+                            onUnlock: () {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const DashboardScreen(),
+                                ),
+                                (route) => false,
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ] else ...[
                 TextField(
                   controller: _otpController,

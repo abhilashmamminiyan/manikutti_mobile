@@ -34,9 +34,7 @@ class _SetupAppLockScreenState extends State<SetupAppLockScreen> {
   Future<void> _toggleLock(bool value) async {
     if (!value) {
       // Disabling lock
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('app_lock_enabled', false);
-      await prefs.remove('app_lock_pin');
+      await ApiService.instance.clearPin();
       setState(() {
         _isLockEnabled = false;
         _hasSavedPin = false;

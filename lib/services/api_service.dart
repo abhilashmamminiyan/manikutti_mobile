@@ -107,8 +107,20 @@ class ApiService {
   }
 
   Future<bool> hasPin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lockEnabled = prefs.getBool('app_lock_enabled') ?? true;
+    if (!lockEnabled) return false;
     final pin = await getPin();
     return pin != null && pin.length == 4;
+  }
+
+  Future<void> clearPin() async {
+    try {
+      await _secureStorage.delete(key: 'app_lock_pin');
+    } catch (_) {}
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('app_lock_pin');
+    await prefs.setBool('app_lock_enabled', false);
   }
 
   Future<void> clearSession() async {
