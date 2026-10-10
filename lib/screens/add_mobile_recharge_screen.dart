@@ -153,21 +153,27 @@ class _AddMobileRechargeScreenState extends State<AddMobileRechargeScreen> {
         await DbHelper.instance.updateMobileRecharge(recharge);
       }
 
-      // Schedule or cancel notification
-      final notificationId = 30000 + (rechargeId % 10000);
-      if (_notifyExpiry) {
-        await NotificationService.instance.scheduleRechargeExpiryReminder(
-          id: notificationId,
-          name: recharge.name,
-          operatorName: recharge.operator,
-          phoneNumber: recharge.phoneNumber,
-          amount: recharge.planLastRecharged,
-          expiryDate: _validityTillDate,
-          daysBefore: _reminderDaysBefore,
-        );
-      } else {
-        await NotificationService.instance.cancelRechargeReminder(
-          notificationId,
+      // Schedule or cancel notification safely
+      try {
+        final notificationId = 30000 + (rechargeId % 10000);
+        if (_notifyExpiry) {
+          await NotificationService.instance.scheduleRechargeExpiryReminder(
+            id: notificationId,
+            name: recharge.name,
+            operatorName: recharge.operator,
+            phoneNumber: recharge.phoneNumber,
+            amount: recharge.planLastRecharged,
+            expiryDate: _validityTillDate,
+            daysBefore: _reminderDaysBefore,
+          );
+        } else {
+          await NotificationService.instance.cancelRechargeReminder(
+            notificationId,
+          );
+        }
+      } catch (notifErr) {
+        print(
+          '[AddMobileRechargeScreen] Non-critical notification reminder error: $notifErr',
         );
       }
 

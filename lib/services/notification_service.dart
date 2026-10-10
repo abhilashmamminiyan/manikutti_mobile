@@ -39,16 +39,70 @@ class NotificationService {
     );
 
     // Request permissions on Android 13+ (API 33+)
-    await _localNotifications
+    final androidPlugin = _localNotifications
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
+        >();
+    await androidPlugin?.requestNotificationsPermission();
+    try {
+      await androidPlugin?.requestExactAlarmsPermission();
+    } catch (e) {
+      print('[NotificationService] Exact alarm permission request notice: $e');
+    }
 
     _isInitialized = true;
     print(
       '[NotificationService] Local notifications initialized successfully.',
     );
+  }
+
+  Future<void> _safeZonedSchedule({
+    required int id,
+    required String title,
+    required String body,
+    required tz.TZDateTime scheduledDate,
+    required NotificationDetails notificationDetails,
+    required UILocalNotificationDateInterpretation
+    uiLocalNotificationDateInterpretation,
+    String? payload,
+    DateTimeComponents? matchDateTimeComponents,
+  }) async {
+    try {
+      await _localNotifications.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduledDate,
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            uiLocalNotificationDateInterpretation,
+        payload: payload,
+        matchDateTimeComponents: matchDateTimeComponents,
+      );
+    } catch (e) {
+      print(
+        '[NotificationService] Exact alarm scheduling failed ($e). Falling back to inexact alarm.',
+      );
+      try {
+        await _localNotifications.zonedSchedule(
+          id,
+          title,
+          body,
+          scheduledDate,
+          notificationDetails,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+              uiLocalNotificationDateInterpretation,
+          payload: payload,
+          matchDateTimeComponents: matchDateTimeComponents,
+        );
+      } catch (fallbackError) {
+        print(
+          '[NotificationService] Inexact alarm scheduling failed: $fallbackError',
+        );
+      }
+    }
   }
 
   Future<void> showImmediateNotification({
@@ -90,13 +144,12 @@ class NotificationService {
       iOS: DarwinNotificationDetails(),
     );
 
-    await _localNotifications.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduledDate,
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    await _safeZonedSchedule(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+      notificationDetails: details,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
@@ -130,13 +183,12 @@ class NotificationService {
       iOS: DarwinNotificationDetails(),
     );
 
-    await _localNotifications.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduledDate,
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    await _safeZonedSchedule(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+      notificationDetails: details,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       payload: 'utility_$id',
@@ -210,13 +262,12 @@ class NotificationService {
     final body =
         '$operatorName recharge$amountStr for $phoneNumber expires on ${expiryDate.day}/${expiryDate.month}/${expiryDate.year}. Recharge now!';
 
-    await _localNotifications.zonedSchedule(
-      id,
-      title,
-      body,
-      effectiveDate,
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    await _safeZonedSchedule(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: effectiveDate,
+      notificationDetails: details,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       payload: 'recharge_$id',
