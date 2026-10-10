@@ -30,5 +30,12 @@
   "medical": "Medical",
   "entertainment": "Entertainment",
   "other": "Other",
-  "description": "Description"
+  "description": "Description",
+  "loansAndEmi": "Loans & EMI",
+  "loans": "Loans",
+  "emis": "EMIs & Commitments",
+  "activeEmis": "Active EMIs",
+  "familyLoans": "Family Loans",
+  "addLoan": "Add Loan",
+  "addEmi": "Add EMI"
 }

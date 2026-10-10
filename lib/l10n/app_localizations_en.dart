@@ -100,4 +100,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get description => 'Description';
+
+  @override
+  String get loansAndEmi => 'Loans & EMI';
+
+  @override
+  String get loans => 'Loans';
+
+  @override
+  String get emis => 'EMIs & Commitments';
+
+  @override
+  String get activeEmis => 'Active EMIs';
+
+  @override
+  String get familyLoans => 'Family Loans';
+
+  @override
+  String get addLoan => 'Add Loan';
+
+  @override
+  String get addEmi => 'Add EMI';
 }
