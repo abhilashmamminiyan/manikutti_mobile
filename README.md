@@ -46,25 +46,28 @@ This project implements an enterprise-grade, single-run CI/CD workflow designed 
 
 ```mermaid
 graph TD
-    subgraph "1. Feature Branch Push (Fast Feedback)"
-        P1["push: feature/**"] --> P2["lint-and-analyze ONLY<br/>(~1 min)"]
+    subgraph "1. Pull Request to Main (Fast Feedback Gate)"
+        R1["pull_request: main"] --> R2["1. lint-and-analyze<br/>(~1 min)"]
+        R2 --> R3["2. auto-merge-pr<br/>(Squash & Auto-merge)"]
     end
 
-    subgraph "2. Pull Request to Main (Quality & Build Gate)"
-        R1["pull_request: main"] --> R2["1. lint-and-analyze"]
-        R2 --> R3["2. build-production-app<br/>(Single Release APK Build)"]
-        R3 --> R4["3. auto-merge-pr"]
+    subgraph "2. PR Merged to Main (Instant Build & Protected Deployment)"
+        M1["push: main (PR Merged)"] --> M2["1. lint-and-analyze"]
+        M1 --> M3["2. Build Production APK<br/>(Runs Instantly)"]
+        M3 --> M4["Upload APK Artifact"]
+        M2 & M4 --> D1["3. Deploy to Firebase<br/>(Environment: Production)"]
+        D1 --> D2["✋ Paused: Waiting for Manual Trigger / Approval"]
+        D2 --> D3["🚀 Deployed to Firebase App Distribution"]
     end
 
-    subgraph "3. Manual Trigger (Clean Release Control)"
-        M1["workflow_dispatch"] --> M2["deploy-to-firebase<br/>(Uploads built APK to testers)"]
+    subgraph "3. Manual Trigger (On-Demand Control)"
+        W1["workflow_dispatch"] --> M3
     end
 ```
 
 ### 💡 Key CI/CD Architectural Highlights
 
-- **⚡ Fast Developer Feedback (~1 Min)**: Direct pushes to `feature/**` branches execute only lightweight linting, formatting (`dart format`), and static analysis (`flutter analyze`). This gives immediate feedback on syntax without wasting 7+ minutes compiling native Android APKs.
-- **🛡️ Quality & Build Protection Gate**: Pull Requests targeting `main` enforce a mandatory quality gate that runs static analysis, unit tests, and compiles the signed release APK. If compilation or signing fails, auto-merge is blocked to protect `main`.
-- **📦 Build-Once, Deploy-Anywhere (Artifact Promotion)**: The production release APK is compiled once during PR validation and saved as a workflow artifact (`actions/upload-artifact@v4`). Deployments reuse this exact verified binary without rebuilding.
-- **🎯 Clean Firebase Release History**: Firebase App Distribution is triggered on-demand via `workflow_dispatch`, preventing temporary WIP builds from polluting active tester release logs.
-- **⏱️ 80% Reduction in Runner Usage**: Eliminates duplicate post-merge runs and redundant APK builds, saving ~8–10 minutes of GitHub Actions runner execution per PR.
+- **⚡ Instant Build on Merge**: When a PR merges into `main`, the `Build Production APK` job triggers immediately without blocking on prior sequential gates, compiling the signed release APK against the merged `main` branch.
+- **🛡️ Quality Gate on Pull Requests**: Pull requests targeting `main` execute static analysis (`flutter analyze`), formatting checks (`dart format`), and unit tests (`flutter test`) in ~1 minute, ensuring high code quality before merging.
+- **✋ Manual Deployment Gate**: Deployment to Firebase App Distribution is protected by GitHub's native `Production` Environment approval rule. Once the APK build completes, the pipeline waits in a paused state for an authorized reviewer to click "Approve and deploy".
+- **📦 Artifact Reuse**: When deployment is approved, the exact release APK compiled in the build step is downloaded from GitHub Actions artifacts and uploaded directly to Firebase App Distribution—preventing duplicate compilation runs.
