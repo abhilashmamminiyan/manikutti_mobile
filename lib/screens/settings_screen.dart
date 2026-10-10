@@ -157,7 +157,7 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 24),
           Center(
             child: Text(
-              'The Heritage Ledger • Version 2.0',
+              'The Heritage Ledger • Version 2.1.0',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: isDark
                     ? AppTheme.darkOnSurfaceVariant.withOpacity(0.5)

@@ -6,6 +6,7 @@ import '../screens/smart_scan_screen.dart';
 import '../screens/bills_dashboard.dart';
 import '../screens/loans_emi_screen.dart';
 import '../screens/home_loan_screen.dart';
+import '../screens/mobile_recharges_screen.dart';
 import '../screens/screenshots_screen.dart';
 import '../services/api_service.dart';
 import '../screens/login_screen.dart';
@@ -225,6 +226,19 @@ class AppDrawer extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) => const HomeLoanScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.phone_android_rounded,
+                    title: l10n.mobileRecharges,
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MobileRechargesScreen(),
                         ),
                       );
                     },

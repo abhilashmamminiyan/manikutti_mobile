@@ -681,4 +681,80 @@ class ApiService {
       return false;
     }
   }
+
+  // --- Mobile Recharges API ---
+
+  Future<List<dynamic>> fetchMobileRecharges() async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/sheets/mobile-recharges'),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['items'] ?? [];
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<bool> addMobileRecharge(Map<String, dynamic> recharge) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/sheets/mobile-recharges'),
+        headers: headers,
+        body: jsonEncode(recharge),
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> updateMobileRecharge(Map<String, dynamic> recharge) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/sheets/mobile-recharges'),
+        headers: headers,
+        body: jsonEncode(recharge),
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteMobileRecharge(int id) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/sheets/mobile-recharges?id=$id'),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
 }

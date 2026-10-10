@@ -139,4 +139,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noRepaymentsYet => 'No repayments logged yet';
+
+  @override
+  String get mobileRecharges => 'Mobile Recharges';
+
+  @override
+  String get mobileRecharge => 'Mobile Recharge';
+
+  @override
+  String get addMobileRecharge => 'Add Mobile Recharge';
+
+  @override
+  String get editMobileRecharge => 'Edit Mobile Recharge';
+
+  @override
+  String get validityTill => 'Validity Till';
+
+  @override
+  String get planLastRecharged => 'Plan Last Recharged';
+
+  @override
+  String get operator => 'Operator';
+
+  @override
+  String get phoneNumber => 'Phone Number';
+
+  @override
+  String get personName => 'Contact / SIM Name';
+
+  @override
+  String get rechargeNow => 'Recharge Now';
+
+  @override
+  String get rechargedToday => 'Recharged Today';
+
+  @override
+  String get markRecharged => 'Mark Recharged';
 }

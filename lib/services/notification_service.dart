@@ -146,6 +146,91 @@ class NotificationService {
     );
   }
 
+  Future<void> scheduleRechargeExpiryReminder({
+    required int id,
+    required String name,
+    required String operatorName,
+    required String phoneNumber,
+    required double amount,
+    required DateTime expiryDate,
+    int daysBefore = 1,
+  }) async {
+    // Schedule reminder before expiry (e.g. 1 day before at 9:00 AM)
+    final reminderTarget = DateTime(
+      expiryDate.year,
+      expiryDate.month,
+      expiryDate.day,
+      9,
+      0,
+    ).subtract(Duration(days: daysBefore));
+
+    final tz.TZDateTime scheduledDate = tz.TZDateTime.from(
+      reminderTarget,
+      tz.local,
+    );
+
+    if (scheduledDate.isBefore(tz.TZDateTime.now(tz.local))) {
+      // If reminder date is already in the past, but expiry is still today or in future
+      final expiryDayNineAm = DateTime(
+        expiryDate.year,
+        expiryDate.month,
+        expiryDate.day,
+        9,
+        0,
+      );
+      final tz.TZDateTime expiryScheduled = tz.TZDateTime.from(
+        expiryDayNineAm,
+        tz.local,
+      );
+      if (expiryScheduled.isBefore(tz.TZDateTime.now(tz.local))) {
+        return; // Expiry already passed
+      }
+    }
+
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'recharge_channel',
+        'Mobile Recharge Reminders',
+        channelDescription: 'Reminders for mobile recharge validity expiry',
+        importance: Importance.max,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
+    );
+
+    final effectiveDate = scheduledDate.isBefore(tz.TZDateTime.now(tz.local))
+        ? tz.TZDateTime.from(
+            DateTime(expiryDate.year, expiryDate.month, expiryDate.day, 9, 0),
+            tz.local,
+          )
+        : scheduledDate;
+
+    final title = 'Recharge Expiring Soon: $name';
+    final amountStr = amount > 0 ? ' (₹${amount.toStringAsFixed(0)})' : '';
+    final body =
+        '$operatorName recharge$amountStr for $phoneNumber expires on ${expiryDate.day}/${expiryDate.month}/${expiryDate.year}. Recharge now!';
+
+    await _localNotifications.zonedSchedule(
+      id,
+      title,
+      body,
+      effectiveDate,
+      details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: 'recharge_$id',
+    );
+    print(
+      '[NotificationService] Scheduled recharge notification #$id for $effectiveDate',
+    );
+  }
+
+  Future<void> cancelRechargeReminder(int id) async {
+    await _localNotifications.cancel(id);
+    print('[NotificationService] Cancelled recharge notification #$id');
+  }
+
   Future<void> cancelNotification(int id) async {
     await _localNotifications.cancel(id);
     print('[NotificationService] Cancelled notification #$id');

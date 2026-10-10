@@ -139,4 +139,40 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get noRepaymentsYet => 'തിരിച്ചടവുകൾ ഇതുവരെ ചേർത്തിട്ടില്ല';
+
+  @override
+  String get mobileRecharges => 'മൊബൈൽ റീചാർജുകൾ';
+
+  @override
+  String get mobileRecharge => 'മൊബൈൽ റീചാർജ്';
+
+  @override
+  String get addMobileRecharge => 'റീചാർജ് ചേർക്കുക';
+
+  @override
+  String get editMobileRecharge => 'റീചാർജ് തിരുത്തുക';
+
+  @override
+  String get validityTill => 'കാലാവധി തീയതി';
+
+  @override
+  String get planLastRecharged => 'റീചാർജ് ചെയ്ത പ്ലാൻ';
+
+  @override
+  String get operator => 'ഓപ്പറേറ്റർ';
+
+  @override
+  String get phoneNumber => 'ഫോൺ നമ്പർ';
+
+  @override
+  String get personName => 'പേര് / സിം പേര്';
+
+  @override
+  String get rechargeNow => 'ഇപ്പോൾ റീചാർജ് ചെയ്യുക';
+
+  @override
+  String get rechargedToday => 'ഇന്ന് റീചാർജ് ചെയ്തു';
+
+  @override
+  String get markRecharged => 'റീചാർജ് രേഖപ്പെടുത്തുക';
 }

@@ -43,5 +43,17 @@
   "principalPaid": "മുതൽ തിരിച്ചടച്ചത്",
   "interestPaid": "പലിശ നൽകിയത്",
   "remainingBalance": "ബാക്കി തുക",
-  "noRepaymentsYet": "തിരിച്ചടവുകൾ ഇതുവരെ ചേർത്തിട്ടില്ല"
+  "noRepaymentsYet": "തിരിച്ചടവുകൾ ഇതുവരെ ചേർത്തിട്ടില്ല",
+  "mobileRecharges": "മൊബൈൽ റീചാർജുകൾ",
+  "mobileRecharge": "മൊബൈൽ റീചാർജ്",
+  "addMobileRecharge": "റീചാർജ് ചേർക്കുക",
+  "editMobileRecharge": "റീചാർജ് തിരുത്തുക",
+  "validityTill": "കാലാവധി തീയതി",
+  "planLastRecharged": "റീചാർജ് ചെയ്ത പ്ലാൻ",
+  "operator": "ഓപ്പറേറ്റർ",
+  "phoneNumber": "ഫോൺ നമ്പർ",
+  "personName": "പേര് / സിം പേര്",
+  "rechargeNow": "ഇപ്പോൾ റീചാർജ് ചെയ്യുക",
+  "rechargedToday": "ഇന്ന് റീചാർജ് ചെയ്തു",
+  "markRecharged": "റീചാർജ് രേഖപ്പെടുത്തുക"
 }
