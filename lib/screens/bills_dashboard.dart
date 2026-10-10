@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../services/notification_service.dart';
 import '../widgets/app_drawer.dart';
 import 'add_utility_screen.dart';
+import '../theme/app_theme.dart';
 
 class BillsDashboard extends StatefulWidget {
   const BillsDashboard({super.key});
@@ -148,119 +149,209 @@ class _BillsDashboardState extends State<BillsDashboard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Utilities & Bills')),
+      appBar: AppBar(
+        title: Text(
+          'Utilities & Bills',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
       drawer: const AppDrawer(),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.primary),
+            )
           : _utilities.isEmpty
-          ? const Center(child: Text('No utilities found.'))
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppTheme.darkSurfaceContainer
+                          : AppTheme.surfaceContainerLow,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.receipt_long_rounded,
+                      size: 48,
+                      color: AppTheme.outline,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No utilities or recurring bills found.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.outline,
+                    ),
+                  ),
+                ],
+              ),
+            )
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               itemCount: _utilities.length,
               itemBuilder: (context, index) {
                 final util = _utilities[index];
                 final daysLeft = _calculateDaysLeft(util.nextDueDate);
                 final isOverdue = daysLeft != null && daysLeft < 0;
 
-                return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppTheme.darkSurfaceContainerLowest
+                        : AppTheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: AppTheme.ambientCardShadow,
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF2C3233)
+                          : AppTheme.outlineVariant.withOpacity(0.18),
+                    ),
                   ),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              util.title,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: isDark
+                                    ? AppTheme.darkOnSurface
+                                    : AppTheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          if (daysLeft != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isOverdue
+                                    ? AppTheme.error.withOpacity(0.1)
+                                    : const Color(0xFF10B981).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               child: Text(
-                                util.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ),
-                            if (daysLeft != null)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
+                                isOverdue
+                                    ? '${daysLeft.abs()} Days Overdue'
+                                    : '$daysLeft Days Left',
+                                style: TextStyle(
                                   color: isOverdue
-                                      ? Colors.red.withOpacity(0.1)
-                                      : Colors.green.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
+                                      ? AppTheme.error
+                                      : const Color(0xFF10B981),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
                                 ),
-                                child: Text(
-                                  isOverdue
-                                      ? '${daysLeft.abs()} Days Overdue'
-                                      : '$daysLeft Days Left',
-                                  style: TextStyle(
-                                    color: isOverdue
-                                        ? Colors.red
-                                        : Colors.green,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text('₹${util.amount} / ${util.validity}'),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Next Due: ${util.nextDueDate.isNotEmpty ? DateFormat('MMM dd, yyyy').format(DateTime.parse(util.nextDueDate)) : 'Unknown'}',
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
                               ),
                             ),
-                            ElevatedButton.icon(
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '₹${util.amount} • ${util.validity}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Next Due: ${util.nextDueDate.isNotEmpty ? DateFormat('MMM dd, yyyy').format(DateTime.parse(util.nextDueDate)) : 'Unknown'}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: isDark
+                                  ? AppTheme.darkOnSurfaceVariant
+                                  : AppTheme.onSurfaceVariant.withOpacity(0.7),
+                              fontSize: 12,
+                            ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: TextButton.icon(
                               onPressed: () => _showPayDialog(util),
                               icon: const Icon(
-                                Icons.check_circle_outline,
+                                Icons.check_circle_rounded,
                                 size: 16,
+                                color: AppTheme.primary,
                               ),
-                              label: const Text('Mark Paid'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: theme.primaryColor.withOpacity(
-                                  0.1,
+                              label: Text(
+                                'Mark Paid',
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: AppTheme.primary,
+                                  fontWeight: FontWeight.w700,
                                 ),
-                                foregroundColor: theme.primaryColor,
-                                elevation: 0,
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddUtilityScreen()),
-          );
-          if (result == true) {
-            _loadUtilities();
-          }
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Add Utility'),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          gradient: AppTheme.primaryGradient,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primary.withOpacity(0.3),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddUtilityScreen()),
+            );
+            if (result == true) {
+              _loadUtilities();
+            }
+          },
+          icon: const Icon(Icons.add_rounded, color: Colors.white),
+          label: Text(
+            'Add Utility',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
       ),
     );
   }
