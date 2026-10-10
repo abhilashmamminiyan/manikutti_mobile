@@ -12,6 +12,7 @@ import 'bills_dashboard.dart';
 import 'loans_emi_screen.dart';
 import 'home_loan_screen.dart';
 import 'mobile_recharges_screen.dart';
+import 'transactions_log_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/ai_advisor_card.dart';
 import '../l10n/app_localizations.dart';
@@ -250,7 +251,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         } catch (_) {}
       }
 
-      if (isAssignedToMe && !isPaidThisMonth && item['status'] != 'Paid') {
+      if (isAssignedToMe && !isPaidThisMonth) {
         await NotificationService.instance.scheduleMonthlyReminder(
           id: id,
           title: 'Payment Due: $title',
@@ -304,7 +305,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               lastPaid.month == today.month && lastPaid.year == today.year;
         } catch (_) {}
       }
-      return isAssignedToMe && !isPaidThisMonth && item['status'] != 'Paid';
+      return isAssignedToMe && !isPaidThisMonth;
     });
   }
 
@@ -888,13 +889,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     double personalEx = 0;
     double familyEx = 0;
 
-    // 1. Calculate regular sums
+    // 1. Calculate regular sums for current month
     double regularSum = 0;
     double paidRegularSum = 0;
+    final today = DateTime.now();
     for (final item in _monthlyExpenses) {
       final amt = (item['amount'] as num).toDouble();
       regularSum += amt;
-      if (item['status'] == 'Paid') {
+      final lastPaidDateStr = item['lastPaidDate'] as String?;
+      bool isPaidThisMonth = false;
+      if (lastPaidDateStr != null && lastPaidDateStr.isNotEmpty) {
+        try {
+          final lastPaid = DateTime.parse(lastPaidDateStr).toLocal();
+          isPaidThisMonth =
+              lastPaid.month == today.month && lastPaid.year == today.year;
+        } catch (_) {}
+      }
+      if (isPaidThisMonth) {
         paidRegularSum += amt;
       }
     }
@@ -921,15 +932,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return false;
     }
 
-    // 3. Sum up transactions
+    // 3. Sum up transactions for the current calendar month
     for (final t in _transactions) {
-      if (t.type == 'Income') {
-        income += t.amount;
-      } else if (t.type == 'Expense') {
-        personalEx += t.amount;
-      } else if (t.type == 'Family') {
-        if (!isRegularCommitmentPayment(t)) {
-          familyEx += t.amount;
+      final tDate = DateTime.tryParse(t.date)?.toLocal();
+      if (tDate != null &&
+          tDate.year == today.year &&
+          tDate.month == today.month) {
+        if (t.type == 'Income') {
+          income += t.amount;
+        } else if (t.type == 'Expense') {
+          personalEx += t.amount;
+        } else if (t.type == 'Family') {
+          if (!isRegularCommitmentPayment(t)) {
+            familyEx += t.amount;
+          }
         }
       }
     }
@@ -976,14 +992,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  List<TransactionModel> get _currentMonthTransactions {
+    final now = DateTime.now();
+    return _transactions.where((t) {
+      final d = DateTime.tryParse(t.date)?.toLocal();
+      return d != null && d.year == now.year && d.month == now.month;
+    }).toList();
+  }
+
   List<TransactionModel> get _filteredTransactions {
-    if (_filter == 'All') return _transactions;
+    final list = _currentMonthTransactions;
+    if (_filter == 'All') return list;
     if (_filter == 'Personal') {
-      return _transactions
+      return list
           .where((t) => t.type == 'Expense' || t.type == 'Income')
           .toList();
     }
-    return _transactions.where((t) => t.type == 'Family').toList();
+    return list.where((t) => t.type == 'Family').toList();
+  }
+
+  List<TransactionModel> get _dashboardTransactions {
+    return _filteredTransactions.take(5).toList();
   }
 
   IconData _getCategoryIcon(String category) {
@@ -1390,7 +1419,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     final title = item['title'] as String;
                     final amount = (item['amount'] as num).toDouble();
                     final dueDay = item['dueDay'] as int;
-                    final status = item['status'] as String;
                     final assignedTo = item['assignedTo'] as String?;
                     final lastPaidDateStr = item['lastPaidDate'] as String?;
 
@@ -1408,7 +1436,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       } catch (_) {}
                     }
 
-                    final paid = isPaidThisMonth || status == 'Paid';
+                    final paid = isPaidThisMonth;
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -1631,28 +1659,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Transactions Log',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        'Transactions Log',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      if (_isLoading) ...[
+                        const SizedBox(width: 8),
+                        const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  if (_isLoading)
-                    const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              TransactionsLogScreen(initialFilter: _filter),
+                        ),
+                      );
+                      if (mounted) {
+                        _loadData();
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 15,
+                      color: AppTheme.primary,
+                    ),
+                    label: const Text(
+                      'See All',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
                         color: AppTheme.primary,
                       ),
                     ),
+                    iconAlignment: IconAlignment.end,
+                  ),
                 ],
               ),
               const SizedBox(height: 14),
 
-              // Transactions List
-              _filteredTransactions.isEmpty
+              // Transactions List (Latest 5 of Current Month)
+              _dashboardTransactions.isEmpty
                   ? Padding(
                       padding: const EdgeInsets.symmetric(vertical: 40.0),
                       child: Column(
@@ -1673,9 +1743,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No transactions recorded in this sanctuary yet.',
+                            'No transactions recorded for ${DateFormat('MMMM').format(DateTime.now())} yet.',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: AppTheme.outline,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              side: BorderSide(
+                                color: AppTheme.primary.withOpacity(0.3),
+                              ),
+                            ),
+                            onPressed: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => TransactionsLogScreen(
+                                    initialFilter: _filter,
+                                  ),
+                                ),
+                              );
+                              if (mounted) _loadData();
+                            },
+                            icon: const Icon(Icons.history_rounded, size: 16),
+                            label: const Text(
+                              'View All Past Transactions',
+                              style: TextStyle(fontSize: 12),
                             ),
                           ),
                         ],
@@ -1684,9 +1782,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   : ListView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _filteredTransactions.length,
+                      itemCount: _dashboardTransactions.length,
                       itemBuilder: (context, index) {
-                        final t = _filteredTransactions[index];
+                        final t = _dashboardTransactions[index];
                         final formattedDate = DateFormat(
                           'MMM dd, yyyy',
                         ).format(DateTime.parse(t.date));
