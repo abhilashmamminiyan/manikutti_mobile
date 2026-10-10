@@ -50,8 +50,12 @@ void main() async {
   bool isLoggedIn = false;
 
   try {
-    // Initialize notification service
-    await NotificationService.instance.initialize();
+    // Initialize notification service safely
+    try {
+      await NotificationService.instance.initialize();
+    } catch (e) {
+      print('Failed to initialize NotificationService: $e');
+    }
 
     // Initialize workmanager background sync task
     try {
@@ -165,16 +169,21 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        if (_isLocked) {
-          return AppLockScreen(
-            onUnlock: () {
-              setState(() {
-                _isLocked = false;
-              });
-            },
-          );
-        }
-        return child!;
+        return Stack(
+          children: [
+            if (child != null) child,
+            if (_isLocked)
+              Positioned.fill(
+                child: AppLockScreen(
+                  onUnlock: () {
+                    setState(() {
+                      _isLocked = false;
+                    });
+                  },
+                ),
+              ),
+          ],
+        );
       },
       home: widget.isLoggedIn ? const DashboardScreen() : const LoginScreen(),
     );
