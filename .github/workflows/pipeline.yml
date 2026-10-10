@@ -106,9 +106,15 @@ jobs:
 
     steps:
       - name: Auto-merge PR when checks pass
-        run: gh pr merge "${{ github.event.pull_request.number }}" --squash --auto || echo "PR is already closed or merged."
+        run: |
+          TOKEN="${{ secrets.PAT_TOKEN }}"
+          if [ -z "$TOKEN" ]; then
+            TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          fi
+          GH_TOKEN="$TOKEN" gh pr merge "${{ github.event.pull_request.number }}" --squash --auto || \
+          GH_TOKEN="${{ secrets.GITHUB_TOKEN }}" gh pr merge "${{ github.event.pull_request.number }}" --squash --auto || \
+          echo "PR is already closed, merged, or auto-merge will be handled manually."
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
           GH_REPO: ${{ github.repository }}
 
   # ── 4. Manual Trigger: Deploy to Firebase ─────────────────────────────────
