@@ -96,12 +96,23 @@ class MyApp extends StatefulWidget {
     state?.setLocale(newLocale);
   }
 
+  static void setThemeMode(BuildContext context, ThemeMode newThemeMode) {
+    _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    state?.setThemeMode(newThemeMode);
+  }
+
+  static ThemeMode getThemeMode(BuildContext context) {
+    _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    return state?._themeMode ?? ThemeMode.system;
+  }
+
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Locale? _locale;
+  ThemeMode _themeMode = ThemeMode.system;
   late bool _isLocked = widget.isLoggedIn && widget.hasPin;
 
   void setLocale(Locale locale) {
@@ -110,12 +121,33 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     });
   }
 
+  void setThemeMode(ThemeMode themeMode) {
+    setState(() {
+      _themeMode = themeMode;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadLocale();
+    _loadThemeMode();
     _checkInitialLockState();
+  }
+
+  Future<void> _loadThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final themeStr = prefs.getString('themeMode') ?? 'system';
+    setState(() {
+      if (themeStr == 'light') {
+        _themeMode = ThemeMode.light;
+      } else if (themeStr == 'dark') {
+        _themeMode = ThemeMode.dark;
+      } else {
+        _themeMode = ThemeMode.system;
+      }
+    });
   }
 
   Future<void> _checkInitialLockState() async {
@@ -164,7 +196,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system, // Auto adapts to light/dark system mode
+      themeMode: _themeMode,
       locale: _locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

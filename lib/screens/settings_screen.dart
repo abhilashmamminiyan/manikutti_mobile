@@ -77,13 +77,28 @@ class SettingsScreen extends StatelessWidget {
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         value: Localizations.localeOf(context).languageCode,
+                        dropdownColor: isDark
+                            ? AppTheme.darkSurfaceContainer
+                            : AppTheme.surfaceContainerLowest,
                         icon: const Icon(
                           Icons.keyboard_arrow_down_rounded,
                           color: AppTheme.primary,
                         ),
-                        items: const [
-                          DropdownMenuItem(value: 'en', child: Text('English')),
-                          DropdownMenuItem(value: 'ml', child: Text('മലയാളം')),
+                        items: [
+                          DropdownMenuItem(
+                            value: 'en',
+                            child: Text(
+                              'English',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'ml',
+                            child: Text(
+                              'മലയാളം',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ),
                         ],
                         onChanged: (value) async {
                           if (value != null) {
@@ -91,6 +106,110 @@ class SettingsScreen extends StatelessWidget {
                             await prefs.setString('languageCode', value);
                             if (context.mounted) {
                               MyApp.setLocale(context, Locale(value));
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Divider(
+                    color: isDark
+                        ? const Color(0xFF2C3233)
+                        : AppTheme.outlineVariant.withOpacity(0.15),
+                  ),
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color:
+                          (isDark
+                                  ? AppTheme.primaryContainer
+                                  : AppTheme.primary)
+                              .withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isDark
+                          ? Icons.dark_mode_rounded
+                          : Icons.light_mode_rounded,
+                      color: isDark
+                          ? AppTheme.primaryContainer
+                          : AppTheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'Theme Mode',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Light, dark, or system preference',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isDark
+                          ? AppTheme.darkOnSurfaceVariant
+                          : AppTheme.onSurfaceVariant.withOpacity(0.7),
+                    ),
+                  ),
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppTheme.darkSurfaceContainer
+                          : AppTheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<ThemeMode>(
+                        value: MyApp.getThemeMode(context),
+                        dropdownColor: isDark
+                            ? AppTheme.darkSurfaceContainer
+                            : AppTheme.surfaceContainerLowest,
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: AppTheme.primary,
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: ThemeMode.system,
+                            child: Text(
+                              'System',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: ThemeMode.light,
+                            child: Text(
+                              'Light',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: ThemeMode.dark,
+                            child: Text(
+                              'Dark',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ),
+                        ],
+                        onChanged: (mode) async {
+                          if (mode != null) {
+                            final prefs = await SharedPreferences.getInstance();
+                            final str = mode == ThemeMode.light
+                                ? 'light'
+                                : (mode == ThemeMode.dark ? 'dark' : 'system');
+                            await prefs.setString('themeMode', str);
+                            if (context.mounted) {
+                              MyApp.setThemeMode(context, mode);
                             }
                           }
                         },
