@@ -3,17 +3,28 @@ class TransactionModel {
   static const String bankCanara = 'Canara Bank';
   static const List<String> supportedBanks = [bankSbi, bankCanara];
 
+  static const String typeExpense = 'Expense';
+  static const String typeIncome = 'Income';
+  static const String typeFamily = 'Family';
+  static const String typeTransfer = 'Transfer';
+
   final int? id;
   final String date;
   final double amount;
   final String category;
   final String note;
   final bool isPaid;
-  final String type; // 'Expense' | 'Income' | 'Family'
+  final String type; // 'Expense' | 'Income' | 'Family' | 'Transfer'
   final String? addedBy;
   final String? familyCode;
   final bool synced;
   final String? bankAccount; // 'SBI' | 'Canara Bank'
+
+  bool get isTransfer =>
+      type == typeTransfer ||
+      category.toLowerCase() == 'transfer' ||
+      category.toLowerCase() == 'self transfer' ||
+      category.toLowerCase() == 'contra';
 
   TransactionModel({
     this.id,
