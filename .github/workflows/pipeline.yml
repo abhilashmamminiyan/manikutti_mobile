@@ -151,11 +151,9 @@ jobs:
           fi
 
           # Query GitHub API for PR associated with this commit
-          PR_INFO=$(GH_TOKEN="$TOKEN" gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" --jq '.[0] | {title: .title, number: .number, url: .html_url, body: .body}' 2>/dev/null || echo "")
+          PR_INFO=$(GH_TOKEN="$TOKEN" gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" --jq '.[0] | {title: .title, body: .body}' 2>/dev/null || echo "")
 
           export PR_TITLE=$(echo "$PR_INFO" | jq -r '.title // empty' 2>/dev/null || echo "")
-          export PR_NUM=$(echo "$PR_INFO" | jq -r '.number // empty' 2>/dev/null || echo "")
-          export PR_URL=$(echo "$PR_INFO" | jq -r '.url // empty' 2>/dev/null || echo "")
           export PR_BODY=$(echo "$PR_INFO" | jq -r '.body // empty' 2>/dev/null || echo "")
 
           # Fallback to git commit subject and body if no PR was found
@@ -166,43 +164,24 @@ jobs:
             export PR_BODY=$(git log -1 --pretty=format:"%b")
           fi
 
-          export RUN_NUMBER="${{ github.run_number }}"
-          export COMMIT_SHA="${{ github.sha }}"
-
           python3 -c '
           import os
 
           pr_title = os.environ.get("PR_TITLE", "").strip()
-          pr_num = os.environ.get("PR_NUM", "").strip()
-          pr_url = os.environ.get("PR_URL", "").strip()
           pr_body = os.environ.get("PR_BODY", "").strip()
-          run_number = os.environ.get("RUN_NUMBER", "").strip()
-          sha = os.environ.get("COMMIT_SHA", "").strip()
 
           notes = []
           if pr_title:
-              notes.append(f"Release: {pr_title}")
-              notes.append("")
-
-          if pr_num and pr_url:
-              notes.append(f"Pull Request: #{pr_num} ({pr_url})")
-              notes.append("")
-          elif pr_num:
-              notes.append(f"Pull Request: #{pr_num}")
+              notes.append(pr_title)
               notes.append("")
 
           if pr_body:
-              notes.append("Changes:")
-              lines = [l for l in pr_body.splitlines() if l.strip()][:25]
-              notes.extend(lines)
-              notes.append("")
+              lines = [l.rstrip() for l in pr_body.splitlines()]
+              while lines and not lines[-1]:
+                  lines.pop()
+              notes.extend(lines[:40])
 
-          notes.append("Build Details:")
-          notes.append(f"- Run: #{run_number}")
-          if sha:
-              notes.append(f"- Commit: {sha[:7]} ({sha})")
-
-          content = "\n".join(notes) + "\n"
+          content = "\n".join(notes).strip() + "\n"
           with open("release_notes.txt", "w", encoding="utf-8") as f:
               f.write(content)
           '
