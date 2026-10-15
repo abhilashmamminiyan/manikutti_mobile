@@ -1,14 +1,22 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/add_transaction_screen.dart';
 import 'services/api_service.dart';
 import 'services/notification_service.dart';
+import 'services/widget_data_service.dart';
+import 'widgets/voice_logging_sheet.dart';
+import 'widgets/voice_dialog_screen.dart';
 import 'theme/app_theme.dart';
 
 import 'l10n/app_localizations.dart';
 import 'screens/app_lock_screen.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -127,6 +135,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     });
   }
 
+  StreamSubscription? _widgetClickSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -134,6 +144,42 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     _loadLocale();
     _loadThemeMode();
     _checkInitialLockState();
+    _initHomeWidgetAndDeepLinks();
+  }
+
+  Future<void> _initHomeWidgetAndDeepLinks() async {
+    try {
+      final initialUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
+      if (initialUri != null) {
+        _handleDeepLinkUri(initialUri);
+      }
+
+      _widgetClickSubscription = HomeWidget.widgetClicked.listen((Uri? uri) {
+        if (uri != null) {
+          _handleDeepLinkUri(uri);
+        }
+      });
+
+      unawaited(WidgetDataService.updateWidgetData());
+    } catch (e) {
+      debugPrint('Error initializing HomeWidget: $e');
+    }
+  }
+
+  void _handleDeepLinkUri(Uri uri) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = navigatorKey.currentContext;
+      if (context == null) return;
+
+      if (uri.host == 'voice-expense' || uri.host == 'voice-dialog') {
+        final query = uri.queryParameters['query'];
+        VoiceLoggingSheet.show(context, initialQuery: query);
+      } else if (uri.host == 'add-transaction') {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+        );
+      }
+    });
   }
 
   Future<void> _loadThemeMode() async {
@@ -185,6 +231,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _widgetClickSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -192,6 +239,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Manikutti Finance',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
@@ -200,6 +248,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       locale: _locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      onGenerateRoute: (settings) {
+        final uri = Uri.tryParse(settings.name ?? '');
+        if (uri != null && (uri.path == '/voice-dialog' || uri.host == 'voice-dialog')) {
+          final query = uri.queryParameters['query'];
+          return PageRouteBuilder(
+            opaque: false,
+            pageBuilder: (context, _, __) => VoiceDialogScreen(initialQuery: query),
+          );
+        }
+        return null;
+      },
       builder: (context, child) {
         return Stack(
           children: [

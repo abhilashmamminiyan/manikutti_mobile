@@ -895,4 +895,32 @@ class ApiService {
       return {'success': false, 'error': 'ഇന്റർനെറ്റ് കണക്ഷൻ പരിശോധിക്കുക.'};
     }
   }
+
+  /// Parses a natural speech or voice transcript (in English, Malayalam, or Manglish)
+  /// using the Gemini AI endpoint (/api/ai/voice-expense).
+  Future<Map<String, dynamic>?> parseVoiceExpense({
+    required String query,
+    String defaultBank = 'SBI',
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/ai/voice-expense'),
+        headers: headers,
+        body: jsonEncode({
+          'query': query,
+          'defaultBank': defaultBank,
+        }),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      print('Error calling /api/ai/voice-expense: $e');
+      return null;
+    }
+  }
 }
+

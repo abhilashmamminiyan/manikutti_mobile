@@ -18,6 +18,8 @@ import 'bank_statement_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/ai_advisor_card.dart';
 import '../widgets/sidebar_pulse_handle.dart';
+import '../widgets/voice_logging_sheet.dart';
+import '../services/widget_data_service.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 
@@ -207,6 +209,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _recalculateFamilyTotals();
 
       await _fetchFamilyDuesAndNotifications();
+      WidgetDataService.updateWidgetData();
     } catch (e) {
       print('Error loading data: $e');
     } finally {
@@ -1771,6 +1774,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           IconButton(
+            icon: const Icon(Icons.mic_rounded, color: AppTheme.primary),
+            onPressed: () {
+              VoiceLoggingSheet.show(
+                context,
+                onExpenseAdded: () {
+                  _loadData();
+                  _triggerSync();
+                },
+              );
+            },
+            tooltip: 'Voice Expense (AI)',
+          ),
+          IconButton(
             icon: const Icon(Icons.sync),
             onPressed: _triggerSync,
             tooltip: 'Sync with Sheets',
@@ -1792,6 +1808,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
           if (result == true) {
             _loadData();
+            WidgetDataService.updateWidgetData();
             // Try to sync in background
             _triggerSync();
           }
