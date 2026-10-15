@@ -16,6 +16,7 @@ import 'mobile_recharges_screen.dart';
 import 'transactions_log_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/ai_advisor_card.dart';
+import '../widgets/sidebar_pulse_handle.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 
@@ -1515,8 +1516,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: const Icon(Icons.add, size: 28),
       ),
-      body: RefreshIndicator(
-        onRefresh: _triggerSync,
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: _triggerSync,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -2359,6 +2362,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ),
-    );
+      Positioned(
+        left: 0,
+        top: 110.0,
+        child: Builder(
+          builder: (ctx) => SidebarPulseHandle(
+            onTap: () {
+              Scaffold.of(ctx).openDrawer();
+            },
+          ),
+        ),
+      ),
+    ],
+  ),
+);
   }
 }
