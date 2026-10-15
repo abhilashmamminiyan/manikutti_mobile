@@ -63,5 +63,13 @@
   "duplicatesFiltered": "Duplicates Filtered",
   "readyToImport": "Ready to Import",
   "addNote": "Add Note",
-  "importTransactions": "Import Transactions"
+  "importTransactions": "Import Transactions",
+  "aboutApp": "About This App",
+  "featuresGuide": "Features & Guides",
+  "whatsNew": "What's New",
+  "viewTutorial": "View Tutorial",
+  "tryFeatureNow": "Try Feature Now",
+  "appInformation": "App Information",
+  "aboutAppSubtitle": "Explore every feature, screenshot guides & upcoming tools",
+  "whatsNewSubtitle": "Latest features and improvements"
 }

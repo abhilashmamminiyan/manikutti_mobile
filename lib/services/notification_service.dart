@@ -1,9 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   static final NotificationService instance = NotificationService._init();
+  static final ValueNotifier<String?> onNotificationPayload =
+      ValueNotifier<String?>(null);
+
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
@@ -35,6 +39,7 @@ class NotificationService {
       initSettings,
       onDidReceiveNotificationResponse: (NotificationResponse details) {
         print('[NotificationService] Notification clicked: ${details.payload}');
+        onNotificationPayload.value = details.payload;
       },
     );
 
@@ -287,9 +292,157 @@ class NotificationService {
     print('[NotificationService] Cancelled notification #$id');
   }
 
-  Future<void> cancelAllNotifications() async {
-    await _localNotifications.cancelAll();
-    print('[NotificationService] Cancelled all notifications');
+  Future<void> scheduleSalaryPromptReminders({
+    bool isAlreadyConfirmed = false,
+  }) async {
+    final now = tz.TZDateTime.now(tz.local);
+    int currentYear = now.year;
+    int currentMonth = now.month;
+
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'salary_channel',
+        'Salary Notifications',
+        channelDescription: 'Monthly reminder to record received salary income',
+        importance: Importance.max,
+        priority: Priority.high,
+        styleInformation: BigTextStyleInformation(''),
+      ),
+      iOS: DarwinNotificationDetails(),
+    );
+
+    if (isAlreadyConfirmed) {
+      await cancelNotification(9004);
+      await cancelNotification(9005);
+
+      // Schedule for day 4 and 5 of next month
+      int nextMonth = currentMonth + 1;
+      int nextYear = currentYear;
+      if (nextMonth > 12) {
+        nextMonth = 1;
+        nextYear++;
+      }
+      final nextDay4 = tz.TZDateTime(tz.local, nextYear, nextMonth, 4, 9, 0);
+      final nextDay5 = tz.TZDateTime(tz.local, nextYear, nextMonth, 5, 9, 0);
+
+      await _safeZonedSchedule(
+        id: 9004,
+        title: 'Have you got your salary?',
+        body: 'Tap to confirm or edit your monthly salary income.',
+        scheduledDate: nextDay4,
+        notificationDetails: details,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'salary_prompt',
+      );
+
+      await _safeZonedSchedule(
+        id: 9005,
+        title: 'Salary Follow-up: Have you got your salary?',
+        body:
+            'Please confirm your salary to record it as income in your transaction log.',
+        scheduledDate: nextDay5,
+        notificationDetails: details,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'salary_prompt',
+      );
+      print(
+        '[NotificationService] Salary prompt scheduled for next month (day 4 & 5)',
+      );
+      return;
+    }
+
+    final day4ThisMonth = tz.TZDateTime(
+      tz.local,
+      currentYear,
+      currentMonth,
+      4,
+      9,
+      0,
+    );
+    final day5ThisMonth = tz.TZDateTime(
+      tz.local,
+      currentYear,
+      currentMonth,
+      5,
+      9,
+      0,
+    );
+
+    if (day4ThisMonth.isAfter(now)) {
+      await _safeZonedSchedule(
+        id: 9004,
+        title: 'Have you got your salary?',
+        body: 'Tap to confirm or edit your monthly salary income.',
+        scheduledDate: day4ThisMonth,
+        notificationDetails: details,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'salary_prompt',
+      );
+      await _safeZonedSchedule(
+        id: 9005,
+        title: 'Salary Follow-up: Have you got your salary?',
+        body:
+            'Please confirm your salary to record it as income in your transaction log.',
+        scheduledDate: day5ThisMonth,
+        notificationDetails: details,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'salary_prompt',
+      );
+    } else if (now.day == 4) {
+      await _safeZonedSchedule(
+        id: 9005,
+        title: 'Salary Follow-up: Have you got your salary?',
+        body:
+            'Please confirm your salary to record it as income in your transaction log.',
+        scheduledDate: day5ThisMonth,
+        notificationDetails: details,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'salary_prompt',
+      );
+    } else if (now.day == 5 && day5ThisMonth.isAfter(now)) {
+      await _safeZonedSchedule(
+        id: 9005,
+        title: 'Salary Follow-up: Have you got your salary?',
+        body:
+            'Please confirm your salary to record it as income in your transaction log.',
+        scheduledDate: day5ThisMonth,
+        notificationDetails: details,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'salary_prompt',
+      );
+    }
+  }
+
+  Future<void> showSalaryPromptNotificationNow({
+    bool isFollowup = false,
+  }) async {
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'salary_channel',
+        'Salary Notifications',
+        channelDescription: 'Monthly reminder to record received salary income',
+        importance: Importance.max,
+        priority: Priority.high,
+        styleInformation: BigTextStyleInformation(''),
+      ),
+      iOS: DarwinNotificationDetails(),
+    );
+
+    await _localNotifications.show(
+      isFollowup ? 9005 : 9004,
+      isFollowup
+          ? 'Salary Follow-up: Have you got your salary?'
+          : 'Have you got your salary?',
+      'Tap to confirm or edit your monthly salary income.',
+      details,
+      payload: 'salary_prompt',
+    );
   }
 
   tz.TZDateTime _nextInstanceOfDay(int dueDay) {

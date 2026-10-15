@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../database/db_helper.dart';
 import '../models/transaction_model.dart';
 import '../services/api_service.dart';
+import '../services/widget_data_service.dart';
 import '../theme/app_theme.dart';
 
 class AddTransactionScreen extends StatefulWidget {
@@ -149,6 +150,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
         await DbHelper.instance.insertTransaction(transaction);
       }
+      WidgetDataService.updateWidgetData();
 
       if (mounted) {
         Navigator.pop(context, true); // Returns true to trigger refresh

@@ -63,5 +63,13 @@
   "duplicatesFiltered": "ഡ്യൂപ്ലിക്കേറ്റുകൾ ഒഴിവാക്കി",
   "readyToImport": "ചേർക്കാൻ തയ്യാറുള്ളവ",
   "addNote": "കുറിപ്പ് ചേർക്കുക",
-  "importTransactions": "ഇടപാടുകൾ ചേർക്കുക"
+  "importTransactions": "ഇടപാടുകൾ ചേർക്കുക",
+  "aboutApp": "ഈ ആപ്പിനെക്കുറിച്ച്",
+  "featuresGuide": "സവിശേഷതകൾ",
+  "whatsNew": "പുതിയ മാറ്റങ്ങൾ",
+  "viewTutorial": "ട്യൂട്ടോറിയൽ കാണുക",
+  "tryFeatureNow": "ഇപ്പോൾ പരീക്ഷിക്കുക",
+  "appInformation": "ആപ്പ് വിവരങ്ങൾ",
+  "aboutAppSubtitle": "എല്ലാ സൗകര്യങ്ങളും സ്ക്രീൻഷോട്ട് വഴികാട്ടികളും കാണുക",
+  "whatsNewSubtitle": "പുതിയ ഫീച്ചറുകളും മെച്ചപ്പെടുത്തലുകളും"
 }
