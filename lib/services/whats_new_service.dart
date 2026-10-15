@@ -31,15 +31,15 @@ class WhatsNewService {
   static final WhatsNewService instance = WhatsNewService._internal();
   WhatsNewService._internal();
 
-  static const String currentVersion = '2.2.1';
+  static const String currentVersion = '2.3.0';
   static const String _prefKeyLastSeenVersion = 'last_seen_release_version';
 
   final ValueNotifier<bool> hasUnreadNotifier = ValueNotifier<bool>(false);
 
   final List<AppReleaseNote> releases = const [
     AppReleaseNote(
-      version: '2.2.1',
-      title: 'Voice Logging, Home Widget & Quick Shortcuts',
+      version: '2.3.0',
+      title: 'Voice Logging, Home Widget, Shortcuts & Sidebar Rail',
       releaseDate: 'October 2026',
       highlights: [
         ReleaseHighlight(
@@ -53,6 +53,12 @@ class WhatsNewService {
           description:
               'Place a real-time expense and bill reminder widget on your phone screen with instant 1-tap voice recording.',
           iconName: 'widgets',
+        ),
+        ReleaseHighlight(
+          title: 'Sidebar Quick-Access Rail',
+          description:
+              'Instant 1-tap icon navigation docked along the left, with an animated pulsing arrow replacing the hamburger icon.',
+          iconName: 'view_sidebar',
         ),
         ReleaseHighlight(
           title: 'Google Assistant & Quick Settings',
