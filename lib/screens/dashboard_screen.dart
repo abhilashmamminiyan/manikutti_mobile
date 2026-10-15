@@ -1295,11 +1295,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       color: color.withOpacity(0.12),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.tune_rounded,
-                      size: 13,
-                      color: color,
-                    ),
+                    child: Icon(Icons.tune_rounded, size: 13, color: color),
                   ),
                 ),
               ],
@@ -1329,7 +1325,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.green.shade300 : Colors.green.shade800,
+                      color: isDark
+                          ? Colors.green.shade300
+                          : Colors.green.shade800,
                     ),
                   ),
                 ],
@@ -1374,8 +1372,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String bankName,
     required double currentBalance,
   }) {
-    final controller =
-        TextEditingController(text: currentBalance.toStringAsFixed(2));
+    final controller = TextEditingController(
+      text: currentBalance.toStringAsFixed(2),
+    );
     final verifiedDate = BankBalanceService.instance.getCachedDate(bankValue);
 
     showModalBottomSheet(
@@ -2535,7 +2534,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         if (t.isTransfer) {
           // Self-transfers are contra transactions: neutral to personal income & expense totals
-          final isIncoming = t.type == 'Income' ||
+          final isIncoming =
+              t.type == 'Income' ||
               t.category.toLowerCase().contains('income') ||
               t.note.toLowerCase().contains('received') ||
               t.note.toLowerCase().contains('from');
@@ -2643,10 +2643,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       bank: TransactionModel.bankSbi,
       transactions: _transactions,
     );
-    final computedCanaraBalance = BankBalanceService.instance.calculateBankBalance(
-      bank: TransactionModel.bankCanara,
-      transactions: _transactions,
-    );
+    final computedCanaraBalance = BankBalanceService.instance
+        .calculateBankBalance(
+          bank: TransactionModel.bankCanara,
+          transactions: _transactions,
+        );
 
     setState(() {
       _totalIncome = income;

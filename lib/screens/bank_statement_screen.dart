@@ -694,7 +694,8 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
       }
 
       String category = 'General';
-      final bool isSelfTransfer = lowerDesc.contains('self transfer') ||
+      final bool isSelfTransfer =
+          lowerDesc.contains('self transfer') ||
           lowerDesc.contains('own account') ||
           lowerDesc.contains('tfr to own') ||
           (lowerDesc.contains('abhilash') &&
@@ -929,7 +930,9 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
       try {
         parsedCandidateDt = DateTime.parse(rawDate);
         candidateDateTime = parsedCandidateDt;
-        normalizedCandidateDate = DateFormat('yyyy-MM-dd').format(parsedCandidateDt);
+        normalizedCandidateDate = DateFormat(
+          'yyyy-MM-dd',
+        ).format(parsedCandidateDt);
       } catch (_) {
         // keep as is
       }
@@ -940,7 +943,8 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
 
       // Detect closing balance: latest non-null balance in chronological statement
       if (rowBalance != null && rowBalance > 0 && parsedCandidateDt != null) {
-        if (detectedClosingDate == null || parsedCandidateDt.isAfter(detectedClosingDate)) {
+        if (detectedClosingDate == null ||
+            parsedCandidateDt.isAfter(detectedClosingDate)) {
           detectedClosingDate = parsedCandidateDt;
           detectedClosingBalance = rowBalance;
         } else if (parsedCandidateDt.isAtSameMomentAs(detectedClosingDate)) {
@@ -965,7 +969,8 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         } catch (_) {}
 
         final isSameAmount = (existing.amount - amount).abs() < 0.01;
-        final isSameType = (existing.type == type) ||
+        final isSameType =
+            (existing.type == type) ||
             (type == 'Expense' && existing.type != 'Income');
 
         if (!isSameAmount || !isSameType) continue;
@@ -1716,7 +1721,10 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                 if (_statementClosingBalance != null) ...[
                   const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(14),
@@ -1724,7 +1732,11 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.verified_rounded, size: 20, color: Colors.green),
+                        const Icon(
+                          Icons.verified_rounded,
+                          size: 20,
+                          color: Colors.green,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -1734,14 +1746,18 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                                 'Detected Statement Closing Balance',
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.green.shade300 : Colors.green.shade800,
+                                  color: isDark
+                                      ? Colors.green.shade300
+                                      : Colors.green.shade800,
                                 ),
                               ),
                               Text(
                                 '₹${_statementClosingBalance!.toStringAsFixed(2)}${_statementClosingDate != null ? ' (as of ${DateFormat('dd MMM yyyy').format(_statementClosingDate!)})' : ''}',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.green.shade200 : Colors.green.shade900,
+                                  color: isDark
+                                      ? Colors.green.shade200
+                                      : Colors.green.shade900,
                                 ),
                               ),
                             ],
@@ -1978,8 +1994,8 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
     final amountColor = isTransfer
         ? (isDark ? Colors.blue[300]! : Colors.blue[700]!)
         : (isIncome
-            ? Colors.green
-            : (isDark ? Colors.red[300]! : Colors.red[700]!));
+              ? Colors.green
+              : (isDark ? Colors.red[300]! : Colors.red[700]!));
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -2035,10 +2051,13 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: (isTransfer
-                                      ? Colors.blue
-                                      : (isIncome ? Colors.green : Colors.red))
-                                  .withOpacity(0.12),
+                              color:
+                                  (isTransfer
+                                          ? Colors.blue
+                                          : (isIncome
+                                                ? Colors.green
+                                                : Colors.red))
+                                      .withOpacity(0.12),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(

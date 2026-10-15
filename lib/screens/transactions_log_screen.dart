@@ -155,7 +155,8 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
     final filtered = _allTransactions.where((t) {
       // 1. Type filter
       if (_typeFilter == 'Personal') {
-        if (t.type != 'Expense' && t.type != 'Income' && !t.isTransfer) return false;
+        if (t.type != 'Expense' && t.type != 'Income' && !t.isTransfer)
+          return false;
       } else if (_typeFilter == 'Family') {
         if (t.type != 'Family') return false;
       } else if (_typeFilter == 'Transfer') {
@@ -474,7 +475,9 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(
-                        children: ['All', 'Personal', 'Family', 'Transfer'].map((name) {
+                        children: ['All', 'Personal', 'Family', 'Transfer'].map((
+                          name,
+                        ) {
                           final isSelected = _typeFilter == name;
                           return Expanded(
                             child: GestureDetector(
@@ -948,10 +951,12 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                                           vertical: 1.5,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF0284C7)
-                                              .withOpacity(0.12),
-                                          borderRadius:
-                                              BorderRadius.circular(6),
+                                          color: const Color(
+                                            0xFF0284C7,
+                                          ).withOpacity(0.12),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
                                         ),
                                         child: const Text(
                                           'Transfer',

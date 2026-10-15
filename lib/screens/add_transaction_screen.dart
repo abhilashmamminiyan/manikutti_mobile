@@ -18,7 +18,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
 
-  String _transactionType = 'Expense'; // 'Expense' | 'Income' | 'Family' | 'Transfer'
+  String _transactionType =
+      'Expense'; // 'Expense' | 'Income' | 'Family' | 'Transfer'
   String _selectedCategory = 'Food';
   String _selectedBankAccount = TransactionModel.bankSbi;
   String _transferToBankAccount = TransactionModel.bankCanara;
@@ -381,8 +382,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                         if (_transferToBankAccount == val) {
                                           _transferToBankAccount =
                                               val == TransactionModel.bankSbi
-                                                  ? TransactionModel.bankCanara
-                                                  : TransactionModel.bankSbi;
+                                              ? TransactionModel.bankCanara
+                                              : TransactionModel.bankSbi;
                                         }
                                       });
                                     },
@@ -419,8 +420,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                         if (_selectedBankAccount == val) {
                                           _selectedBankAccount =
                                               val == TransactionModel.bankSbi
-                                                  ? TransactionModel.bankCanara
-                                                  : TransactionModel.bankSbi;
+                                              ? TransactionModel.bankCanara
+                                              : TransactionModel.bankSbi;
                                         }
                                       });
                                     },
@@ -578,11 +579,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: 2.2,
-                    ),
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 2.2,
+                        ),
                     itemCount: _categories.length,
                     itemBuilder: (context, index) {
                       final cat = _categories[index];
