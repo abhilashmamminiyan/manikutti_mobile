@@ -298,6 +298,39 @@ class ApiService {
     }
   }
 
+  Future<bool> updateMember({
+    required String targetEmail,
+    String? nickname,
+    double? baseSalary,
+    double? currentSalary,
+    double? monthlyIncome,
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/sheets/family'),
+        headers: headers,
+        body: jsonEncode({
+          'action': 'updateMember',
+          'targetEmail': targetEmail,
+          if (nickname != null) 'nickname': nickname,
+          if (baseSalary != null) 'baseSalary': baseSalary,
+          if (currentSalary != null) 'currentSalary': currentSalary,
+          if (monthlyIncome != null) 'monthlyIncome': monthlyIncome,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<List<dynamic>> fetchMonthlyExpenses(String familyCode) async {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
