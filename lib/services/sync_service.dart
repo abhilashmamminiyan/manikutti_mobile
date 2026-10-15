@@ -63,6 +63,13 @@ class SyncService {
 
     for (final transaction in unsyncedList) {
       try {
+        if (transaction.amount <= 0) {
+          if (transaction.id != null) {
+            await dbHelper.deleteTransaction(transaction.id!);
+          }
+          continue;
+        }
+
         final isFamily = transaction.type == 'Family';
         final sheetName = isFamily ? 'Family_Expenses' : 'Personal_Expenses';
 

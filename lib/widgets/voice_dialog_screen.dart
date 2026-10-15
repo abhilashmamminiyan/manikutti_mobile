@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import '../models/transaction_model.dart';
 import '../services/voice_expense_service.dart';
 import '../theme/app_theme.dart';
 import 'spiral_voice_waves.dart';
@@ -26,7 +25,7 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
   String _selectedLocale =
       'ml_IN'; // Default to Malayalam, with toggle to en_IN
   String? _errorMessage;
-  TransactionModel? _savedTransaction;
+  VoiceActionResult? _actionResult;
 
   @override
   void initState() {
@@ -55,19 +54,31 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
     try {
       final available = await _speech.initialize(
         onError: (err) {
-          if (mounted) {
-            setState(() {
-              _isListening = false;
-              _errorMessage = err.errorMsg;
-            });
+          if (!mounted) return;
+          // If words were already spoken before Android's silence timeout, process them!
+          if (_words.trim().isNotEmpty &&
+              _actionResult == null &&
+              !_isProcessing) {
+            _processTranscript(_words);
+            return;
           }
+          setState(() {
+            _isListening = false;
+            // Never show red error banner on simple initial silence timeout
+            if (err.errorMsg.contains('timeout') ||
+                err.errorMsg.contains('no_match')) {
+              _errorMessage = null;
+            } else {
+              _errorMessage = err.errorMsg;
+            }
+          });
         },
         onStatus: (status) {
           if (status == 'done' || status == 'notListening') {
             if (mounted && _isListening) {
               setState(() => _isListening = false);
               if (_words.trim().isNotEmpty &&
-                  _savedTransaction == null &&
+                  _actionResult == null &&
                   !_isProcessing) {
                 _processTranscript(_words);
               }
@@ -81,7 +92,12 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
           _isInit = available;
         });
         if (available) {
-          _startListening();
+          // Give a smooth 350ms buffer for activity window entrance animation
+          Future.delayed(const Duration(milliseconds: 350), () {
+            if (mounted && !_isListening && !_isProcessing) {
+              _startListening();
+            }
+          });
         } else {
           _errorMessage = 'Microphone permission not granted.';
         }
@@ -100,7 +116,8 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
     setState(() {
       _isListening = true;
       _errorMessage = null;
-      _savedTransaction = null;
+      _actionResult = null;
+      _words = '';
     });
 
     try {
@@ -110,14 +127,22 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
             setState(() {
               _words = result.recognizedWords;
             });
+            if (result.finalResult &&
+                result.recognizedWords.trim().isNotEmpty &&
+                _actionResult == null &&
+                !_isProcessing) {
+              _processTranscript(result.recognizedWords);
+            }
           }
         },
         listenOptions: stt.SpeechListenOptions(
-          listenMode: stt.ListenMode.confirmation,
-          cancelOnError: true,
+          listenMode: stt.ListenMode.dictation,
+          cancelOnError: false,
           partialResults: true,
+          localeId: _selectedLocale,
+          listenFor: const Duration(seconds: 30),
+          pauseFor: const Duration(seconds: 5),
         ),
-        localeId: _selectedLocale,
       );
     } catch (e) {
       if (mounted) {
@@ -132,7 +157,7 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
   Future<void> _stopListening() async {
     await _speech.stop();
     setState(() => _isListening = false);
-    if (_words.trim().isNotEmpty && _savedTransaction == null) {
+    if (_words.trim().isNotEmpty && _actionResult == null) {
       await _processTranscript(_words);
     }
   }
@@ -144,12 +169,19 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
     });
 
     try {
-      final tx = await VoiceExpenseService.instance.processAndSaveVoiceExpense(
-        transcript,
-      );
+      final result = await VoiceExpenseService.instance
+          .processAndSaveVoiceExpense(transcript);
       if (mounted) {
+        if (!result.success) {
+          setState(() {
+            _errorMessage = result.message;
+            _isProcessing = false;
+          });
+          return;
+        }
+
         setState(() {
-          _savedTransaction = tx;
+          _actionResult = result;
           _isProcessing = false;
         });
 
@@ -280,7 +312,7 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
                   const SizedBox(height: 22),
 
                   // Content
-                  if (_savedTransaction != null)
+                  if (_actionResult != null && _actionResult!.success)
                     _buildSuccessView()
                   else
                     _buildListeningView(),
@@ -366,7 +398,62 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
   }
 
   Widget _buildSuccessView() {
-    final tx = _savedTransaction!;
+    final result = _actionResult;
+    if (result == null) return const SizedBox.shrink();
+
+    if (result.isDelete) {
+      return Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.amber.shade700,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.amber.withOpacity(0.4),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.delete_sweep_rounded,
+              color: Colors.white,
+              size: 30,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '${result.deletedCount} Deleted',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            result.message,
+            style: const TextStyle(
+              color: Color(0xFF94A3B8),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Removed from local DB & cloud • Closing...',
+            style: TextStyle(color: Colors.white38, fontSize: 11),
+          ),
+        ],
+      );
+    }
+
+    final tx = result.transaction;
+    if (tx == null) return const SizedBox.shrink();
+
     return Column(
       children: [
         Container(

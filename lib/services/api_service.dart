@@ -308,6 +308,74 @@ class ApiService {
     }
   }
 
+  Future<bool> deleteTransaction({
+    required int id,
+    String sheetName = 'Personal_Expenses',
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/sheets/expense?id=$id&sheetName=$sheetName'),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteExpenseByDate({
+    required String date,
+    String sheetName = 'Personal_Expenses',
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final encodedDate = Uri.encodeComponent(date);
+      final response = await http.delete(
+        Uri.parse(
+          '$baseUrl/api/sheets/expense?date=$encodedDate&sheetName=$sheetName',
+        ),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<int> deleteLastTransactions({
+    int count = 1,
+    String sheetName = 'Personal_Expenses',
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.delete(
+        Uri.parse(
+          '$baseUrl/api/sheets/expense?action=delete_last&count=$count&sheetName=$sheetName',
+        ),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return (body['deletedCount'] as num?)?.toInt() ?? 0;
+      }
+      return 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
   Future<Map<String, dynamic>> parseBankStatement({
     required List<int> fileBytes,
     required String fileName,

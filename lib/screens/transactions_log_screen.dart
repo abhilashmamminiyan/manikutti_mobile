@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../database/db_helper.dart';
 import '../models/transaction_model.dart';
+import '../services/api_service.dart';
 import '../services/sync_service.dart';
+import '../services/widget_data_service.dart';
 import '../theme/app_theme.dart';
 import 'add_transaction_screen.dart';
 import 'bank_statement_screen.dart';
@@ -49,6 +52,8 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
   Future<void> _loadTransactions() async {
     setState(() => _isLoading = true);
     try {
+      // Auto-purge any accidental 0 or negative amount transactions
+      await DbHelper.instance.deleteZeroOrNegativeTransactions();
       final list = await DbHelper.instance.getAllTransactions();
       if (mounted) {
         setState(() {
@@ -63,6 +68,75 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
           SnackBar(content: Text('Error loading transactions: $e')),
         );
       }
+    }
+  }
+
+  Future<bool> _confirmDeleteTransaction(TransactionModel t) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Delete Transaction?'),
+          content: Text(
+            'Are you sure you want to delete "${t.note.isNotEmpty ? t.note : t.category}" (₹${t.amount.toStringAsFixed(2)})?'
+            '${t.synced ? "\n\nThis will remove the transaction from your device and Google Sheets." : "\n\nThis will remove the unsynced transaction from your device."}',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return false;
+
+    try {
+      // 1. Delete from local SQLite
+      if (t.id != null) {
+        await DbHelper.instance.deleteTransaction(t.id!);
+      }
+
+      // 2. If already synced, delete from Google Sheets by Date
+      if (t.synced) {
+        final sheetName = t.type == 'Family'
+            ? 'Family_Expenses'
+            : 'Personal_Expenses';
+        await ApiService.instance.deleteExpenseByDate(
+          date: t.date,
+          sheetName: sheetName,
+        );
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Deleted "${t.note.isNotEmpty ? t.note : t.category}"',
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // Reload transactions and update widget
+      await _loadTransactions();
+      unawaited(WidgetDataService.updateWidgetData());
+      return true;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete transaction: $e')),
+        );
+      }
+      return false;
     }
   }
 
@@ -852,8 +926,7 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                         ? DateFormat('MMM dd, yyyy').format(parsedDate)
                         : t.date;
 
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
+                    final cardWidget = Container(
                       decoration: BoxDecoration(
                         color: isDark
                             ? AppTheme.darkSurfaceContainerLowest
@@ -1032,11 +1105,63 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: () => _confirmDeleteTransaction(t),
+                                    child: Icon(
+                                      Icons.delete_outline,
+                                      size: 16,
+                                      color: isDark
+                                          ? Colors.white38
+                                          : Colors.black38,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ],
                           ),
                         ],
+                      ),
+                    );
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: Dismissible(
+                        key: Key('tx_${t.id ?? t.date}_$index'),
+                        direction: DismissDirection.endToStart,
+                        confirmDismiss: (_) => _confirmDeleteTransaction(t),
+                        background: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent.shade700,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Icon(
+                                Icons.delete_outline,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Delete',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onLongPress: () => _confirmDeleteTransaction(t),
+                          child: cardWidget,
+                        ),
                       ),
                     );
                   }, childCount: transactions.length),

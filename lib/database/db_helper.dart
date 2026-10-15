@@ -122,6 +122,38 @@ class DbHelper {
     return await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<List<TransactionModel>> getLastTransactions(int count) async {
+    if (count <= 0) return [];
+    final db = await instance.database;
+    final result = await db.query(
+      'transactions',
+      orderBy: 'date DESC, id DESC',
+      limit: count,
+    );
+    return result.map((json) => TransactionModel.fromMap(json)).toList();
+  }
+
+  Future<int> deleteZeroOrNegativeTransactions() async {
+    final db = await instance.database;
+    return await db.delete('transactions', where: 'amount <= 0');
+  }
+
+  Future<int> deleteLastTransactions(int count) async {
+    if (count <= 0) return 0;
+    final lastItems = await getLastTransactions(count);
+    if (lastItems.isEmpty) return 0;
+
+    final db = await instance.database;
+    int deleted = 0;
+    for (final item in lastItems) {
+      if (item.id != null) {
+        await db.delete('transactions', where: 'id = ?', whereArgs: [item.id]);
+        deleted++;
+      }
+    }
+    return deleted;
+  }
+
   Future<int> deleteSyncedTransactions() async {
     final db = await instance.database;
     return await db.delete('transactions', where: 'synced = ?', whereArgs: [1]);
