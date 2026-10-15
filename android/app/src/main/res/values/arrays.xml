@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="voice_feature_synonyms">
+        <item>voice expense</item>
+        <item>voice</item>
+        <item>log expense</item>
+        <item>voice logging</item>
+        <item>mic</item>
+        <item>microphone</item>
+        <item>voice dialog</item>
+        <item>വോയ്സ്</item>
+        <item>വോയ്സ് എക്സ്പെൻസ്</item>
+        <item>ചെലവ്</item>
+    </string-array>
+    <string-array name="add_feature_synonyms">
+        <item>add expense</item>
+        <item>new expense</item>
+        <item>add transaction</item>
+    </string-array>
+</resources>
