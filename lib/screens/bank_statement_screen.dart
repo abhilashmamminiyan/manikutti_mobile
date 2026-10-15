@@ -112,39 +112,34 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         return;
       }
 
-      // Check if file is a PDF and if it's password protected
+      // Check if file is a PDF and extract text directly
+      String? extractedText;
       if (file.name.toLowerCase().endsWith('.pdf')) {
         bool isProtected = false;
         try {
           final testDoc = PdfDocument(inputBytes: fileBytes);
+          final text = PdfTextExtractor(testDoc).extractText();
           testDoc.dispose();
-        } catch (e) {
-          final msg = e.toString().toLowerCase();
-          if (msg.contains('password') ||
-              msg.contains('encrypted') ||
-              msg.contains('security')) {
-            isProtected = true;
-          } else {
-            final sample = String.fromCharCodes(fileBytes.take(4096));
-            if (sample.contains('/Encrypt')) {
-              isProtected = true;
-            }
+          if (text.trim().isNotEmpty) {
+            extractedText = text;
           }
+        } catch (e) {
+          isProtected = true;
         }
 
         if (isProtected) {
           setState(() => _isPicking = false);
           if (!mounted) return;
-          final unlocked = await _showPdfPasswordDialog(
+          final unlockedText = await _showPdfPasswordDialog(
             context,
             fileBytes,
             file.name,
           );
-          if (unlocked == null) {
+          if (unlockedText == null) {
             // User cancelled
             return;
           }
-          fileBytes = unlocked;
+          extractedText = unlockedText;
         }
       }
 
@@ -156,20 +151,43 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         _errorMessage = null;
       });
 
-      // Send to backend Gemini parser API
+      // Send to backend Gemini parser API with direct textContent if available
       final parseResult = await ApiService.instance.parseBankStatement(
         fileBytes: fileBytes,
         fileName: file.name,
+        textContent: extractedText,
       );
 
       if (!mounted) return;
 
       if (parseResult['success'] == true &&
-          parseResult['transactions'] is List) {
+          parseResult['transactions'] is List &&
+          (parseResult['transactions'] as List).isNotEmpty) {
         final List<dynamic> rawList = parseResult['transactions'];
         await _processParsedTransactions(rawList);
       } else {
-        // If file is CSV, try local fallback
+        // Fallback 1: If extracted text is available from PDF, run on-device Indian Bank Statement parser
+        if (extractedText != null && extractedText.trim().isNotEmpty) {
+          final localStatementRows = _parseIndianBankStatementText(
+            extractedText,
+          );
+          if (localStatementRows.isNotEmpty) {
+            await _processParsedTransactions(localStatementRows);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Extracted ${localStatementRows.length} transactions via on-device statement parser.',
+                  ),
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            }
+            return;
+          }
+        }
+
+        // Fallback 2: If file is CSV, try local CSV parser
         if (file.name.toLowerCase().endsWith('.csv')) {
           final text = utf8.decode(fileBytes, allowMalformed: true);
           final localParsed = _parseCsvLocally(text);
@@ -197,7 +215,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
     }
   }
 
-  Future<Uint8List?> _showPdfPasswordDialog(
+  Future<String?> _showPdfPasswordDialog(
     BuildContext context,
     Uint8List originalBytes,
     String fileName,
@@ -207,7 +225,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
     String? errorText;
     bool isUnlocking = false;
 
-    return showDialog<Uint8List?>(
+    return showDialog<String?>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
@@ -424,15 +442,12 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         inputBytes: originalBytes,
         password: cleanPassword,
       );
-      // Remove passwords so the resulting document is unlocked for the AI parser
-      doc.security.userPassword = '';
-      doc.security.ownerPassword = '';
-      final unlockedBytes = await doc.save();
+      final text = PdfTextExtractor(doc).extractText();
       doc.dispose();
 
-      // Return decrypted bytes
+      // Return extracted text directly
       if (dialogContext.mounted) {
-        Navigator.pop(dialogContext, Uint8List.fromList(unlockedBytes));
+        Navigator.pop(dialogContext, text);
       }
     } catch (e) {
       setDialogState(() {
@@ -448,6 +463,169 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         );
       }
     }
+  }
+
+  /// On-device regex parser for Indian bank statement text (SBI, HDFC, ICICI, Canara, etc.)
+  List<Map<String, dynamic>> _parseIndianBankStatementText(String rawText) {
+    final lines = rawText
+        .split(RegExp(r'\r?\n'))
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty)
+        .toList();
+    final results = <Map<String, dynamic>>[];
+
+    const monthMap = {
+      'jan': '01',
+      'feb': '02',
+      'mar': '03',
+      'apr': '04',
+      'may': '05',
+      'jun': '06',
+      'jul': '07',
+      'aug': '08',
+      'sep': '09',
+      'oct': '10',
+      'nov': '11',
+      'dec': '12',
+    };
+
+    final dateRegex = RegExp(
+      r'^(\d{1,2})[\s/-]+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s/-]+(\d{2,4})|^(\d{1,4})[-/.](\d{1,2})[-/.](\d{1,4})',
+      caseSensitive: false,
+    );
+
+    for (final line in lines) {
+      final match = dateRegex.firstMatch(line);
+      if (match == null) continue;
+
+      String parsedDate = '';
+      String remainder = '';
+
+      if (match.group(1) != null &&
+          match.group(2) != null &&
+          match.group(3) != null) {
+        final day = match.group(1)!.padLeft(2, '0');
+        final monthKey = match.group(2)!.toLowerCase().substring(0, 3);
+        final month = monthMap[monthKey] ?? '01';
+        String year = match.group(3)!;
+        if (year.length == 2) year = '20$year';
+        parsedDate = '$year-$month-$day';
+        remainder = line.substring(match.end).trim();
+      } else if (match.group(4) != null &&
+          match.group(5) != null &&
+          match.group(6) != null) {
+        final p1 = match.group(4)!;
+        final p2 = match.group(5)!.padLeft(2, '0');
+        final p3 = match.group(6)!;
+        if (p1.length == 4) {
+          parsedDate = '$p1-$p2-${p3.padLeft(2, '0')}';
+        } else {
+          final year = p3.length == 2 ? '20$p3' : p3;
+          parsedDate = '$year-$p2-${p1.padLeft(2, '0')}';
+        }
+        remainder = line.substring(match.end).trim();
+      }
+
+      if (parsedDate.isEmpty) continue;
+
+      // Optional second date (Value date)
+      final secondDate = dateRegex.firstMatch(remainder);
+      if (secondDate != null && secondDate.start == 0) {
+        remainder = remainder.substring(secondDate.end).trim();
+      }
+
+      // Extract trailing amount tokens
+      final tokens = remainder.split(RegExp(r'\s+'));
+      final amountTokens = <double>[];
+      final descTokens = List<String>.from(tokens);
+
+      while (descTokens.isNotEmpty) {
+        final last = descTokens.last.replaceAll(',', '');
+        final num = double.tryParse(last);
+        if (num != null && RegExp(r'^\d+(?:\.\d{1,2})?$').hasMatch(last)) {
+          amountTokens.insert(0, num);
+          descTokens.removeLast();
+        } else {
+          break;
+        }
+      }
+
+      if (amountTokens.isEmpty) continue;
+
+      final description = descTokens.join(' ').trim();
+      if (description.isEmpty) continue;
+
+      double amount = 0.0;
+      if (amountTokens.length >= 2) {
+        amount = amountTokens[amountTokens.length - 2];
+      } else {
+        amount = amountTokens.first;
+      }
+
+      if (amount <= 0) continue;
+
+      final lowerDesc = description.toLowerCase();
+      final isCredit =
+          lowerDesc.contains(' cr') ||
+          lowerDesc.contains('credit') ||
+          lowerDesc.contains('salary') ||
+          lowerDesc.contains('by transfer') ||
+          lowerDesc.contains('refund') ||
+          lowerDesc.contains('interest') ||
+          lowerDesc.contains('dividend');
+
+      final type = isCredit ? 'Income' : 'Expense';
+
+      String category = 'General';
+      if (lowerDesc.contains('swiggy') ||
+          lowerDesc.contains('zomato') ||
+          lowerDesc.contains('hotel') ||
+          lowerDesc.contains('food') ||
+          lowerDesc.contains('restaurant')) {
+        category = 'Food';
+      } else if (lowerDesc.contains('fuel') ||
+          lowerDesc.contains('petrol') ||
+          lowerDesc.contains('hpcl') ||
+          lowerDesc.contains('bpcl') ||
+          lowerDesc.contains('uber') ||
+          lowerDesc.contains('ola')) {
+        category = 'Transport';
+      } else if (lowerDesc.contains('amazon') ||
+          lowerDesc.contains('flipkart') ||
+          lowerDesc.contains('myntra') ||
+          lowerDesc.contains('retail') ||
+          lowerDesc.contains('pos ')) {
+        category = 'Shopping';
+      } else if (lowerDesc.contains('salary') ||
+          lowerDesc.contains('payroll')) {
+        category = 'Salary';
+      } else if (lowerDesc.contains('electric') ||
+          lowerDesc.contains('kseb') ||
+          lowerDesc.contains('bescom') ||
+          lowerDesc.contains('airtel') ||
+          lowerDesc.contains('jio')) {
+        category = 'Utilities';
+      } else if (lowerDesc.contains('rent') || lowerDesc.contains('housing')) {
+        category = 'Housing';
+      } else if (lowerDesc.contains('pharmacy') ||
+          lowerDesc.contains('hospital') ||
+          lowerDesc.contains('med')) {
+        category = 'Health';
+      }
+
+      results.add({
+        'date': parsedDate,
+        'amount': amount,
+        'type': type,
+        'category': category,
+        'description': description,
+        'note': description.length > 60
+            ? description.substring(0, 60)
+            : description,
+      });
+    }
+
+    return results;
   }
 
   List<Map<String, dynamic>> _parseCsvLocally(String csvText) {

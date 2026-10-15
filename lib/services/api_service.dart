@@ -311,23 +311,28 @@ class ApiService {
     required List<int> fileBytes,
     required String fileName,
     String? mimeType,
+    String? textContent,
   }) async {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
       final base64Content = base64Encode(fileBytes);
+      final payload = <String, dynamic>{
+        'fileBase64': base64Content,
+        'fileName': fileName,
+        'mimeType':
+            mimeType ??
+            (fileName.toLowerCase().endsWith('.pdf')
+                ? 'application/pdf'
+                : 'text/csv'),
+      };
+      if (textContent != null && textContent.trim().isNotEmpty) {
+        payload['textContent'] = textContent;
+      }
       final response = await http.post(
         Uri.parse('$baseUrl/api/statement/parse'),
         headers: headers,
-        body: jsonEncode({
-          'fileBase64': base64Content,
-          'fileName': fileName,
-          'mimeType':
-              mimeType ??
-              (fileName.toLowerCase().endsWith('.pdf')
-                  ? 'application/pdf'
-                  : 'text/csv'),
-        }),
+        body: jsonEncode(payload),
       );
 
       final body = jsonDecode(response.body);
