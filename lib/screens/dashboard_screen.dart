@@ -221,7 +221,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         List<Loan> fetchedLoans = [];
         try {
-          final loansData = await ApiService.instance.fetchLoansData(_familyCode!);
+          final loansData = await ApiService.instance.fetchLoansData(
+            _familyCode!,
+          );
           final rawLoans = (loansData['loans'] as List?) ?? [];
           fetchedLoans = rawLoans.map((l) => Loan.fromJson(l)).toList();
         } catch (e) {
@@ -740,21 +742,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _showEditSalaryDialog() {
     if (_familyMembers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No family members found to edit salary.')),
+        const SnackBar(
+          content: Text('No family members found to edit salary.'),
+        ),
       );
       return;
     }
 
     final myMember = _familyMembers.firstWhere(
-      (m) => (m['email'] as String?)?.toLowerCase() == _userEmail?.toLowerCase(),
+      (m) =>
+          (m['email'] as String?)?.toLowerCase() == _userEmail?.toLowerCase(),
       orElse: () => _familyMembers.first,
     );
 
     String selectedEmail = myMember['email'] ?? '';
-    double baseSalary = (myMember['baseSalary'] as num?)?.toDouble() ??
-        (myMember['monthlyIncome'] as num?)?.toDouble() ?? 0.0;
-    double currentSalary = (myMember['currentSalary'] as num?)?.toDouble() ??
-        (myMember['monthlyIncome'] as num?)?.toDouble() ?? baseSalary;
+    double baseSalary =
+        (myMember['baseSalary'] as num?)?.toDouble() ??
+        (myMember['monthlyIncome'] as num?)?.toDouble() ??
+        0.0;
+    double currentSalary =
+        (myMember['currentSalary'] as num?)?.toDouble() ??
+        (myMember['monthlyIncome'] as num?)?.toDouble() ??
+        baseSalary;
 
     final salaryController = TextEditingController(
       text: currentSalary > 0 ? currentSalary.toStringAsFixed(0) : '',
@@ -780,7 +789,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Container(
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF1E282A) : Colors.white,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
+                  ),
                 ),
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
@@ -817,12 +828,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         value: selectedEmail,
                         decoration: InputDecoration(
                           labelText: 'Family Member',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                         ),
-                        items: _familyMembers.map<DropdownMenuItem<String>>((m) {
+                        items: _familyMembers.map<DropdownMenuItem<String>>((
+                          m,
+                        ) {
                           final email = m['email'] as String? ?? '';
-                          final nickname = m['nickname'] as String? ?? email.split('@').first;
+                          final nickname =
+                              m['nickname'] as String? ??
+                              email.split('@').first;
                           return DropdownMenuItem<String>(
                             value: email,
                             child: Text('$nickname ($email)'),
@@ -834,15 +854,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               (m) => m['email'] == val,
                               orElse: () => _familyMembers.first,
                             );
-                            final bSal = (found['baseSalary'] as num?)?.toDouble() ??
-                                (found['monthlyIncome'] as num?)?.toDouble() ?? 0.0;
-                            final cSal = (found['currentSalary'] as num?)?.toDouble() ??
-                                (found['monthlyIncome'] as num?)?.toDouble() ?? bSal;
+                            final bSal =
+                                (found['baseSalary'] as num?)?.toDouble() ??
+                                (found['monthlyIncome'] as num?)?.toDouble() ??
+                                0.0;
+                            final cSal =
+                                (found['currentSalary'] as num?)?.toDouble() ??
+                                (found['monthlyIncome'] as num?)?.toDouble() ??
+                                bSal;
                             setModalState(() {
                               selectedEmail = val;
                               baseSalary = bSal;
                               currentSalary = cSal;
-                              salaryController.text = cSal > 0 ? cSal.toStringAsFixed(0) : '';
+                              salaryController.text = cSal > 0
+                                  ? cSal.toStringAsFixed(0)
+                                  : '';
                             });
                           }
                         },
@@ -854,7 +880,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       decoration: BoxDecoration(
                         color: AppTheme.primary.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
+                        border: Border.all(
+                          color: AppTheme.primary.withOpacity(0.2),
+                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -882,18 +910,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                             ],
                           ),
-                          const Icon(Icons.lock_outline_rounded, color: AppTheme.primary, size: 20),
+                          const Icon(
+                            Icons.lock_outline_rounded,
+                            color: AppTheme.primary,
+                            size: 20,
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: salaryController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: InputDecoration(
                         labelText: "This Month's Salary Income (₹)",
                         hintText: "Enter amount",
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         prefixIcon: const Icon(Icons.currency_rupee_rounded),
                         errorText: errorText,
                       ),
@@ -909,7 +945,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       },
                       title: const Text(
                         'Also update standard Base Salary to this amount',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       controlAffinity: ListTileControlAffinity.leading,
                     ),
@@ -926,10 +965,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onPressed: saving
                           ? null
                           : () async {
-                              final amt = double.tryParse(salaryController.text.trim());
+                              final amt = double.tryParse(
+                                salaryController.text.trim(),
+                              );
                               if (amt == null || amt < 0) {
                                 setModalState(() {
-                                  errorText = 'Please enter a valid salary amount';
+                                  errorText =
+                                      'Please enter a valid salary amount';
                                 });
                                 return;
                               }
@@ -938,19 +980,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 errorText = null;
                               });
 
-                              final success = await ApiService.instance.updateMember(
-                                targetEmail: selectedEmail,
-                                currentSalary: amt,
-                                baseSalary: alsoUpdateBase ? amt : null,
-                                monthlyIncome: amt,
-                              );
+                              final success = await ApiService.instance
+                                  .updateMember(
+                                    targetEmail: selectedEmail,
+                                    currentSalary: amt,
+                                    baseSalary: alsoUpdateBase ? amt : null,
+                                    monthlyIncome: amt,
+                                  );
 
                               if (mounted) {
                                 Navigator.pop(context);
                                 if (success) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Salary income updated successfully!'),
+                                      content: Text(
+                                        'Salary income updated successfully!',
+                                      ),
                                       backgroundColor: Color(0xFF10B981),
                                     ),
                                   );
@@ -958,7 +1003,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Failed to update salary income.'),
+                                      content: Text(
+                                        'Failed to update salary income.',
+                                      ),
                                       backgroundColor: Colors.red,
                                     ),
                                   );
@@ -969,11 +1016,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
                             )
                           : const Text(
                               'Save Salary Income',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
                             ),
                     ),
                   ],
@@ -1272,9 +1325,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     for (final item in _monthlyExpenses) {
       final title = (item['title'] as String? ?? '').toLowerCase();
       final cleanTitle = title.replaceAll('emi:', '').trim();
-      final linkedLoan = (item['linkedLoan'] as String? ?? '').toLowerCase().trim();
+      final linkedLoan = (item['linkedLoan'] as String? ?? '')
+          .toLowerCase()
+          .trim();
       final isEmi = title.contains('emi') || linkedLoan.isNotEmpty;
-      final isCounted = loanNames.contains(title) || loanNames.contains(cleanTitle) || (linkedLoan.isNotEmpty && loanNames.contains(linkedLoan));
+      final isCounted =
+          loanNames.contains(title) ||
+          loanNames.contains(cleanTitle) ||
+          (linkedLoan.isNotEmpty && loanNames.contains(linkedLoan));
       if (isEmi && !isCounted) {
         standaloneEmiSum += (item['amount'] as num? ?? 0).toDouble();
       }
@@ -1285,10 +1343,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     double salarySum = 0;
     double baseSalarySum = 0;
     for (final m in _familyMembers) {
-      final mIncome = (m['currentSalary'] as num?)?.toDouble() ??
-          (m['monthlyIncome'] as num?)?.toDouble() ?? 0.0;
-      final mBase = (m['baseSalary'] as num?)?.toDouble() ??
-          (m['monthlyIncome'] as num?)?.toDouble() ?? mIncome;
+      final mIncome =
+          (m['currentSalary'] as num?)?.toDouble() ??
+          (m['monthlyIncome'] as num?)?.toDouble() ??
+          0.0;
+      final mBase =
+          (m['baseSalary'] as num?)?.toDouble() ??
+          (m['monthlyIncome'] as num?)?.toDouble() ??
+          mIncome;
       salarySum += mIncome;
       baseSalarySum += mBase;
     }
@@ -1767,7 +1829,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     final assignedTo = item['assignedTo'] as String?;
                     final lastPaidDateStr = item['lastPaidDate'] as String?;
                     final linkedLoan = item['linkedLoan'] as String?;
-                    final isEmi = title.toLowerCase().contains('emi') ||
+                    final isEmi =
+                        title.toLowerCase().contains('emi') ||
                         (linkedLoan != null && linkedLoan.trim().isNotEmpty);
 
                     final isAssignedToMe =
@@ -1806,10 +1869,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: (isEmi
-                                      ? const Color(0xFFF59E0B)
-                                      : AppTheme.secondaryContainer)
-                                  .withOpacity(0.18),
+                              color:
+                                  (isEmi
+                                          ? const Color(0xFFF59E0B)
+                                          : AppTheme.secondaryContainer)
+                                      .withOpacity(0.18),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
@@ -1834,13 +1898,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   children: [
                                     Text(
                                       title,
-                                      style:
-                                          theme.textTheme.titleSmall?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: isDark
-                                            ? AppTheme.darkOnSurface
-                                            : AppTheme.onSurface,
-                                      ),
+                                      style: theme.textTheme.titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: isDark
+                                                ? AppTheme.darkOnSurface
+                                                : AppTheme.onSurface,
+                                          ),
                                     ),
                                     if (isEmi)
                                       Container(
@@ -1849,13 +1913,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           vertical: 2,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFFF59E0B)
-                                              .withOpacity(0.15),
-                                          borderRadius:
-                                              BorderRadius.circular(6),
+                                          color: const Color(
+                                            0xFFF59E0B,
+                                          ).withOpacity(0.15),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
                                           border: Border.all(
-                                            color: const Color(0xFFF59E0B)
-                                                .withOpacity(0.5),
+                                            color: const Color(
+                                              0xFFF59E0B,
+                                            ).withOpacity(0.5),
                                             width: 0.8,
                                           ),
                                         ),
