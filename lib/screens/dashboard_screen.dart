@@ -20,6 +20,8 @@ import '../widgets/ai_advisor_card.dart';
 import '../widgets/sidebar_pulse_handle.dart';
 import '../widgets/voice_logging_sheet.dart';
 import '../services/widget_data_service.dart';
+import '../services/whats_new_service.dart';
+import 'settings_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 
@@ -1670,7 +1672,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _triggerSync() async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Syncing changes with Google Sheets...'),
+        content: Text('Syncing changes with Cloud Vault...'),
         duration: Duration(seconds: 1),
       ),
     );
@@ -1749,6 +1751,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: Builder(
+          builder: (ctx) => PulsingArrowButton(
+            onTap: () => Scaffold.of(ctx).openDrawer(),
+          ),
+        ),
         title: Text(l10n.dashboard),
         actions: [
           Stack(
@@ -1789,7 +1797,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.sync),
             onPressed: _triggerSync,
-            tooltip: 'Sync with Sheets',
+            tooltip: 'Sync with Cloud',
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: WhatsNewService.instance.hasUnreadNotifier,
+            builder: (context, hasUnread, _) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.settings_outlined),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        ),
+                      );
+                    },
+                    tooltip: l10n.settings,
+                  ),
+                  if (hasUnread)
+                    Positioned(
+                      right: 10,
+                      top: 10,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.person_outline),
@@ -1818,16 +1861,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: const Icon(Icons.add, size: 28),
       ),
-      body: Stack(
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          RefreshIndicator(
-            onRefresh: _triggerSync,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+          Builder(
+            builder: (ctx) => SidebarIconRail(
+              activeRoute: 'dashboard',
+              onOpenDrawer: () => Scaffold.of(ctx).openDrawer(),
+            ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _triggerSync,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(left: 8.0, right: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                   const SizedBox(height: 12),
                   // Swipeable Card PageView
                   SizedBox(
@@ -2681,19 +2732,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ),
-          Positioned(
-            left: 0,
-            top: 110.0,
-            child: Builder(
-              builder: (ctx) => SidebarPulseHandle(
-                onTap: () {
-                  Scaffold.of(ctx).openDrawer();
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
   }
 }

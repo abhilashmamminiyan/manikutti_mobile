@@ -10,7 +10,9 @@ import '../screens/mobile_recharges_screen.dart';
 import '../screens/screenshots_screen.dart';
 import '../screens/bank_statement_screen.dart';
 import '../services/api_service.dart';
+import '../services/whats_new_service.dart';
 import '../screens/login_screen.dart';
+import '../screens/about_app_screen.dart';
 import '../theme/app_theme.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -22,6 +24,7 @@ class AppDrawer extends StatelessWidget {
     required String title,
     required VoidCallback onTap,
     bool isDestructive = false,
+    bool hasBadge = false,
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -72,6 +75,16 @@ class AppDrawer extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (hasBadge)
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14,
@@ -284,6 +297,19 @@ class AppDrawer extends StatelessWidget {
                       );
                     },
                   ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.auto_awesome_rounded,
+                    title: l10n.aboutApp,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AboutAppScreen(),
+                        ),
+                      );
+                    },
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
@@ -296,16 +322,22 @@ class AppDrawer extends StatelessWidget {
                       thickness: 1,
                     ),
                   ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.settings_rounded,
-                    title: l10n.settings,
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SettingsScreen(),
-                        ),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: WhatsNewService.instance.hasUnreadNotifier,
+                    builder: (context, hasUnread, _) {
+                      return _buildDrawerItem(
+                        context: context,
+                        icon: Icons.settings_rounded,
+                        title: l10n.settings,
+                        hasBadge: hasUnread,
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SettingsScreen(),
+                            ),
+                          );
+                        },
                       );
                     },
                   ),

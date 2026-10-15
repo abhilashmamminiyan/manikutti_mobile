@@ -481,6 +481,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import Transactions'**
   String get importTransactions;
+
+  /// No description provided for @aboutApp.
+  ///
+  /// In en, this message translates to:
+  /// **'About This App'**
+  String get aboutApp;
+
+  /// No description provided for @featuresGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'Features & Guides'**
+  String get featuresGuide;
+
+  /// No description provided for @whatsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s New'**
+  String get whatsNew;
+
+  /// No description provided for @viewTutorial.
+  ///
+  /// In en, this message translates to:
+  /// **'View Tutorial'**
+  String get viewTutorial;
+
+  /// No description provided for @tryFeatureNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Feature Now'**
+  String get tryFeatureNow;
+
+  /// No description provided for @appInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'App Information'**
+  String get appInformation;
+
+  /// No description provided for @aboutAppSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore every feature, screenshot guides & upcoming tools'**
+  String get aboutAppSubtitle;
+
+  /// No description provided for @whatsNewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest features and improvements'**
+  String get whatsNewSubtitle;
 }
 
 class _AppLocalizationsDelegate

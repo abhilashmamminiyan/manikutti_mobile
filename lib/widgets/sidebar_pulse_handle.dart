@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+export 'sidebar_icon_rail.dart';
 
 /// Floating handle pinned to the left edge of the screen.
 /// Displays an animated pulsing arrow at the top and an options icon below it.

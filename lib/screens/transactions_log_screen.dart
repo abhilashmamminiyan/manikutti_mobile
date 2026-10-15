@@ -69,7 +69,7 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
   Future<void> _syncAndReload() async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Syncing changes with Google Sheets...'),
+        content: Text('Syncing changes with Cloud Vault...'),
         duration: Duration(seconds: 1),
       ),
     );

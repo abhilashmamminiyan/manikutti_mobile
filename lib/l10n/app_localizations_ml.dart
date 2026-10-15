@@ -200,4 +200,29 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get importTransactions => 'ഇടപാടുകൾ ചേർക്കുക';
+
+  @override
+  String get aboutApp => 'ഈ ആപ്പിനെക്കുറിച്ച്';
+
+  @override
+  String get featuresGuide => 'സവിശേഷതകൾ';
+
+  @override
+  String get whatsNew => 'പുതിയ മാറ്റങ്ങൾ';
+
+  @override
+  String get viewTutorial => 'ട്യൂട്ടോറിയൽ കാണുക';
+
+  @override
+  String get tryFeatureNow => 'ഇപ്പോൾ പരീക്ഷിക്കുക';
+
+  @override
+  String get appInformation => 'ആപ്പ് വിവരങ്ങൾ';
+
+  @override
+  String get aboutAppSubtitle =>
+      'എല്ലാ സൗകര്യങ്ങളും സ്ക്രീൻഷോട്ട് വഴികാട്ടികളും കാണുക';
+
+  @override
+  String get whatsNewSubtitle => 'പുതിയ ഫീച്ചറുകളും മെച്ചപ്പെടുത്തലുകളും';
 }

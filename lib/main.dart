@@ -15,6 +15,7 @@ import 'theme/app_theme.dart';
 
 import 'l10n/app_localizations.dart';
 import 'screens/app_lock_screen.dart';
+import 'services/whats_new_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -63,6 +64,13 @@ void main() async {
       await NotificationService.instance.initialize();
     } catch (e) {
       print('Failed to initialize NotificationService: $e');
+    }
+
+    // Initialize release notes & What's New service
+    try {
+      await WhatsNewService.instance.init();
+    } catch (e) {
+      print('Failed to initialize WhatsNewService: $e');
     }
 
     // Initialize workmanager background sync task
