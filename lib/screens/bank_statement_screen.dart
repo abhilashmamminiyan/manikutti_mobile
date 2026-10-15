@@ -997,7 +997,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Confirm Import'),
         content: Text(
-          'Are you sure you want to save ${selectedItems.length} transactions to your Google Sheet and local Transaction Logs?',
+          'Are you sure you want to save ${selectedItems.length} transactions to your Cloud Ledger and local Transaction Logs?',
         ),
         actions: [
           TextButton(
@@ -1064,7 +1064,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         );
       }
 
-      // 1. Batch Save to Google Sheets
+      // 1. Batch Save to Cloud Vault
       final success = await ApiService.instance.batchCreateTransactions(
         sheetName: 'Personal_Expenses',
         expenses: sheetPayload,
@@ -1072,7 +1072,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
 
       if (!success) {
         throw Exception(
-          'Google Sheets batch sync failed. Please check your internet connection.',
+          'Cloud sync failed. Please check your internet connection.',
         );
       }
 
@@ -1136,7 +1136,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '$count transactions have been recorded in your Google Sheet and local Transaction Logs.',
+                  '$count transactions have been recorded in your Cloud Ledger and local Transaction Logs.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: AppTheme.outline,
                   ),
@@ -1365,7 +1365,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Upload your monthly bank statement (.pdf, .csv, .xlsx) to automatically parse all transactions, add notes, filter out duplicates, and sync to Google Sheets.',
+              'Upload your monthly bank statement (.pdf, .csv, .xlsx) to automatically parse all transactions, add notes, filter out duplicates, and sync to your secure Cloud Ledger.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppTheme.outline,

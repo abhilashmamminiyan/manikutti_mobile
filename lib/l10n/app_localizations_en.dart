@@ -200,4 +200,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importTransactions => 'Import Transactions';
+
+  @override
+  String get aboutApp => 'About This App';
+
+  @override
+  String get featuresGuide => 'Features & Guides';
+
+  @override
+  String get whatsNew => 'What\'s New';
+
+  @override
+  String get viewTutorial => 'View Tutorial';
+
+  @override
+  String get tryFeatureNow => 'Try Feature Now';
+
+  @override
+  String get appInformation => 'App Information';
+
+  @override
+  String get aboutAppSubtitle =>
+      'Explore every feature, screenshot guides & upcoming tools';
+
+  @override
+  String get whatsNewSubtitle => 'Latest features and improvements';
 }
