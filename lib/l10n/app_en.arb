@@ -55,5 +55,13 @@
   "personName": "Contact / SIM Name",
   "rechargeNow": "Recharge Now",
   "rechargedToday": "Recharged Today",
-  "markRecharged": "Mark Recharged"
+  "markRecharged": "Mark Recharged",
+  "bankStatement": "Bank Statement",
+  "uploadBankStatement": "Upload Bank Statement",
+  "noStatementSelected": "Please select a bank statement (.pdf, .csv)",
+  "transactionsFound": "Transactions Found",
+  "duplicatesFiltered": "Duplicates Filtered",
+  "readyToImport": "Ready to Import",
+  "addNote": "Add Note",
+  "importTransactions": "Import Transactions"
 }

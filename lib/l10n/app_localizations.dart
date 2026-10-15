@@ -433,6 +433,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark Recharged'**
   String get markRecharged;
+
+  /// No description provided for @bankStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank Statement'**
+  String get bankStatement;
+
+  /// No description provided for @uploadBankStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Bank Statement'**
+  String get uploadBankStatement;
+
+  /// No description provided for @noStatementSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a bank statement (.pdf, .csv)'**
+  String get noStatementSelected;
+
+  /// No description provided for @transactionsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions Found'**
+  String get transactionsFound;
+
+  /// No description provided for @duplicatesFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicates Filtered'**
+  String get duplicatesFiltered;
+
+  /// No description provided for @readyToImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to Import'**
+  String get readyToImport;
+
+  /// No description provided for @addNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Note'**
+  String get addNote;
+
+  /// No description provided for @importTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Transactions'**
+  String get importTransactions;
 }
 
 class _AppLocalizationsDelegate

@@ -175,4 +175,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get markRecharged => 'Mark Recharged';
+
+  @override
+  String get bankStatement => 'Bank Statement';
+
+  @override
+  String get uploadBankStatement => 'Upload Bank Statement';
+
+  @override
+  String get noStatementSelected =>
+      'Please select a bank statement (.pdf, .csv)';
+
+  @override
+  String get transactionsFound => 'Transactions Found';
+
+  @override
+  String get duplicatesFiltered => 'Duplicates Filtered';
+
+  @override
+  String get readyToImport => 'Ready to Import';
+
+  @override
+  String get addNote => 'Add Note';
+
+  @override
+  String get importTransactions => 'Import Transactions';
 }

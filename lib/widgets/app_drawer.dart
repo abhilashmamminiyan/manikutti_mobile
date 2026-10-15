@@ -8,6 +8,7 @@ import '../screens/loans_emi_screen.dart';
 import '../screens/home_loan_screen.dart';
 import '../screens/mobile_recharges_screen.dart';
 import '../screens/screenshots_screen.dart';
+import '../screens/bank_statement_screen.dart';
 import '../services/api_service.dart';
 import '../screens/login_screen.dart';
 import '../theme/app_theme.dart';
@@ -265,6 +266,19 @@ class AppDrawer extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) => const ScreenshotsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.upload_file_rounded,
+                    title: l10n.bankStatement,
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BankStatementScreen(),
                         ),
                       );
                     },

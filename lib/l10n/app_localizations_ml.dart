@@ -175,4 +175,29 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get markRecharged => 'റീചാർജ് രേഖപ്പെടുത്തുക';
+
+  @override
+  String get bankStatement => 'ബാങ്ക് സ്റ്റേറ്റ്‌മെന്റ്';
+
+  @override
+  String get uploadBankStatement => 'ബാങ്ക് സ്റ്റേറ്റ്‌മെന്റ് അപ്‌ലോഡ്';
+
+  @override
+  String get noStatementSelected =>
+      'ഒരു ബാങ്ക് സ്റ്റേറ്റ്‌മെന്റ് ഫയൽ തിരഞ്ഞെടുക്കുക (.pdf, .csv)';
+
+  @override
+  String get transactionsFound => 'കണ്ടെത്തിയ ഇടപാടുകൾ';
+
+  @override
+  String get duplicatesFiltered => 'ഡ്യൂപ്ലിക്കേറ്റുകൾ ഒഴിവാക്കി';
+
+  @override
+  String get readyToImport => 'ചേർക്കാൻ തയ്യാറുള്ളവ';
+
+  @override
+  String get addNote => 'കുറിപ്പ് ചേർക്കുക';
+
+  @override
+  String get importTransactions => 'ഇടപാടുകൾ ചേർക്കുക';
 }
