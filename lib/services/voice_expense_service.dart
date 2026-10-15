@@ -158,8 +158,12 @@ class VoiceExpenseService {
 
     Map<String, dynamic> parsedData;
     try {
-      final apiRes = await ApiService.instance.parseVoiceExpense(query: cleanText);
-      if (apiRes != null && apiRes['success'] == true && apiRes['data'] != null) {
+      final apiRes = await ApiService.instance.parseVoiceExpense(
+        query: cleanText,
+      );
+      if (apiRes != null &&
+          apiRes['success'] == true &&
+          apiRes['data'] != null) {
         parsedData = apiRes['data'] as Map<String, dynamic>;
       } else {
         parsedData = parseLocally(cleanText);
@@ -178,7 +182,8 @@ class VoiceExpenseService {
     final String category = parsedData['category']?.toString() ?? 'Other';
     final String note = parsedData['note']?.toString() ?? cleanText;
     final String type = parsedData['type']?.toString() ?? 'Expense';
-    final String bankAccount = parsedData['bankAccount']?.toString() ?? TransactionModel.bankSbi;
+    final String bankAccount =
+        parsedData['bankAccount']?.toString() ?? TransactionModel.bankSbi;
 
     // Normalizing timestamp to UTC as per architectural contract
     final utcTimestamp = DateTime.now().toUtc().toIso8601String();
@@ -220,7 +225,8 @@ class VoiceExpenseService {
         NotificationService.instance.showImmediateNotification(
           id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
           title: 'Manikutti: Record Saved',
-          body: 'Saved ₹${savedTx.amount.toStringAsFixed(0)} for ${savedTx.note} (${savedTx.category})',
+          body:
+              'Saved ₹${savedTx.amount.toStringAsFixed(0)} for ${savedTx.note} (${savedTx.category})',
         ),
       );
     } catch (e) {

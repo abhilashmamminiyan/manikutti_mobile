@@ -18,11 +18,7 @@ class PulsingArrowButton extends StatefulWidget {
   final VoidCallback onTap;
   final double size;
 
-  const PulsingArrowButton({
-    super.key,
-    required this.onTap,
-    this.size = 20.0,
-  });
+  const PulsingArrowButton({super.key, required this.onTap, this.size = 20.0});
 
   @override
   State<PulsingArrowButton> createState() => _PulsingArrowButtonState();
@@ -207,9 +203,7 @@ class SidebarIconRail extends StatelessWidget {
       width: 48,
       decoration: BoxDecoration(
         color: bgColor,
-        border: Border(
-          right: BorderSide(color: borderColor, width: 1.0),
-        ),
+        border: Border(right: BorderSide(color: borderColor, width: 1.0)),
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 6.0),
@@ -306,7 +300,9 @@ class SidebarIconRail extends StatelessWidget {
               onTap: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (_) => const MobileRechargesScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const MobileRechargesScreen(),
+                  ),
                 );
               },
             ),
@@ -348,7 +344,9 @@ class SidebarIconRail extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const BankStatementScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const BankStatementScreen(),
+                  ),
                 );
               },
             ),

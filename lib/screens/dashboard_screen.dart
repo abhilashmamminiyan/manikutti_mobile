@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../database/db_helper.dart';
 import '../models/transaction_model.dart';
 import '../models/loan_model.dart';
@@ -56,6 +57,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double _constantEmiDues = 0;
   double _familySalaryIncome = 0;
   double _familyBaseSalary = 0;
+  double _myBaseSalary = 0;
+  double _myCurrentSalary = 0;
+  bool _isSalaryPromptVisible = false;
   double _totalPaidRegularExpenses = 0;
   String? _familyCode;
   String? _userEmail;
@@ -66,9 +70,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    NotificationService.onNotificationPayload.addListener(
+      _handleNotificationPayload,
+    );
     _loadData();
     _checkFamilyMembership();
     _initPackageInfo();
+  }
+
+  @override
+  void dispose() {
+    NotificationService.onNotificationPayload.removeListener(
+      _handleNotificationPayload,
+    );
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _handleNotificationPayload() {
+    final payload = NotificationService.onNotificationPayload.value;
+    if (payload == 'salary_prompt') {
+      if (mounted) {
+        setState(() {
+          _isSalaryPromptVisible = true;
+        });
+      }
+    }
   }
 
   Future<void> _initPackageInfo() async {
@@ -999,7 +1026,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showEditSalaryDialog() {
+  void _showEditSalaryDialog({bool recordAsIncomeOnSave = false}) {
     if (_familyMembers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1029,6 +1056,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       text: currentSalary > 0 ? currentSalary.toStringAsFixed(0) : '',
     );
     bool alsoUpdateBase = false;
+    bool recordAsIncome = recordAsIncomeOnSave;
     bool saving = false;
     String? errorText;
 
@@ -1212,6 +1240,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       controlAffinity: ListTileControlAffinity.leading,
                     ),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: recordAsIncome,
+                      onChanged: (val) {
+                        setModalState(() {
+                          recordAsIncome = val ?? false;
+                        });
+                      },
+                      title: const Text(
+                        'Record as Income in transaction log for this month',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                    ),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -1248,15 +1293,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     monthlyIncome: amt,
                                   );
 
+                              if (success && recordAsIncome) {
+                                await _recordSalaryAsIncome(
+                                  amount: amt,
+                                  note: 'Monthly Salary Income',
+                                );
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                final now = DateTime.now();
+                                await prefs.setBool(
+                                  'salary_confirmed_${now.year}_${now.month}',
+                                  true,
+                                );
+                                await NotificationService.instance
+                                    .cancelNotification(9004);
+                                await NotificationService.instance
+                                    .cancelNotification(9005);
+                                await NotificationService.instance
+                                    .scheduleSalaryPromptReminders(
+                                      isAlreadyConfirmed: true,
+                                    );
+                                if (mounted) {
+                                  setState(() {
+                                    _isSalaryPromptVisible = false;
+                                  });
+                                }
+                              }
+
                               if (mounted) {
                                 Navigator.pop(context);
                                 if (success) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                       content: Text(
-                                        'Salary income updated successfully!',
+                                        recordAsIncome
+                                            ? 'Salary income updated and recorded in transaction log!'
+                                            : 'Salary income updated successfully!',
                                       ),
-                                      backgroundColor: Color(0xFF10B981),
+                                      backgroundColor: const Color(0xFF10B981),
                                     ),
                                   );
                                   await _loadData();
@@ -1296,6 +1370,418 @@ class _DashboardScreenState extends State<DashboardScreen> {
           },
         );
       },
+    );
+  }
+
+  Future<void> _recordSalaryAsIncome({
+    required double amount,
+    required String note,
+  }) async {
+    try {
+      final transaction = TransactionModel(
+        date: DateTime.now().toUtc().toIso8601String(),
+        amount: amount,
+        category: 'Salary',
+        note: note,
+        type: 'Income',
+        isPaid: true,
+        addedBy: _userEmail ?? '',
+        synced: false,
+        bankAccount: 'SBI',
+      );
+      await DbHelper.instance.insertTransaction(transaction);
+      SyncService.instance.syncData().ignore();
+    } catch (e) {
+      debugPrint('[Dashboard] Error recording salary as income: $e');
+    }
+  }
+
+  Future<void> _handleConfirmSalaryYes() async {
+    final amt = _myCurrentSalary > 0 ? _myCurrentSalary : _myBaseSalary;
+    if (amt <= 0) {
+      _showEditSalaryDialog(recordAsIncomeOnSave: true);
+      return;
+    }
+
+    await _recordSalaryAsIncome(amount: amt, note: 'Monthly Salary Income');
+
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    await prefs.setBool('salary_confirmed_${now.year}_${now.month}', true);
+
+    await NotificationService.instance.cancelNotification(9004);
+    await NotificationService.instance.cancelNotification(9005);
+    await NotificationService.instance.scheduleSalaryPromptReminders(
+      isAlreadyConfirmed: true,
+    );
+
+    if (mounted) {
+      setState(() {
+        _isSalaryPromptVisible = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Salary income (₹${amt.toStringAsFixed(0)}) recorded in transaction log!',
+          ),
+          backgroundColor: const Color(0xFF10B981),
+        ),
+      );
+      await _loadData();
+    }
+  }
+
+  Future<void> _handleConfirmSalaryBasic() async {
+    final amt = _myBaseSalary > 0 ? _myBaseSalary : _myCurrentSalary;
+    if (amt <= 0) {
+      _showEditSalaryDialog(recordAsIncomeOnSave: true);
+      return;
+    }
+
+    if (_userEmail != null && amt != _myCurrentSalary) {
+      await ApiService.instance.updateMember(
+        targetEmail: _userEmail!,
+        currentSalary: amt,
+        monthlyIncome: amt,
+      );
+    }
+
+    await _recordSalaryAsIncome(
+      amount: amt,
+      note: 'Monthly Salary Income (Base)',
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    await prefs.setBool('salary_confirmed_${now.year}_${now.month}', true);
+
+    await NotificationService.instance.cancelNotification(9004);
+    await NotificationService.instance.cancelNotification(9005);
+    await NotificationService.instance.scheduleSalaryPromptReminders(
+      isAlreadyConfirmed: true,
+    );
+
+    if (mounted) {
+      setState(() {
+        _isSalaryPromptVisible = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Base salary income (₹${amt.toStringAsFixed(0)}) recorded in transaction log!',
+          ),
+          backgroundColor: const Color(0xFF10B981),
+        ),
+      );
+      await _loadData();
+    }
+  }
+
+  Future<void> _checkSalaryPromptStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    final confirmed =
+        prefs.getBool('salary_confirmed_${now.year}_${now.month}') ?? false;
+
+    final hasSalaryTransaction = _transactions.any((t) {
+      if (t.type != 'Income') return false;
+      final cat = t.category.toLowerCase();
+      final note = t.note.toLowerCase();
+      final isSalary = cat.contains('salary') || note.contains('salary');
+      if (!isSalary) return false;
+      try {
+        final dt = DateTime.parse(t.date).toLocal();
+        return dt.year == now.year && dt.month == now.month;
+      } catch (_) {
+        return false;
+      }
+    });
+
+    if (confirmed || hasSalaryTransaction) {
+      if (!confirmed) {
+        await prefs.setBool('salary_confirmed_${now.year}_${now.month}', true);
+      }
+      await NotificationService.instance.cancelNotification(9004);
+      await NotificationService.instance.cancelNotification(9005);
+      await NotificationService.instance.scheduleSalaryPromptReminders(
+        isAlreadyConfirmed: true,
+      );
+      if (mounted) {
+        setState(() {
+          _isSalaryPromptVisible = false;
+        });
+      }
+      return;
+    }
+
+    await NotificationService.instance.scheduleSalaryPromptReminders(
+      isAlreadyConfirmed: false,
+    );
+
+    final isSalaryDay = now.day >= 4;
+    final isPromptPayload =
+        NotificationService.onNotificationPayload.value == 'salary_prompt';
+
+    if (mounted) {
+      setState(() {
+        _isSalaryPromptVisible = isSalaryDay || isPromptPayload;
+      });
+    }
+  }
+
+  Widget _buildSalaryPromptBanner(ThemeData theme, bool isDark) {
+    final now = DateTime.now();
+    final isDay5Followup = now.day == 5;
+    final effectiveSalary = _myCurrentSalary > 0
+        ? _myCurrentSalary
+        : _myBaseSalary;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF064E3B), const Color(0xFF0F172A)]
+              : [const Color(0xFFECFDF5), const Color(0xFFF0FDF4)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFF10B981).withOpacity(0.35),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF10B981).withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withOpacity(0.18),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.payments_rounded,
+                  color: Color(0xFF10B981),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            isDay5Followup
+                                ? 'Salary Follow-up: Received Salary?'
+                                : 'Have you got your salary?',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF065F46),
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              _isSalaryPromptVisible = false;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Icon(
+                              Icons.close,
+                              size: 18,
+                              color: isDark ? Colors.white70 : Colors.black45,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isDay5Followup
+                          ? 'Confirm your salary to record it as income in your transaction log.'
+                          : 'Monthly prompt to verify and record this month’s income.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? Colors.white70
+                            : const Color(0xFF047857),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.black.withOpacity(0.25)
+                  : Colors.white.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'BASE SALARY',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white60 : Colors.black54,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    Text(
+                      '₹${_myBaseSalary.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : const Color(0xFF065F46),
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  width: 1,
+                  height: 24,
+                  color: (isDark ? Colors.white : Colors.black).withOpacity(
+                    0.1,
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'THIS MONTH EXPECTED',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white60 : Colors.black54,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    Text(
+                      '₹${effectiveSalary.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF10B981),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _handleConfirmSalaryYes,
+                icon: const Icon(Icons.check_circle_rounded, size: 16),
+                label: Text(
+                  'Yes (₹${effectiveSalary.toStringAsFixed(0)})',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: isDark
+                      ? Colors.white
+                      : const Color(0xFF065F46),
+                  side: BorderSide(
+                    color: const Color(0xFF10B981).withOpacity(0.6),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _handleConfirmSalaryBasic,
+                icon: const Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: 16,
+                ),
+                label: Text(
+                  'Basic (₹${_myBaseSalary.toStringAsFixed(0)})',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: isDark ? Colors.white70 : Colors.black87,
+                  side: BorderSide(
+                    color: (isDark ? Colors.white : Colors.black).withOpacity(
+                      0.2,
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () =>
+                    _showEditSalaryDialog(recordAsIncomeOnSave: true),
+                icon: const Icon(Icons.edit_note_rounded, size: 16),
+                label: const Text(
+                  'Edit',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -1640,6 +2126,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
       baseSalarySum += mBase;
     }
 
+    // 6. Find current user's salary info
+    double myBase = 0;
+    double myCurrent = 0;
+    if (_familyMembers.isNotEmpty) {
+      final myMember = _familyMembers.firstWhere(
+        (m) =>
+            (m['email'] as String?)?.toLowerCase() == _userEmail?.toLowerCase(),
+        orElse: () => _familyMembers.first,
+      );
+      myBase =
+          (myMember['baseSalary'] as num?)?.toDouble() ??
+          (myMember['monthlyIncome'] as num?)?.toDouble() ??
+          0.0;
+      myCurrent =
+          (myMember['currentSalary'] as num?)?.toDouble() ??
+          (myMember['monthlyIncome'] as num?)?.toDouble() ??
+          myBase;
+    }
+
     setState(() {
       _totalIncome = income;
       _totalPersonalExpenses = personalEx;
@@ -1648,6 +2153,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _constantEmiDues = emiDuesTotal;
       _familySalaryIncome = salarySum;
       _familyBaseSalary = baseSalarySum;
+      _myBaseSalary = myBase;
+      _myCurrentSalary = myCurrent;
       _sbiIncome = sbiIn;
       _sbiExpenses = sbiOut;
       _sbiBalance = sbiIn - sbiOut;
@@ -1655,6 +2162,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _canaraExpenses = canaraOut;
       _canaraBalance = canaraIn - canaraOut;
     });
+
+    await _checkSalaryPromptStatus();
   }
 
   String _getMemberNickname(String email) {
@@ -1753,9 +2262,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: Builder(
-          builder: (ctx) => PulsingArrowButton(
-            onTap: () => Scaffold.of(ctx).openDrawer(),
-          ),
+          builder: (ctx) =>
+              PulsingArrowButton(onTap: () => Scaffold.of(ctx).openDrawer()),
         ),
         title: Text(l10n.dashboard),
         actions: [
@@ -1879,744 +2387,76 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                  const SizedBox(height: 12),
-                  // Swipeable Card PageView
-                  SizedBox(
-                    height: 200,
-                    child: PageView(
-                      controller: _pageController,
-                      onPageChanged: (page) {
-                        setState(() {
-                          _currentPage = page;
-                        });
-                      },
-                      children: [
-                        _buildPersonalCard(theme),
-                        _buildFamilyCard(theme, isDark),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Page indicator dots
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(2, (index) {
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                        width: _currentPage == index ? 16.0 : 8.0,
-                        height: 8.0,
-                        decoration: BoxDecoration(
-                          color: _currentPage == index
-                              ? theme.primaryColor
-                              : Colors.grey[400],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Bank Accounts Summary Breakdown
-                  _buildBankAccountsSummaryCard(theme, isDark),
-                  const SizedBox(height: 16),
-
-                  // Quick Access Hub
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(18),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const BillsDashboard(),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppTheme.darkSurfaceContainerLowest
-                                  : AppTheme.surfaceContainerLowest,
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: AppTheme.ambientCardShadow,
-                              border: Border.all(
-                                color: isDark
-                                    ? const Color(0xFF2C3233)
-                                    : AppTheme.outlineVariant.withOpacity(0.18),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primary.withOpacity(0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.receipt_long_rounded,
-                                    size: 18,
-                                    color: AppTheme.primary,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    l10n.bills,
-                                    style: theme.textTheme.labelMedium
-                                        ?.copyWith(fontWeight: FontWeight.w700),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(18),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const LoansEmiScreen(),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppTheme.darkSurfaceContainerLowest
-                                  : AppTheme.surfaceContainerLowest,
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: AppTheme.ambientCardShadow,
-                              border: Border.all(
-                                color: isDark
-                                    ? const Color(0xFF2C3233)
-                                    : AppTheme.outlineVariant.withOpacity(0.18),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.secondary.withOpacity(0.12),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.account_balance_rounded,
-                                    size: 18,
-                                    color: AppTheme.secondary,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    l10n.loansAndEmi,
-                                    style: theme.textTheme.labelMedium
-                                        ?.copyWith(fontWeight: FontWeight.w700),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                    const SizedBox(height: 12),
+                    if (_isSalaryPromptVisible) ...[
+                      _buildSalaryPromptBanner(theme, isDark),
+                      const SizedBox(height: 14),
                     ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(18),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const HomeLoanScreen(),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppTheme.darkSurfaceContainerLowest
-                                  : AppTheme.surfaceContainerLowest,
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: AppTheme.ambientCardShadow,
-                              border: Border.all(
-                                color: isDark
-                                    ? const Color(0xFF2C3233)
-                                    : AppTheme.outlineVariant.withOpacity(0.18),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primary.withOpacity(0.12),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.home_work_rounded,
-                                    size: 18,
-                                    color: AppTheme.primary,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    l10n.homeLoan,
-                                    style: theme.textTheme.labelMedium
-                                        ?.copyWith(fontWeight: FontWeight.w700),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(18),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const MobileRechargesScreen(),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppTheme.darkSurfaceContainerLowest
-                                  : AppTheme.surfaceContainerLowest,
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: AppTheme.ambientCardShadow,
-                              border: Border.all(
-                                color: isDark
-                                    ? const Color(0xFF2C3233)
-                                    : AppTheme.outlineVariant.withOpacity(0.18),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.indigo.withOpacity(0.12),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.phone_android_rounded,
-                                    size: 18,
-                                    color: Colors.indigo,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    l10n.mobileRecharges,
-                                    style: theme.textTheme.labelMedium
-                                        ?.copyWith(fontWeight: FontWeight.w700),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  const AiAdvisorCard(),
-                  // Regular Commitments Section
-                  if (_monthlyExpenses.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    Text(
-                      'Regular Commitments',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    // Swipeable Card PageView
+                    SizedBox(
+                      height: 200,
+                      child: PageView(
+                        controller: _pageController,
+                        onPageChanged: (page) {
+                          setState(() {
+                            _currentPage = page;
+                          });
+                        },
+                        children: [
+                          _buildPersonalCard(theme),
+                          _buildFamilyCard(theme, isDark),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _monthlyExpenses.length,
-                      itemBuilder: (context, index) {
-                        final item = _monthlyExpenses[index];
-                        final title = item['title'] as String;
-                        final amount = (item['amount'] as num).toDouble();
-                        final dueDay = item['dueDay'] as int;
-                        final assignedTo = item['assignedTo'] as String?;
-                        final lastPaidDateStr = item['lastPaidDate'] as String?;
-                        final linkedLoan = item['linkedLoan'] as String?;
-                        final isEmi =
-                            title.toLowerCase().contains('emi') ||
-                            (linkedLoan != null &&
-                                linkedLoan.trim().isNotEmpty);
-
-                        final isAssignedToMe =
-                            assignedTo?.toLowerCase() ==
-                            _userEmail?.toLowerCase();
-
-                        final today = DateTime.now();
-                        bool isPaidThisMonth = false;
-                        if (lastPaidDateStr != null &&
-                            lastPaidDateStr.isNotEmpty) {
-                          try {
-                            final lastPaid = DateTime.parse(lastPaidDateStr);
-                            isPaidThisMonth =
-                                lastPaid.month == today.month &&
-                                lastPaid.year == today.year;
-                          } catch (_) {}
-                        }
-
-                        final paid = isPaidThisMonth;
-
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
+                    // Page indicator dots
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(2, (index) {
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                          width: _currentPage == index ? 16.0 : 8.0,
+                          height: 8.0,
                           decoration: BoxDecoration(
-                            color: isDark
-                                ? AppTheme.darkSurfaceContainerLowest
-                                : AppTheme.surfaceContainerLowest,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: AppTheme.ambientCardShadow,
-                            border: Border.all(
-                              color: isDark
-                                  ? const Color(0xFF2C3233)
-                                  : AppTheme.outlineVariant.withOpacity(0.18),
-                            ),
-                          ),
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color:
-                                      (isEmi
-                                              ? const Color(0xFFF59E0B)
-                                              : AppTheme.secondaryContainer)
-                                          .withOpacity(0.18),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  isEmi
-                                      ? Icons.account_balance_wallet_rounded
-                                      : Icons.calendar_today_rounded,
-                                  color: isEmi
-                                      ? const Color(0xFFF59E0B)
-                                      : AppTheme.secondary,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Wrap(
-                                      crossAxisAlignment:
-                                          WrapCrossAlignment.center,
-                                      spacing: 6,
-                                      runSpacing: 4,
-                                      children: [
-                                        Text(
-                                          title,
-                                          style: theme.textTheme.titleSmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                                color: isDark
-                                                    ? AppTheme.darkOnSurface
-                                                    : AppTheme.onSurface,
-                                              ),
-                                        ),
-                                        if (isEmi)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: const Color(
-                                                0xFFF59E0B,
-                                              ).withOpacity(0.15),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                              border: Border.all(
-                                                color: const Color(
-                                                  0xFFF59E0B,
-                                                ).withOpacity(0.5),
-                                                width: 0.8,
-                                              ),
-                                            ),
-                                            child: const Text(
-                                              'EMI • FIXED',
-                                              style: TextStyle(
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.w800,
-                                                color: Color(0xFFF59E0B),
-                                                letterSpacing: 0.3,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      'Due on day $dueDay • ${isAssignedToMe ? "Assigned to You" : "Assigned to ${assignedTo?.split('@')[0] ?? 'Family'}"}',
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: isDark
-                                                ? AppTheme.darkOnSurfaceVariant
-                                                : AppTheme.onSurfaceVariant
-                                                      .withOpacity(0.7),
-                                            fontSize: 11,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '₹${amount.toStringAsFixed(0)}',
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                          color: isDark
-                                              ? AppTheme.darkOnSurface
-                                              : AppTheme.onSurface,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  if (paid)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 3,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(
-                                          0xFF10B981,
-                                        ).withOpacity(0.12),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Text(
-                                        'PAID',
-                                        style: TextStyle(
-                                          color: Color(0xFF10B981),
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                                    )
-                                  else if (isAssignedToMe)
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        gradient: AppTheme.primaryGradient,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.transparent,
-                                          shadowColor: Colors.transparent,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 14,
-                                            vertical: 6,
-                                          ),
-                                          minimumSize: Size.zero,
-                                          tapTargetSize:
-                                              MaterialTapTargetSize.shrinkWrap,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                        ),
-                                        onPressed: () =>
-                                            _markPaid(item['id'] as int),
-                                        child: const Text(
-                                          'Pay',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                  else
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 3,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isDark
-                                            ? const Color(0xFF584400)
-                                            : AppTheme.secondaryContainer
-                                                  .withOpacity(0.25),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        'PENDING',
-                                        style: TextStyle(
-                                          color: isDark
-                                              ? const Color(0xFFFFE087)
-                                              : AppTheme.secondary,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ],
+                            color: _currentPage == index
+                                ? theme.primaryColor
+                                : Colors.grey[400],
+                            borderRadius: BorderRadius.circular(4),
                           ),
                         );
-                      },
+                      }),
                     ),
-                  ],
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 16),
 
-                  // Stitch Editorial Segmented Pill Selector
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppTheme.darkSurfaceContainer
-                          : AppTheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: ['All', 'Personal', 'Family'].map((name) {
-                        final isSelected = _filter == name;
-                        return Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _filter = name),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? (isDark
-                                          ? AppTheme.primaryContainer
-                                          : AppTheme.primary)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: isSelected
-                                    ? AppTheme.subtleFloatShadow
-                                    : null,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  name,
-                                  style: theme.textTheme.labelMedium?.copyWith(
-                                    color: isSelected
-                                        ? (isDark
-                                              ? AppTheme.onPrimaryContainer
-                                              : Colors.white)
-                                        : (isDark
-                                              ? AppTheme.darkOnSurfaceVariant
-                                              : AppTheme.onSurfaceVariant),
-                                    fontWeight: isSelected
-                                        ? FontWeight.w700
-                                        : FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                    // Bank Accounts Summary Breakdown
+                    _buildBankAccountsSummaryCard(theme, isDark),
+                    const SizedBox(height: 16),
 
-                  // Recent Transactions Headline
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Transactions Log',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          if (_isLoading) ...[
-                            const SizedBox(width: 8),
-                            const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppTheme.primary,
+                    // Quick Access Hub
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(18),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const BillsDashboard(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
                               ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      TextButton.icon(
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        onPressed: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  TransactionsLogScreen(initialFilter: _filter),
-                            ),
-                          );
-                          if (mounted) {
-                            _loadData();
-                          }
-                        },
-                        icon: const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 15,
-                          color: AppTheme.primary,
-                        ),
-                        label: const Text(
-                          'See All',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primary,
-                          ),
-                        ),
-                        iconAlignment: IconAlignment.end,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Transactions List (Latest 5 of Current Month)
-                  _dashboardTransactions.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 40.0),
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? AppTheme.darkSurfaceContainer
-                                      : AppTheme.surfaceContainerLow,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.receipt_long_rounded,
-                                  size: 40,
-                                  color: AppTheme.outline,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No transactions recorded for ${DateFormat('MMMM').format(DateTime.now())} yet.',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: AppTheme.outline,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  side: BorderSide(
-                                    color: AppTheme.primary.withOpacity(0.3),
-                                  ),
-                                ),
-                                onPressed: () async {
-                                  await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => TransactionsLogScreen(
-                                        initialFilter: _filter,
-                                      ),
-                                    ),
-                                  );
-                                  if (mounted) _loadData();
-                                },
-                                icon: const Icon(
-                                  Icons.history_rounded,
-                                  size: 16,
-                                ),
-                                label: const Text(
-                                  'View All Past Transactions',
-                                  style: TextStyle(fontSize: 12),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _dashboardTransactions.length,
-                          itemBuilder: (context, index) {
-                            final t = _dashboardTransactions[index];
-                            final formattedDate = DateFormat(
-                              'MMM dd, yyyy',
-                            ).format(DateTime.parse(t.date));
-
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
                                 color: isDark
                                     ? AppTheme.darkSurfaceContainerLowest
                                     : AppTheme.surfaceContainerLowest,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(18),
                                 boxShadow: AppTheme.ambientCardShadow,
                                 border: Border.all(
                                   color: isDark
@@ -2626,115 +2466,826 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         ),
                                 ),
                               ),
-                              padding: const EdgeInsets.all(16.0),
                               child: Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.all(12),
+                                    padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: _getCategoryColor(
-                                        t.type,
-                                      ).withOpacity(0.12),
+                                      color: AppTheme.primary.withOpacity(0.1),
                                       shape: BoxShape.circle,
                                     ),
-                                    child: Icon(
-                                      _getCategoryIcon(t.category),
-                                      color: _getCategoryColor(t.type),
-                                      size: 20,
+                                    child: const Icon(
+                                      Icons.receipt_long_rounded,
+                                      size: 18,
+                                      color: AppTheme.primary,
                                     ),
                                   ),
-                                  const SizedBox(width: 14),
+                                  const SizedBox(width: 10),
                                   Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          t.note.isNotEmpty
-                                              ? t.note
-                                              : t.category,
-                                          style: theme.textTheme.titleSmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                                color: isDark
-                                                    ? AppTheme.darkOnSurface
-                                                    : AppTheme.onSurface,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            Text(
-                                              '$formattedDate • ${t.type}',
-                                              style: theme.textTheme.bodySmall
-                                                  ?.copyWith(
-                                                    color: isDark
-                                                        ? AppTheme
-                                                              .darkOnSurfaceVariant
-                                                        : AppTheme
-                                                              .onSurfaceVariant
-                                                              .withOpacity(0.7),
-                                                    fontSize: 11,
-                                                  ),
-                                            ),
-                                            if (t.type == 'Family' &&
-                                                t.addedBy != null) ...[
-                                              Text(
-                                                ' • ${_getMemberNickname(t.addedBy!)}',
-                                                style: theme.textTheme.bodySmall
-                                                    ?.copyWith(
-                                                      color: AppTheme.primary,
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ],
+                                    child: Text(
+                                      l10n.bills,
+                                      style: theme.textTheme.labelMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        '${t.type == 'Income' ? '+' : '-'}₹${t.amount.toStringAsFixed(2)}',
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w800,
-                                              color: t.type == 'Income'
-                                                  ? const Color(0xFF10B981)
-                                                  : (t.type == 'Family'
-                                                        ? AppTheme.primary
-                                                        : AppTheme.error),
-                                            ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Icon(
-                                        t.synced
-                                            ? Icons.cloud_done_rounded
-                                            : Icons.cloud_off_rounded,
-                                        size: 14,
-                                        color: t.synced
-                                            ? const Color(0xFF10B981)
-                                            : AppTheme.secondary,
-                                      ),
-                                    ],
                                   ),
                                 ],
                               ),
-                            );
-                          },
+                            ),
+                          ),
                         ),
-                  const SizedBox(height: 80), // bottom spacing for FAB
-                ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(18),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const LoansEmiScreen(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppTheme.darkSurfaceContainerLowest
+                                    : AppTheme.surfaceContainerLowest,
+                                borderRadius: BorderRadius.circular(18),
+                                boxShadow: AppTheme.ambientCardShadow,
+                                border: Border.all(
+                                  color: isDark
+                                      ? const Color(0xFF2C3233)
+                                      : AppTheme.outlineVariant.withOpacity(
+                                          0.18,
+                                        ),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.secondary.withOpacity(
+                                        0.12,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.account_balance_rounded,
+                                      size: 18,
+                                      color: AppTheme.secondary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      l10n.loansAndEmi,
+                                      style: theme.textTheme.labelMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(18),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const HomeLoanScreen(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppTheme.darkSurfaceContainerLowest
+                                    : AppTheme.surfaceContainerLowest,
+                                borderRadius: BorderRadius.circular(18),
+                                boxShadow: AppTheme.ambientCardShadow,
+                                border: Border.all(
+                                  color: isDark
+                                      ? const Color(0xFF2C3233)
+                                      : AppTheme.outlineVariant.withOpacity(
+                                          0.18,
+                                        ),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primary.withOpacity(0.12),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.home_work_rounded,
+                                      size: 18,
+                                      color: AppTheme.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      l10n.homeLoan,
+                                      style: theme.textTheme.labelMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(18),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const MobileRechargesScreen(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppTheme.darkSurfaceContainerLowest
+                                    : AppTheme.surfaceContainerLowest,
+                                borderRadius: BorderRadius.circular(18),
+                                boxShadow: AppTheme.ambientCardShadow,
+                                border: Border.all(
+                                  color: isDark
+                                      ? const Color(0xFF2C3233)
+                                      : AppTheme.outlineVariant.withOpacity(
+                                          0.18,
+                                        ),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.indigo.withOpacity(0.12),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.phone_android_rounded,
+                                      size: 18,
+                                      color: Colors.indigo,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      l10n.mobileRecharges,
+                                      style: theme.textTheme.labelMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    const AiAdvisorCard(),
+                    // Regular Commitments Section
+                    if (_monthlyExpenses.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      Text(
+                        'Regular Commitments',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _monthlyExpenses.length,
+                        itemBuilder: (context, index) {
+                          final item = _monthlyExpenses[index];
+                          final title = item['title'] as String;
+                          final amount = (item['amount'] as num).toDouble();
+                          final dueDay = item['dueDay'] as int;
+                          final assignedTo = item['assignedTo'] as String?;
+                          final lastPaidDateStr =
+                              item['lastPaidDate'] as String?;
+                          final linkedLoan = item['linkedLoan'] as String?;
+                          final isEmi =
+                              title.toLowerCase().contains('emi') ||
+                              (linkedLoan != null &&
+                                  linkedLoan.trim().isNotEmpty);
+
+                          final isAssignedToMe =
+                              assignedTo?.toLowerCase() ==
+                              _userEmail?.toLowerCase();
+
+                          final today = DateTime.now();
+                          bool isPaidThisMonth = false;
+                          if (lastPaidDateStr != null &&
+                              lastPaidDateStr.isNotEmpty) {
+                            try {
+                              final lastPaid = DateTime.parse(lastPaidDateStr);
+                              isPaidThisMonth =
+                                  lastPaid.month == today.month &&
+                                  lastPaid.year == today.year;
+                            } catch (_) {}
+                          }
+
+                          final paid = isPaidThisMonth;
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppTheme.darkSurfaceContainerLowest
+                                  : AppTheme.surfaceContainerLowest,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: AppTheme.ambientCardShadow,
+                              border: Border.all(
+                                color: isDark
+                                    ? const Color(0xFF2C3233)
+                                    : AppTheme.outlineVariant.withOpacity(0.18),
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        (isEmi
+                                                ? const Color(0xFFF59E0B)
+                                                : AppTheme.secondaryContainer)
+                                            .withOpacity(0.18),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    isEmi
+                                        ? Icons.account_balance_wallet_rounded
+                                        : Icons.calendar_today_rounded,
+                                    color: isEmi
+                                        ? const Color(0xFFF59E0B)
+                                        : AppTheme.secondary,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Wrap(
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        spacing: 6,
+                                        runSpacing: 4,
+                                        children: [
+                                          Text(
+                                            title,
+                                            style: theme.textTheme.titleSmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                  color: isDark
+                                                      ? AppTheme.darkOnSurface
+                                                      : AppTheme.onSurface,
+                                                ),
+                                          ),
+                                          if (isEmi)
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: const Color(
+                                                  0xFFF59E0B,
+                                                ).withOpacity(0.15),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                                border: Border.all(
+                                                  color: const Color(
+                                                    0xFFF59E0B,
+                                                  ).withOpacity(0.5),
+                                                  width: 0.8,
+                                                ),
+                                              ),
+                                              child: const Text(
+                                                'EMI • FIXED',
+                                                style: TextStyle(
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Color(0xFFF59E0B),
+                                                  letterSpacing: 0.3,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        'Due on day $dueDay • ${isAssignedToMe ? "Assigned to You" : "Assigned to ${assignedTo?.split('@')[0] ?? 'Family'}"}',
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: isDark
+                                                  ? AppTheme
+                                                        .darkOnSurfaceVariant
+                                                  : AppTheme.onSurfaceVariant
+                                                        .withOpacity(0.7),
+                                              fontSize: 11,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      '₹${amount.toStringAsFixed(0)}',
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                            color: isDark
+                                                ? AppTheme.darkOnSurface
+                                                : AppTheme.onSurface,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    if (paid)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(
+                                            0xFF10B981,
+                                          ).withOpacity(0.12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'PAID',
+                                          style: TextStyle(
+                                            color: Color(0xFF10B981),
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      )
+                                    else if (isAssignedToMe)
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          gradient: AppTheme.primaryGradient,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.transparent,
+                                            shadowColor: Colors.transparent,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                              vertical: 6,
+                                            ),
+                                            minimumSize: Size.zero,
+                                            tapTargetSize: MaterialTapTargetSize
+                                                .shrinkWrap,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          onPressed: () =>
+                                              _markPaid(item['id'] as int),
+                                          child: const Text(
+                                            'Pay',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    else
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? const Color(0xFF584400)
+                                              : AppTheme.secondaryContainer
+                                                    .withOpacity(0.25),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'PENDING',
+                                          style: TextStyle(
+                                            color: isDark
+                                                ? const Color(0xFFFFE087)
+                                                : AppTheme.secondary,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+
+                    // Stitch Editorial Segmented Pill Selector
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppTheme.darkSurfaceContainer
+                            : AppTheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: ['All', 'Personal', 'Family'].map((name) {
+                          final isSelected = _filter == name;
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _filter = name),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? (isDark
+                                            ? AppTheme.primaryContainer
+                                            : AppTheme.primary)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: isSelected
+                                      ? AppTheme.subtleFloatShadow
+                                      : null,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    name,
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: isSelected
+                                              ? (isDark
+                                                    ? AppTheme
+                                                          .onPrimaryContainer
+                                                    : Colors.white)
+                                              : (isDark
+                                                    ? AppTheme
+                                                          .darkOnSurfaceVariant
+                                                    : AppTheme
+                                                          .onSurfaceVariant),
+                                          fontWeight: isSelected
+                                              ? FontWeight.w700
+                                              : FontWeight.w600,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Recent Transactions Headline
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Transactions Log',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                            if (_isLoading) ...[
+                              const SizedBox(width: 8),
+                              const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppTheme.primary,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        TextButton.icon(
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => TransactionsLogScreen(
+                                  initialFilter: _filter,
+                                ),
+                              ),
+                            );
+                            if (mounted) {
+                              _loadData();
+                            }
+                          },
+                          icon: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 15,
+                            color: AppTheme.primary,
+                          ),
+                          label: const Text(
+                            'See All',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                          iconAlignment: IconAlignment.end,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Transactions List (Latest 5 of Current Month)
+                    _dashboardTransactions.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 40.0),
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? AppTheme.darkSurfaceContainer
+                                        : AppTheme.surfaceContainerLow,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.receipt_long_rounded,
+                                    size: 40,
+                                    color: AppTheme.outline,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No transactions recorded for ${DateFormat('MMMM').format(DateTime.now())} yet.',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: AppTheme.outline,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    side: BorderSide(
+                                      color: AppTheme.primary.withOpacity(0.3),
+                                    ),
+                                  ),
+                                  onPressed: () async {
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => TransactionsLogScreen(
+                                          initialFilter: _filter,
+                                        ),
+                                      ),
+                                    );
+                                    if (mounted) _loadData();
+                                  },
+                                  icon: const Icon(
+                                    Icons.history_rounded,
+                                    size: 16,
+                                  ),
+                                  label: const Text(
+                                    'View All Past Transactions',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _dashboardTransactions.length,
+                            itemBuilder: (context, index) {
+                              final t = _dashboardTransactions[index];
+                              final formattedDate = DateFormat(
+                                'MMM dd, yyyy',
+                              ).format(DateTime.parse(t.date));
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? AppTheme.darkSurfaceContainerLowest
+                                      : AppTheme.surfaceContainerLowest,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: AppTheme.ambientCardShadow,
+                                  border: Border.all(
+                                    color: isDark
+                                        ? const Color(0xFF2C3233)
+                                        : AppTheme.outlineVariant.withOpacity(
+                                            0.18,
+                                          ),
+                                  ),
+                                ),
+                                padding: const EdgeInsets.all(16.0),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: _getCategoryColor(
+                                          t.type,
+                                        ).withOpacity(0.12),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        _getCategoryIcon(t.category),
+                                        color: _getCategoryColor(t.type),
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            t.note.isNotEmpty
+                                                ? t.note
+                                                : t.category,
+                                            style: theme.textTheme.titleSmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                  color: isDark
+                                                      ? AppTheme.darkOnSurface
+                                                      : AppTheme.onSurface,
+                                                ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                '$formattedDate • ${t.type}',
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      color: isDark
+                                                          ? AppTheme
+                                                                .darkOnSurfaceVariant
+                                                          : AppTheme
+                                                                .onSurfaceVariant
+                                                                .withOpacity(
+                                                                  0.7,
+                                                                ),
+                                                      fontSize: 11,
+                                                    ),
+                                              ),
+                                              if (t.type == 'Family' &&
+                                                  t.addedBy != null) ...[
+                                                Text(
+                                                  ' • ${_getMemberNickname(t.addedBy!)}',
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: AppTheme.primary,
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          '${t.type == 'Income' ? '+' : '-'}₹${t.amount.toStringAsFixed(2)}',
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w800,
+                                                color: t.type == 'Income'
+                                                    ? const Color(0xFF10B981)
+                                                    : (t.type == 'Family'
+                                                          ? AppTheme.primary
+                                                          : AppTheme.error),
+                                              ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Icon(
+                                          t.synced
+                                              ? Icons.cloud_done_rounded
+                                              : Icons.cloud_off_rounded,
+                                          size: 14,
+                                          color: t.synced
+                                              ? const Color(0xFF10B981)
+                                              : AppTheme.secondary,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                    const SizedBox(height: 80), // bottom spacing for FAB
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
   }
 }

@@ -35,7 +35,8 @@ class AppFeaturesData {
           title: 'Tap the Voice Microphone',
           instruction:
               'Tap the glowing emerald microphone icon at the top of your dashboard, or use the floating home screen button.',
-          proTip: 'You can switch between Malayalam and English with one tap inside the voice window.',
+          proTip:
+              'You can switch between Malayalam and English with one tap inside the voice window.',
           mockupType: MockupType.voiceLogging,
         ),
         TutorialStep(
@@ -43,7 +44,8 @@ class AppFeaturesData {
           title: 'Speak Naturally',
           instruction:
               'Say your expense aloud. For example: "ഇന്ന് മീൻ വാങ്ങാൻ 250 രൂപ" or "Grocery 480 rupees".',
-          proTip: 'Mentioning the category or shop helps the app categorize your spending automatically.',
+          proTip:
+              'Mentioning the category or shop helps the app categorize your spending automatically.',
           mockupType: MockupType.voiceLogging,
         ),
         TutorialStep(
@@ -51,7 +53,8 @@ class AppFeaturesData {
           title: 'Instant Confirmation',
           instruction:
               'Watch your spoken words instantly turn into a neat transaction card with amount, shop name, and category.',
-          proTip: 'The transaction is saved immediately to your ledger and silently backed up to the cloud.',
+          proTip:
+              'The transaction is saved immediately to your ledger and silently backed up to the cloud.',
           mockupType: MockupType.voiceLogging,
         ),
       ],
@@ -63,7 +66,8 @@ class AppFeaturesData {
     AppFeature(
       id: 'home_widget',
       title: 'Home Screen Expense Widget',
-      shortTagline: 'Track spending and upcoming bills right from your home screen',
+      shortTagline:
+          'Track spending and upcoming bills right from your home screen',
       icon: Icons.widgets_rounded,
       badge: 'New',
       category: 'Voice & Widgets',
@@ -82,7 +86,8 @@ class AppFeaturesData {
           title: 'Long-Press Your Home Screen',
           instruction:
               'Find an empty spot on your Android home screen, press and hold your finger until the wallpaper menu pops up, then tap "Widgets".',
-          proTip: 'Ensure your phone is unlocked and you have space for a 4x2 or 4x1 card.',
+          proTip:
+              'Ensure your phone is unlocked and you have space for a 4x2 or 4x1 card.',
           mockupType: MockupType.homeScreenWidget,
         ),
         TutorialStep(
@@ -90,7 +95,8 @@ class AppFeaturesData {
           title: 'Select "Manikutti" from the List',
           instruction:
               'Scroll through the widget picker or type "Manikutti" into the search bar. Locate the "Manikutti Smart Expense" widget card.',
-          proTip: 'You can preview the card size before dropping it onto your screen.',
+          proTip:
+              'You can preview the card size before dropping it onto your screen.',
           mockupType: MockupType.homeScreenWidget,
         ),
         TutorialStep(
@@ -98,7 +104,8 @@ class AppFeaturesData {
           title: 'Drag & Drop onto Your Screen',
           instruction:
               'Hold and drag the widget onto your favorite screen position. Your live balance and 1-tap voice button are now always at your fingertips!',
-          proTip: 'Tapping the mic icon on the widget lets you speak an expense without opening the full app.',
+          proTip:
+              'Tapping the mic icon on the widget lets you speak an expense without opening the full app.',
           mockupType: MockupType.homeScreenWidget,
         ),
       ],
@@ -110,7 +117,8 @@ class AppFeaturesData {
     AppFeature(
       id: 'google_assistant',
       title: 'Google Assistant & Quick Shortcuts',
-      shortTagline: 'Log expenses hands-free with "Hey Google" or your notification shade',
+      shortTagline:
+          'Log expenses hands-free with "Hey Google" or your notification shade',
       icon: Icons.assistant_rounded,
       badge: 'New',
       category: 'Voice & Widgets',
@@ -129,7 +137,8 @@ class AppFeaturesData {
           title: 'Say "Hey Google"',
           instruction:
               'Activate Google Assistant on your phone by saying "Hey Google" or pressing and holding your power/home button.',
-          proTip: 'You can speak in English or Malayalam depending on your Google Assistant settings.',
+          proTip:
+              'You can speak in English or Malayalam depending on your Google Assistant settings.',
           mockupType: MockupType.googleAssistant,
         ),
         TutorialStep(
@@ -137,7 +146,8 @@ class AppFeaturesData {
           title: 'Speak Your Command',
           instruction:
               'Say: "Log 250 rupees for groceries on Manikutti" or "മണിച്ചിട്ടിയിൽ 100 രൂപ പെട്രോൾ കുറിക്കുക".',
-          proTip: 'The app will pop up a subtle floating window, confirm your entry, and close cleanly.',
+          proTip:
+              'The app will pop up a subtle floating window, confirm your entry, and close cleanly.',
           mockupType: MockupType.googleAssistant,
         ),
         TutorialStep(
@@ -145,7 +155,8 @@ class AppFeaturesData {
           title: 'Add Quick Settings Tile',
           instruction:
               'Swipe down twice from the top of your phone screen to open Quick Settings -> Tap the pencil Edit icon -> Drag "Manikutti Mic" into your active toggles.',
-          proTip: 'Now you can record any expense with 1 tap from your lock screen or while inside any app!',
+          proTip:
+              'Now you can record any expense with 1 tap from your lock screen or while inside any app!',
           mockupType: MockupType.googleAssistant,
         ),
       ],
@@ -157,7 +168,8 @@ class AppFeaturesData {
     AppFeature(
       id: 'bank_statement',
       title: 'Bank Statement Importer (PDF & CSV)',
-      shortTagline: 'Import monthly statements from SBI, Canara & others with duplicate protection',
+      shortTagline:
+          'Import monthly statements from SBI, Canara & others with duplicate protection',
       icon: Icons.account_balance_wallet_rounded,
       badge: 'New',
       category: 'Banking & Statements',
@@ -176,7 +188,8 @@ class AppFeaturesData {
           title: 'Download Your e-Statement',
           instruction:
               'Open your bank mobile app (SBI YONO, Canara ai1, etc.) or net banking, and download your monthly account statement as a PDF or CSV file.',
-          proTip: 'Most banking apps let you email the PDF statement to yourself or save it in Downloads.',
+          proTip:
+              'Most banking apps let you email the PDF statement to yourself or save it in Downloads.',
           mockupType: MockupType.bankStatement,
         ),
         TutorialStep(
@@ -184,7 +197,8 @@ class AppFeaturesData {
           title: 'Select Statement in Manikutti',
           instruction:
               'Open the side menu in Manikutti -> Tap "Bank Statement" -> Tap "Choose Statement File" and pick the downloaded file.',
-          proTip: 'If your bank PDF is password protected (e.g., DOB or mobile digits), enter your password securely.',
+          proTip:
+              'If your bank PDF is password protected (e.g., DOB or mobile digits), enter your password securely.',
           mockupType: MockupType.bankStatement,
         ),
         TutorialStep(
@@ -192,7 +206,8 @@ class AppFeaturesData {
           title: 'Review & Import',
           instruction:
               'The smart reader highlights new transactions and displays how many duplicates were safely filtered. Tap "Import Transactions" to add them to your ledger.',
-          proTip: 'You can uncheck individual entries or adjust categories before importing.',
+          proTip:
+              'You can uncheck individual entries or adjust categories before importing.',
           mockupType: MockupType.bankStatement,
         ),
       ],
@@ -204,7 +219,8 @@ class AppFeaturesData {
     AppFeature(
       id: 'biometric_lock',
       title: 'Biometric Fingerprint & Face Unlock',
-      shortTagline: 'Keep your personal finances private with biometric security',
+      shortTagline:
+          'Keep your personal finances private with biometric security',
       icon: Icons.fingerprint_rounded,
       badge: 'Privacy',
       category: 'Privacy & Security',
@@ -223,7 +239,8 @@ class AppFeaturesData {
           title: 'Navigate to App Lock in Settings',
           instruction:
               'Open Settings from the side drawer and select "App Lock" under the security section.',
-          proTip: 'Make sure you have already registered a fingerprint or face unlock in Android settings.',
+          proTip:
+              'Make sure you have already registered a fingerprint or face unlock in Android settings.',
           mockupType: MockupType.biometricLock,
         ),
         TutorialStep(
@@ -231,7 +248,8 @@ class AppFeaturesData {
           title: 'Set Your 4-Digit Security PIN',
           instruction:
               'Enter a memorable 4-digit PIN and toggle on "Enable Biometrics" for instant one-touch entry.',
-          proTip: 'Choose a PIN different from your phone unlock PIN for an extra layer of privacy.',
+          proTip:
+              'Choose a PIN different from your phone unlock PIN for an extra layer of privacy.',
           mockupType: MockupType.biometricLock,
         ),
         TutorialStep(
@@ -239,7 +257,8 @@ class AppFeaturesData {
           title: 'Enjoy Private Protection',
           instruction:
               'Every time you open Manikutti, you will see a sleek biometric prompt. Touch your fingerprint sensor to enter your ledger.',
-          proTip: 'You can change or disable your PIN at any time from Settings.',
+          proTip:
+              'You can change or disable your PIN at any time from Settings.',
           mockupType: MockupType.biometricLock,
         ),
       ],
@@ -251,7 +270,8 @@ class AppFeaturesData {
     AppFeature(
       id: 'family_finance',
       title: 'Family Financial Sanctuary',
-      shortTagline: 'Collaborate on household expenses with your partner and family',
+      shortTagline:
+          'Collaborate on household expenses with your partner and family',
       icon: Icons.family_restroom_rounded,
       badge: 'Popular',
       category: 'Family & Budget',
@@ -270,7 +290,8 @@ class AppFeaturesData {
           title: 'Generate Family Invitation Code',
           instruction:
               'The primary admin generates a secure Family Sanctuary Code and shares it privately with family members.',
-          proTip: 'Codes are private to your family and cannot be accessed by outsiders.',
+          proTip:
+              'Codes are private to your family and cannot be accessed by outsiders.',
           mockupType: MockupType.familySanctuary,
         ),
         TutorialStep(
@@ -278,7 +299,8 @@ class AppFeaturesData {
           title: 'Enter Family Code on Secondary Phone',
           instruction:
               'Family members log in and enter the invitation code to link their app to the shared family sanctuary.',
-          proTip: 'Each member uses their own phone and receives instant notifications for shared activities.',
+          proTip:
+              'Each member uses their own phone and receives instant notifications for shared activities.',
           mockupType: MockupType.familySanctuary,
         ),
         TutorialStep(
@@ -286,7 +308,8 @@ class AppFeaturesData {
           title: 'Review Shared Contributions',
           instruction:
               'View visual graphs showing total household monthly spending, categorized expenses, and member balance summaries.',
-          proTip: 'Shared expenses are updated in real time across all family members’ devices.',
+          proTip:
+              'Shared expenses are updated in real time across all family members’ devices.',
           mockupType: MockupType.familySanctuary,
         ),
       ],
@@ -298,7 +321,8 @@ class AppFeaturesData {
     AppFeature(
       id: 'loans_emi',
       title: 'Home Loans & Split EMI Manager',
-      shortTagline: 'Stay on top of bank loans, interest, and monthly installments',
+      shortTagline:
+          'Stay on top of bank loans, interest, and monthly installments',
       icon: Icons.real_estate_agent_rounded,
       badge: 'Essential',
       category: 'Family & Budget',
@@ -340,7 +364,8 @@ class AppFeaturesData {
     AppFeature(
       id: 'offline_vault',
       title: 'Offline-First Vault & Silent Cloud Backup',
-      shortTagline: 'Log expenses anywhere with zero internet — syncs automatically when online',
+      shortTagline:
+          'Log expenses anywhere with zero internet — syncs automatically when online',
       icon: Icons.cloud_done_rounded,
       badge: 'Core',
       category: 'Privacy & Security',
@@ -361,7 +386,8 @@ class AppFeaturesData {
     AppFeature(
       id: 'smart_calculator',
       title: 'In-App Expense Calculator & Splitter',
-      shortTagline: 'Perform instant math and split bills without switching apps',
+      shortTagline:
+          'Perform instant math and split bills without switching apps',
       icon: Icons.calculate_rounded,
       badge: 'Handy',
       category: 'Privacy & Security',
@@ -382,7 +408,8 @@ class AppFeaturesData {
     AppFeature(
       id: 'bilingual_experience',
       title: 'Full Malayalam & English Support',
-      shortTagline: 'Designed with love for Kerala families and the global diaspora',
+      shortTagline:
+          'Designed with love for Kerala families and the global diaspora',
       icon: Icons.translate_rounded,
       badge: 'Regional',
       category: 'Privacy & Security',

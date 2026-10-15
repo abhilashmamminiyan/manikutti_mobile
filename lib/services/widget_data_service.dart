@@ -19,7 +19,8 @@ class WidgetDataService {
       double monthTotal = 0;
 
       for (final tx in transactions) {
-        if (tx.type.toLowerCase() == 'expense' || tx.type.toLowerCase() == 'family') {
+        if (tx.type.toLowerCase() == 'expense' ||
+            tx.type.toLowerCase() == 'family') {
           final txDate = DateTime.tryParse(tx.date);
           if (txDate != null) {
             final txMonthKey = DateFormat('yyyy-MM').format(txDate.toLocal());
@@ -51,7 +52,8 @@ class WidgetDataService {
             hasAlert = true;
             break;
           } else if (daysLeft <= 3) {
-            pendingText = '⚡ ${r.name}: Expires in ${daysLeft == 0 ? "today" : "$daysLeft days"}';
+            pendingText =
+                '⚡ ${r.name}: Expires in ${daysLeft == 0 ? "today" : "$daysLeft days"}';
             hasAlert = true;
             break;
           }
@@ -68,11 +70,11 @@ class WidgetDataService {
       await HomeWidget.saveWidgetData<bool>('has_alert', hasAlert);
 
       // 4. Request Widget Update
-      await HomeWidget.updateWidget(
-        androidName: androidWidgetProvider,
-      );
+      await HomeWidget.updateWidget(androidName: androidWidgetProvider);
       if (kDebugMode) {
-        print('Widget updated successfully: Total=$formattedTotal, Alert=$pendingText');
+        print(
+          'Widget updated successfully: Total=$formattedTotal, Alert=$pendingText',
+        );
       }
     } catch (e) {
       if (kDebugMode) {

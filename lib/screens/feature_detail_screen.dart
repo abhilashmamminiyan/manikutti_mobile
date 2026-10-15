@@ -12,10 +12,7 @@ import 'add_transaction_screen.dart';
 class FeatureDetailScreen extends StatelessWidget {
   final AppFeature feature;
 
-  const FeatureDetailScreen({
-    super.key,
-    required this.feature,
-  });
+  const FeatureDetailScreen({super.key, required this.feature});
 
   void _handleAction(BuildContext context) {
     final routeId = feature.actionRouteId;
@@ -222,9 +219,7 @@ class FeatureDetailScreen extends StatelessWidget {
             ),
             child: Text(
               feature.userOverview,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                height: 1.5,
-              ),
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
             ),
           ),
           const SizedBox(height: 24),

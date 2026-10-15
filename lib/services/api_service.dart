@@ -908,10 +908,7 @@ class ApiService {
       final response = await http.post(
         Uri.parse('$baseUrl/api/ai/voice-expense'),
         headers: headers,
-        body: jsonEncode({
-          'query': query,
-          'defaultBank': defaultBank,
-        }),
+        body: jsonEncode({'query': query, 'defaultBank': defaultBank}),
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
@@ -923,4 +920,3 @@ class ApiService {
     }
   }
 }
-

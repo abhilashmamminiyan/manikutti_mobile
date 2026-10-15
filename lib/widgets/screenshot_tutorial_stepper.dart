@@ -6,13 +6,11 @@ import 'feature_mockup_preview.dart';
 class ScreenshotTutorialStepper extends StatefulWidget {
   final List<TutorialStep> steps;
 
-  const ScreenshotTutorialStepper({
-    super.key,
-    required this.steps,
-  });
+  const ScreenshotTutorialStepper({super.key, required this.steps});
 
   @override
-  State<ScreenshotTutorialStepper> createState() => _ScreenshotTutorialStepperState();
+  State<ScreenshotTutorialStepper> createState() =>
+      _ScreenshotTutorialStepperState();
 }
 
 class _ScreenshotTutorialStepperState extends State<ScreenshotTutorialStepper> {
@@ -51,7 +49,10 @@ class _ScreenshotTutorialStepperState extends State<ScreenshotTutorialStepper> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.primary.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(20),
@@ -134,9 +135,7 @@ class _ScreenshotTutorialStepperState extends State<ScreenshotTutorialStepper> {
             ),
             child: Text(
               step.instruction,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                height: 1.4,
-              ),
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
             ),
           ),
           const SizedBox(height: 10),
@@ -153,7 +152,11 @@ class _ScreenshotTutorialStepperState extends State<ScreenshotTutorialStepper> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.lightbulb_outline_rounded, color: Colors.amber, size: 18),
+                  const Icon(
+                    Icons.lightbulb_outline_rounded,
+                    color: Colors.amber,
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -175,7 +178,10 @@ class _ScreenshotTutorialStepperState extends State<ScreenshotTutorialStepper> {
             children: [
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -194,7 +200,10 @@ class _ScreenshotTutorialStepperState extends State<ScreenshotTutorialStepper> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

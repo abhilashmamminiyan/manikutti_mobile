@@ -257,7 +257,10 @@ class _WhatsNewScreenState extends State<WhatsNewScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('• ', style: TextStyle(color: AppTheme.primary)),
+                            const Text(
+                              '• ',
+                              style: TextStyle(color: AppTheme.primary),
+                            ),
                             Expanded(
                               child: Text(
                                 '${h.title}: ${h.description}',
@@ -288,10 +291,7 @@ class _WhatsNewScreenState extends State<WhatsNewScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text(
               'Got It',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
           ),
           const SizedBox(height: 24),

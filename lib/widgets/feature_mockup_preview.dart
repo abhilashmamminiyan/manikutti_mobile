@@ -61,9 +61,17 @@ class FeatureMockupPreview extends StatelessWidget {
                     children: [
                       Icon(Icons.wifi, color: Colors.white70, size: 12),
                       SizedBox(width: 4),
-                      Icon(Icons.signal_cellular_4_bar, color: Colors.white70, size: 12),
+                      Icon(
+                        Icons.signal_cellular_4_bar,
+                        color: Colors.white70,
+                        size: 12,
+                      ),
                       SizedBox(width: 4),
-                      Icon(Icons.battery_5_bar_rounded, color: Colors.white70, size: 12),
+                      Icon(
+                        Icons.battery_5_bar_rounded,
+                        color: Colors.white70,
+                        size: 12,
+                      ),
                     ],
                   ),
                 ],
@@ -111,10 +119,18 @@ class FeatureMockupPreview extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildDummyAppIcon(Icons.camera_alt_rounded, 'Camera', Colors.pinkAccent),
+              _buildDummyAppIcon(
+                Icons.camera_alt_rounded,
+                'Camera',
+                Colors.pinkAccent,
+              ),
               _buildDummyAppIcon(Icons.mail_rounded, 'Mail', Colors.redAccent),
               _buildDummyAppIcon(Icons.public_rounded, 'Chrome', Colors.amber),
-              _buildDummyAppIcon(Icons.photo_library_rounded, 'Photos', Colors.blue),
+              _buildDummyAppIcon(
+                Icons.photo_library_rounded,
+                'Photos',
+                Colors.blue,
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -131,7 +147,11 @@ class FeatureMockupPreview extends StatelessWidget {
                   border: Border.all(color: AppTheme.primary, width: 2),
                 ),
               ),
-              const Icon(Icons.touch_app_rounded, color: Colors.white, size: 28),
+              const Icon(
+                Icons.touch_app_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -207,23 +227,38 @@ class FeatureMockupPreview extends StatelessWidget {
                         color: AppTheme.primary,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.account_balance_wallet, size: 12, color: Colors.white),
+                      child: const Icon(
+                        Icons.account_balance_wallet,
+                        size: 12,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     const Text(
                       'Manikutti (4x2)',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.blueAccent.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
                         'Smart Card',
-                        style: TextStyle(color: Colors.blueAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.blueAccent,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -241,12 +276,20 @@ class FeatureMockupPreview extends StatelessWidget {
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               onPressed: () {},
               icon: const Icon(Icons.add, size: 14, color: Colors.white),
-              label: const Text('Add to Screen', style: TextStyle(color: Colors.white, fontSize: 11)),
+              label: const Text(
+                'Add to Screen',
+                style: TextStyle(color: Colors.white, fontSize: 11),
+              ),
             ),
           ),
         ],
@@ -283,7 +326,11 @@ class FeatureMockupPreview extends StatelessWidget {
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.spa_rounded, color: Color(0xFF2DD4BF), size: 14),
+                        Icon(
+                          Icons.spa_rounded,
+                          color: Color(0xFF2DD4BF),
+                          size: 14,
+                        ),
                         SizedBox(width: 4),
                         Text(
                           'The Heritage Ledger',
@@ -296,7 +343,10 @@ class FeatureMockupPreview extends StatelessWidget {
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white10,
                         borderRadius: BorderRadius.circular(6),
@@ -324,7 +374,10 @@ class FeatureMockupPreview extends StatelessWidget {
                 const SizedBox(height: 8),
                 // Bill Alert Pill
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.amber.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
@@ -332,12 +385,20 @@ class FeatureMockupPreview extends StatelessWidget {
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.notifications_active, color: Colors.amber, size: 10),
+                      Icon(
+                        Icons.notifications_active,
+                        color: Colors.amber,
+                        size: 10,
+                      ),
                       SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           'Jio Fiber due in 3 days (₹799)',
-                          style: TextStyle(color: Colors.amber, fontSize: 9, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Colors.amber,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -360,7 +421,14 @@ class FeatureMockupPreview extends StatelessWidget {
                           children: [
                             Icon(Icons.mic, color: Colors.white, size: 12),
                             SizedBox(width: 4),
-                            Text('Voice Entry', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                            Text(
+                              'Voice Entry',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -372,7 +440,11 @@ class FeatureMockupPreview extends StatelessWidget {
                         color: Colors.white10,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.add, color: Colors.white, size: 12),
+                      child: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -385,9 +457,21 @@ class FeatureMockupPreview extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildDummyAppIcon(Icons.call_rounded, 'Phone', Colors.green),
-              _buildDummyAppIcon(Icons.chat_bubble_rounded, 'Chat', Colors.blue),
-              _buildDummyAppIcon(Icons.camera_alt_rounded, 'Camera', Colors.orange),
-              _buildDummyAppIcon(Icons.settings_rounded, 'Settings', Colors.grey),
+              _buildDummyAppIcon(
+                Icons.chat_bubble_rounded,
+                'Chat',
+                Colors.blue,
+              ),
+              _buildDummyAppIcon(
+                Icons.camera_alt_rounded,
+                'Camera',
+                Colors.orange,
+              ),
+              _buildDummyAppIcon(
+                Icons.settings_rounded,
+                'Settings',
+                Colors.grey,
+              ),
             ],
           ),
         ],
@@ -402,7 +486,11 @@ class FeatureMockupPreview extends StatelessWidget {
       return Column(
         children: [
           const SizedBox(height: 14),
-          const Icon(Icons.assistant_rounded, color: Colors.blueAccent, size: 36),
+          const Icon(
+            Icons.assistant_rounded,
+            color: Colors.blueAccent,
+            size: 36,
+          ),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -426,10 +514,7 @@ class FeatureMockupPreview extends StatelessWidget {
                 Text(
                   'or in Malayalam: "മണിക്കുട്ടിയിൽ 250 രൂപ പലചരക്ക് കുറിക്കുക"',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Color(0xFF93C5FD),
-                    fontSize: 10,
-                  ),
+                  style: TextStyle(color: Color(0xFF93C5FD), fontSize: 10),
                 ),
               ],
             ),
@@ -472,7 +557,11 @@ class FeatureMockupPreview extends StatelessWidget {
                     SizedBox(width: 4),
                     Text(
                       'Manikutti Quick Voice',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
@@ -485,11 +574,19 @@ class FeatureMockupPreview extends StatelessWidget {
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 14),
+                      Icon(
+                        Icons.check_circle_rounded,
+                        color: Colors.greenAccent,
+                        size: 14,
+                      ),
                       SizedBox(width: 6),
                       Text(
                         '₹250 • Grocery • Saved',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
@@ -512,7 +609,11 @@ class FeatureMockupPreview extends StatelessWidget {
           const Text(
             'Notification Shade (Quick Settings)',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 10),
           GridView.count(
@@ -534,7 +635,10 @@ class FeatureMockupPreview extends StatelessWidget {
                     colors: [Color(0xFF0F766E), Color(0xFF059669)],
                   ),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF34D399), width: 1.5),
+                  border: Border.all(
+                    color: const Color(0xFF34D399),
+                    width: 1.5,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF10B981).withOpacity(0.4),
@@ -551,8 +655,21 @@ class FeatureMockupPreview extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Manikutti Mic', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
-                          Text('1-Tap Record', style: TextStyle(color: Colors.white70, fontSize: 8)),
+                          Text(
+                            'Manikutti Mic',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
+                          ),
+                          Text(
+                            '1-Tap Record',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 8,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -580,7 +697,11 @@ class FeatureMockupPreview extends StatelessWidget {
             ),
             child: const Row(
               children: [
-                Icon(Icons.picture_as_pdf_rounded, color: Colors.redAccent, size: 28),
+                Icon(
+                  Icons.picture_as_pdf_rounded,
+                  color: Colors.redAccent,
+                  size: 28,
+                ),
                 SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -588,9 +709,16 @@ class FeatureMockupPreview extends StatelessWidget {
                     children: [
                       Text(
                         'SBI_Account_Statement.pdf',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
                       ),
-                      Text('Canara, HDFC, SBI & others', style: TextStyle(color: Colors.white60, fontSize: 9)),
+                      Text(
+                        'Canara, HDFC, SBI & others',
+                        style: TextStyle(color: Colors.white60, fontSize: 9),
+                      ),
                     ],
                   ),
                 ),
@@ -622,7 +750,11 @@ class FeatureMockupPreview extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Smart Duplicate Protection: 5 existing transactions skipped automatically',
-                    style: TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -640,8 +772,22 @@ class FeatureMockupPreview extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('14 New Entries Found', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
-                    Text('Ready to Import', style: TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                    Text(
+                      '14 New Entries Found',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                    Text(
+                      'Ready to Import',
+                      style: TextStyle(
+                        color: Colors.greenAccent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -660,7 +806,11 @@ class FeatureMockupPreview extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _miniTxItem('Grocery - Reliance Fresh', '-₹840', Colors.redAccent),
+                _miniTxItem(
+                  'Grocery - Reliance Fresh',
+                  '-₹840',
+                  Colors.redAccent,
+                ),
                 const Divider(color: Colors.white12, height: 8),
                 _miniTxItem('Salary Credit', '+₹45,000', Colors.greenAccent),
                 const Divider(color: Colors.white12, height: 8),
@@ -673,10 +823,15 @@ class FeatureMockupPreview extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF059669),
               minimumSize: const Size(double.infinity, 32),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: () {},
-            child: const Text('Confirm Import', style: TextStyle(color: Colors.white, fontSize: 11)),
+            child: const Text(
+              'Confirm Import',
+              style: TextStyle(color: Colors.white, fontSize: 11),
+            ),
           ),
         ],
       );
@@ -701,12 +856,20 @@ class FeatureMockupPreview extends StatelessWidget {
               ),
             ],
           ),
-          child: const Icon(Icons.fingerprint_rounded, color: AppTheme.primary, size: 48),
+          child: const Icon(
+            Icons.fingerprint_rounded,
+            color: AppTheme.primary,
+            size: 48,
+          ),
         ),
         const SizedBox(height: 14),
         const Text(
           'Manikutti App Lock',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
         ),
         const SizedBox(height: 4),
         const Text(
@@ -751,17 +914,27 @@ class FeatureMockupPreview extends StatelessWidget {
                 children: [
                   Icon(Icons.mic, color: Color(0xFF2DD4BF), size: 16),
                   SizedBox(width: 6),
-                  Text('Listening (മലയാളം / English)...', style: TextStyle(color: Colors.white, fontSize: 11)),
+                  Text(
+                    'Listening (മലയാളം / English)...',
+                    style: TextStyle(color: Colors.white, fontSize: 11),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
               const Text(
                 '"100 roopakku petrol adichu"',
-                style: TextStyle(color: Color(0xFF5EEAD4), fontWeight: FontWeight.bold, fontSize: 12),
+                style: TextStyle(
+                  color: Color(0xFF5EEAD4),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF134E48),
                   borderRadius: BorderRadius.circular(8),
@@ -769,8 +942,18 @@ class FeatureMockupPreview extends StatelessWidget {
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Auto-Category: Fuel', style: TextStyle(color: Colors.white70, fontSize: 10)),
-                    Text('Amount: ₹100', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
+                    Text(
+                      'Auto-Category: Fuel',
+                      style: TextStyle(color: Colors.white70, fontSize: 10),
+                    ),
+                    Text(
+                      'Amount: ₹100',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -801,7 +984,14 @@ class FeatureMockupPreview extends StatelessWidget {
                 children: [
                   Icon(Icons.family_restroom, color: roseColor, size: 14),
                   SizedBox(width: 6),
-                  Text('Shared Household Budget', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                  Text(
+                    'Shared Household Budget',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 6),
@@ -818,8 +1008,14 @@ class FeatureMockupPreview extends StatelessWidget {
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Spent: ₹18,500', style: TextStyle(color: Colors.white70, fontSize: 9)),
-                  Text('Budget: ₹30,000', style: TextStyle(color: Colors.white70, fontSize: 9)),
+                  Text(
+                    'Spent: ₹18,500',
+                    style: TextStyle(color: Colors.white70, fontSize: 9),
+                  ),
+                  Text(
+                    'Budget: ₹30,000',
+                    style: TextStyle(color: Colors.white70, fontSize: 9),
+                  ),
                 ],
               ),
             ],
@@ -842,14 +1038,28 @@ class FeatureMockupPreview extends StatelessWidget {
           ),
           child: const Row(
             children: [
-              Icon(Icons.document_scanner_rounded, color: Colors.purpleAccent, size: 24),
+              Icon(
+                Icons.document_scanner_rounded,
+                color: Colors.purpleAccent,
+                size: 24,
+              ),
               SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Smart Receipt Camera', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
-                    Text('Auto-reads paper supermarket bills', style: TextStyle(color: Colors.white60, fontSize: 9)),
+                    Text(
+                      'Smart Receipt Camera',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                    Text(
+                      'Auto-reads paper supermarket bills',
+                      style: TextStyle(color: Colors.white60, fontSize: 9),
+                    ),
                   ],
                 ),
               ),
@@ -872,8 +1082,18 @@ class FeatureMockupPreview extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Goal Savings Jars', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
-                    Text('Target savings for festivals & trips', style: TextStyle(color: Colors.white60, fontSize: 9)),
+                    Text(
+                      'Goal Savings Jars',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                    Text(
+                      'Target savings for festivals & trips',
+                      style: TextStyle(color: Colors.white60, fontSize: 9),
+                    ),
                   ],
                 ),
               ),
@@ -924,7 +1144,14 @@ class FeatureMockupPreview extends StatelessWidget {
         children: [
           Icon(icon, color: Colors.white, size: 16),
           const SizedBox(width: 6),
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -934,8 +1161,18 @@ class FeatureMockupPreview extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: const TextStyle(color: Colors.white70, fontSize: 10)),
-        Text(amount, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 10)),
+        Text(
+          title,
+          style: const TextStyle(color: Colors.white70, fontSize: 10),
+        ),
+        Text(
+          amount,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+          ),
+        ),
       ],
     );
   }

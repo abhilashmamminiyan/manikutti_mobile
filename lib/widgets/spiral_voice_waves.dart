@@ -57,7 +57,10 @@ class _SpiralVoiceWavesState extends State<SpiralVoiceWaves>
           children: [
             // Rotating spiral waves & pulsing sound rings
             AnimatedBuilder(
-              animation: Listenable.merge([_rotationController, _pulseController]),
+              animation: Listenable.merge([
+                _rotationController,
+                _pulseController,
+              ]),
               builder: (context, child) {
                 return CustomPaint(
                   size: const Size(170, 170),
@@ -86,10 +89,11 @@ class _SpiralVoiceWavesState extends State<SpiralVoiceWaves>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: (widget.isListening
-                            ? const Color(0xFF38BDF8)
-                            : const Color(0xFF2563EB))
-                        .withOpacity(0.4),
+                    color:
+                        (widget.isListening
+                                ? const Color(0xFF38BDF8)
+                                : const Color(0xFF2563EB))
+                            .withOpacity(0.4),
                     blurRadius: 18,
                     spreadRadius: widget.isListening ? 3 : 1,
                   ),
@@ -128,11 +132,16 @@ class _SpiralVoiceWavesState extends State<SpiralVoiceWaves>
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: widget.isListening ? Colors.redAccent : const Color(0xFF2563EB),
+                  color: widget.isListening
+                      ? Colors.redAccent
+                      : const Color(0xFF2563EB),
                   boxShadow: [
                     BoxShadow(
-                      color: (widget.isListening ? Colors.redAccent : const Color(0xFF2563EB))
-                          .withOpacity(0.6),
+                      color:
+                          (widget.isListening
+                                  ? Colors.redAccent
+                                  : const Color(0xFF2563EB))
+                              .withOpacity(0.6),
                       blurRadius: 8,
                     ),
                   ],
@@ -141,7 +150,9 @@ class _SpiralVoiceWavesState extends State<SpiralVoiceWaves>
                 child: Icon(
                   widget.isListening
                       ? Icons.mic
-                      : (widget.isProcessing ? Icons.hourglass_top : Icons.mic_none),
+                      : (widget.isProcessing
+                            ? Icons.hourglass_top
+                            : Icons.mic_none),
                   size: 14,
                   color: Colors.white,
                 ),
@@ -178,14 +189,14 @@ class _SpiralWavePainter extends CustomPainter {
     for (int i = 0; i < 3; i++) {
       final ringProgress = (pulse + (i / 3.0)) % 1.0;
       final radius = 36.0 + (maxRadius - 36.0) * ringProgress;
-      final opacity = ((1.0 - ringProgress) * (isListening ? 0.45 : 0.18)).clamp(0.0, 1.0);
+      final opacity = ((1.0 - ringProgress) * (isListening ? 0.45 : 0.18))
+          .clamp(0.0, 1.0);
 
       ringPaint
         ..strokeWidth = isListening ? (1.5 + (1.0 - ringProgress)) : 1.2
-        ..color = (isListening
-                ? const Color(0xFF38BDF8)
-                : const Color(0xFF60A5FA))
-            .withOpacity(opacity);
+        ..color =
+            (isListening ? const Color(0xFF38BDF8) : const Color(0xFF60A5FA))
+                .withOpacity(opacity);
 
       canvas.drawCircle(center, radius, ringPaint);
     }
@@ -218,7 +229,9 @@ class _SpiralWavePainter extends CustomPainter {
       for (int step = 0; step < numPoints; step++) {
         final t = step / numPoints;
         final angle = armAngleOffset + t * 2.2 * math.pi;
-        final wobble = isListening ? (0.12 * math.sin((pulse * 2 * math.pi) + (step * 0.2))) : 0.0;
+        final wobble = isListening
+            ? (0.12 * math.sin((pulse * 2 * math.pi) + (step * 0.2)))
+            : 0.0;
         final r = 36.0 + (maxRadius - 36.0) * t * (1.0 + wobble);
         final x = r * math.cos(angle);
         final y = r * math.sin(angle);
@@ -230,7 +243,8 @@ class _SpiralWavePainter extends CustomPainter {
         }
       }
 
-      final alpha = (tToAlpha(isListening) * (1.0 - (arm % 2 == 0 ? 0.0 : 0.2))).clamp(0.0, 1.0);
+      final alpha = (tToAlpha(isListening) * (1.0 - (arm % 2 == 0 ? 0.0 : 0.2)))
+          .clamp(0.0, 1.0);
       final armPaint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = isListening ? 2.2 : 1.4

@@ -10,11 +10,7 @@ class VoiceLoggingSheet extends StatefulWidget {
   final String? initialQuery;
   final VoidCallback? onExpenseAdded;
 
-  const VoiceLoggingSheet({
-    super.key,
-    this.initialQuery,
-    this.onExpenseAdded,
-  });
+  const VoiceLoggingSheet({super.key, this.initialQuery, this.onExpenseAdded});
 
   static Future<void> show(
     BuildContext context, {
@@ -43,7 +39,8 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
   bool _isListening = false;
   bool _isProcessing = false;
   String _words = '';
-  String _selectedLocale = 'ml_IN'; // Default to Malayalam, with quick toggle to en_IN
+  String _selectedLocale =
+      'ml_IN'; // Default to Malayalam, with quick toggle to en_IN
   String? _errorMessage;
   TransactionModel? _savedTransaction;
 
@@ -83,7 +80,9 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
           if (status == 'done' || status == 'notListening') {
             if (mounted && _isListening) {
               setState(() => _isListening = false);
-              if (_words.trim().isNotEmpty && _savedTransaction == null && !_isProcessing) {
+              if (_words.trim().isNotEmpty &&
+                  _savedTransaction == null &&
+                  !_isProcessing) {
                 _processTranscript(_words);
               }
             }
@@ -98,7 +97,8 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
         if (available) {
           _startListening();
         } else {
-          _errorMessage = 'Microphone permission not granted or speech recognition unavailable.';
+          _errorMessage =
+              'Microphone permission not granted or speech recognition unavailable.';
         }
       }
     } catch (e) {
@@ -159,7 +159,9 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
     });
 
     try {
-      final tx = await VoiceExpenseService.instance.processAndSaveVoiceExpense(transcript);
+      final tx = await VoiceExpenseService.instance.processAndSaveVoiceExpense(
+        transcript,
+      );
       if (mounted) {
         setState(() {
           _savedTransaction = tx;
@@ -256,9 +258,14 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
                 onTap: _toggleLocale,
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isDark ? Colors.white12 : Colors.black12,
@@ -317,12 +324,16 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
           _isProcessing
               ? 'Analyzing with Gemini AI...'
               : (_isListening
-                  ? (_selectedLocale == 'ml_IN' ? 'കേൾക്കുന്നു... സംസാരിക്കൂ' : 'Listening... Speak now')
-                  : 'Tap mic to speak'),
+                    ? (_selectedLocale == 'ml_IN'
+                          ? 'കേൾക്കുന്നു... സംസാരിക്കൂ'
+                          : 'Listening... Speak now')
+                    : 'Tap mic to speak'),
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: _isListening ? Colors.redAccent : (isDark ? Colors.white70 : Colors.black54),
+            color: _isListening
+                ? Colors.redAccent
+                : (isDark ? Colors.white70 : Colors.black54),
           ),
         ),
         const SizedBox(height: 14),
@@ -330,20 +341,20 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
         // Live recognized words container
         Container(
           width: double.infinity,
-          constraints: const Duration(milliseconds: 200) == Duration.zero ? null : const BoxConstraints(minHeight: 60),
+          constraints: const Duration(milliseconds: 200) == Duration.zero
+              ? null
+              : const BoxConstraints(minHeight: 60),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark ? Colors.white12 : Colors.black12,
-            ),
+            border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
           ),
           child: Text(
             _words.isEmpty
                 ? (_selectedLocale == 'ml_IN'
-                    ? 'ഉദാ: "100 roopakku petrol adichu" അല്ലെങ്കിൽ "ചായ 40 രൂപ"'
-                    : 'e.g. "100 rupees for petrol" or "Dinner 1200"')
+                      ? 'ഉദാ: "100 roopakku petrol adichu" അല്ലെങ്കിൽ "ചായ 40 രൂപ"'
+                      : 'e.g. "100 rupees for petrol" or "Dinner 1200"')
                 : _words,
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -414,7 +425,11 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
                       color: Colors.green,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.check, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -425,14 +440,18 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
                           'Expense Recorded Successfully!',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.green.shade900,
+                            color: isDark
+                                ? Colors.white
+                                : Colors.green.shade900,
                             fontSize: 15,
                           ),
                         ),
                         Text(
                           'Saved offline & widget updated',
                           style: TextStyle(
-                            color: isDark ? Colors.white60 : Colors.green.shade700,
+                            color: isDark
+                                ? Colors.white60
+                                : Colors.green.shade700,
                             fontSize: 12,
                           ),
                         ),
@@ -450,20 +469,29 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
                     children: [
                       Text(
                         tx.note,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: isDark ? Colors.white12 : Colors.black12,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               tx.category,
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -505,7 +533,9 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
                   );
                 },
                 style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 child: const Text('Edit in Form'),
@@ -518,7 +548,9 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 child: const Text('Done'),

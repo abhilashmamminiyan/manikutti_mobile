@@ -46,6 +46,26 @@ void callbackDispatcher() {
           }
         }
       }
+      // Check Day 4 & Day 5 Salary Prompt
+      final today = DateTime.now();
+      if (today.day == 4 || today.day == 5) {
+        final prefs = await SharedPreferences.getInstance();
+        final confirmed =
+            prefs.getBool('salary_confirmed_${today.year}_${today.month}') ??
+            false;
+        final lastPromptDay =
+            prefs.getInt('salary_prompt_sent_${today.year}_${today.month}') ??
+            0;
+        if (!confirmed && lastPromptDay != today.day) {
+          await prefs.setInt(
+            'salary_prompt_sent_${today.year}_${today.month}',
+            today.day,
+          );
+          await NotificationService.instance.showSalaryPromptNotificationNow(
+            isFollowup: today.day == 5,
+          );
+        }
+      }
     } catch (e) {
       print('Background task execution failed: $e');
     }
@@ -258,11 +278,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       supportedLocales: AppLocalizations.supportedLocales,
       onGenerateRoute: (settings) {
         final uri = Uri.tryParse(settings.name ?? '');
-        if (uri != null && (uri.path == '/voice-dialog' || uri.host == 'voice-dialog')) {
+        if (uri != null &&
+            (uri.path == '/voice-dialog' || uri.host == 'voice-dialog')) {
           final query = uri.queryParameters['query'];
           return PageRouteBuilder(
             opaque: false,
-            pageBuilder: (context, _, __) => VoiceDialogScreen(initialQuery: query),
+            pageBuilder: (context, _, __) =>
+                VoiceDialogScreen(initialQuery: query),
           );
         }
         return null;

@@ -23,7 +23,8 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
   bool _isListening = false;
   bool _isProcessing = false;
   String _words = '';
-  String _selectedLocale = 'ml_IN'; // Default to Malayalam, with toggle to en_IN
+  String _selectedLocale =
+      'ml_IN'; // Default to Malayalam, with toggle to en_IN
   String? _errorMessage;
   TransactionModel? _savedTransaction;
 
@@ -65,7 +66,9 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
           if (status == 'done' || status == 'notListening') {
             if (mounted && _isListening) {
               setState(() => _isListening = false);
-              if (_words.trim().isNotEmpty && _savedTransaction == null && !_isProcessing) {
+              if (_words.trim().isNotEmpty &&
+                  _savedTransaction == null &&
+                  !_isProcessing) {
                 _processTranscript(_words);
               }
             }
@@ -141,7 +144,9 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
     });
 
     try {
-      final tx = await VoiceExpenseService.instance.processAndSaveVoiceExpense(transcript);
+      final tx = await VoiceExpenseService.instance.processAndSaveVoiceExpense(
+        transcript,
+      );
       if (mounted) {
         setState(() {
           _savedTransaction = tx;
@@ -310,8 +315,10 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
           _isProcessing
               ? 'Analyzing with Gemini AI...'
               : (_isListening
-                  ? (_selectedLocale == 'ml_IN' ? 'കേൾക്കുന്നു... സംസാരിക്കൂ' : 'Listening... Speak now')
-                  : 'Tap mic to speak'),
+                    ? (_selectedLocale == 'ml_IN'
+                          ? 'കേൾക്കുന്നു... സംസാരിക്കൂ'
+                          : 'Listening... Speak now')
+                    : 'Tap mic to speak'),
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -333,8 +340,8 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
           child: Text(
             _words.isEmpty
                 ? (_selectedLocale == 'ml_IN'
-                    ? 'ഉദാ: "100 roopakku petrol adichu"'
-                    : 'e.g. "100 rupees for petrol"')
+                      ? 'ഉദാ: "100 roopakku petrol adichu"'
+                      : 'e.g. "100 rupees for petrol"')
                 : _words,
             textAlign: TextAlign.center,
             style: TextStyle(

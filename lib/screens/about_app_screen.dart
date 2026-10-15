@@ -26,9 +26,11 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
 
   List<AppFeature> get _filteredFeatures {
     return AppFeaturesData.features.where((f) {
-      final matchesCategory = _selectedCategory == 'All Features' ||
+      final matchesCategory =
+          _selectedCategory == 'All Features' ||
           f.category == _selectedCategory;
-      final matchesSearch = _searchQuery.isEmpty ||
+      final matchesSearch =
+          _searchQuery.isEmpty ||
           f.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           f.shortTagline.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           f.userOverview.toLowerCase().contains(_searchQuery.toLowerCase());
@@ -158,14 +160,8 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: isDark
-                          ? [
-                              const Color(0xFF1E293B),
-                              const Color(0xFF0F172A),
-                            ]
-                          : [
-                              const Color(0xFFF0FDF4),
-                              const Color(0xFFDCFCE7),
-                            ],
+                          ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                          : [const Color(0xFFF0FDF4), const Color(0xFFDCFCE7)],
                     ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
@@ -313,8 +309,8 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
                         color: isSelected
                             ? AppTheme.primary
                             : (isDark
-                                ? const Color(0xFF2C3233)
-                                : AppTheme.outlineVariant.withOpacity(0.3)),
+                                  ? const Color(0xFF2C3233)
+                                  : AppTheme.outlineVariant.withOpacity(0.3)),
                       ),
                     ),
                   ),
@@ -354,7 +350,11 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
               alignment: Alignment.center,
               child: Column(
                 children: [
-                  const Icon(Icons.search_off_rounded, size: 40, color: Colors.grey),
+                  const Icon(
+                    Icons.search_off_rounded,
+                    size: 40,
+                    color: Colors.grey,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     'No features found matching "$_searchQuery"',
@@ -421,9 +421,10 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
                                         Expanded(
                                           child: Text(
                                             feature.title,
-                                            style: theme.textTheme.titleSmall?.copyWith(
-                                              fontWeight: FontWeight.w800,
-                                            ),
+                                            style: theme.textTheme.titleSmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w800,
+                                                ),
                                           ),
                                         ),
                                         Container(
@@ -432,8 +433,11 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
                                             vertical: 2,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: feature.accentColor.withOpacity(0.15),
-                                            borderRadius: BorderRadius.circular(8),
+                                            color: feature.accentColor
+                                                .withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                           ),
                                           child: Text(
                                             feature.badge,
@@ -449,11 +453,12 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
                                     const SizedBox(height: 4),
                                     Text(
                                       feature.shortTagline,
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: isDark
-                                            ? AppTheme.darkOnSurfaceVariant
-                                            : AppTheme.onSurfaceVariant,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: isDark
+                                                ? AppTheme.darkOnSurfaceVariant
+                                                : AppTheme.onSurfaceVariant,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -475,10 +480,11 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
                                     const SizedBox(width: 4),
                                     Text(
                                       'Screenshot Tutorial',
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        color: AppTheme.primary,
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: AppTheme.primary,
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                     ),
                                   ],
                                 )
