@@ -31,6 +31,22 @@ class BankBalanceService {
           if (d != null) _cachedDates[bank] = d;
         }
       }
+
+      // Seed default verified baselines if not yet initialized
+      if (!_cachedBalances.containsKey(TransactionModel.bankSbi)) {
+        await setVerifiedBalance(
+          TransactionModel.bankSbi,
+          7017.00,
+          DateTime(2026, 10, 15),
+        );
+      }
+      if (!_cachedBalances.containsKey(TransactionModel.bankCanara)) {
+        await setVerifiedBalance(
+          TransactionModel.bankCanara,
+          3516.92,
+          DateTime(2026, 10, 15),
+        );
+      }
       _initialized = true;
     } catch (e) {
       debugPrint('[BankBalanceService] Error in init: $e');

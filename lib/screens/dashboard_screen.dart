@@ -8,6 +8,7 @@ import '../models/loan_model.dart';
 import '../services/api_service.dart';
 import '../services/sync_service.dart';
 import '../services/notification_service.dart';
+import '../services/bank_balance_service.dart';
 import 'login_screen.dart';
 import 'add_transaction_screen.dart';
 import 'bills_dashboard.dart';
@@ -237,6 +238,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
+      await BankBalanceService.instance.init();
       final list = await DbHelper.instance.getAllTransactions();
       setState(() {
         _transactions = list;
@@ -893,7 +895,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildPersonalCard(ThemeData theme) {
-    final netBalance = _totalIncome - _totalPersonalExpenses;
+    final availableBalance = _sbiBalance + _canaraBalance;
+    final netCashflow = _totalIncome - _totalPersonalExpenses;
     return Container(
       decoration: BoxDecoration(
         gradient: AppTheme.heroCardGradient,
@@ -1000,7 +1003,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                '₹${netBalance.toStringAsFixed(2)}',
+                '₹${availableBalance.toStringAsFixed(2)}',
                 style: theme.textTheme.displaySmall?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w800,
@@ -1237,6 +1240,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required bool isDark,
     required String bankValue,
   }) {
+    final verifiedDate = BankBalanceService.instance.getCachedDate(bankValue);
+
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () {
@@ -1276,6 +1281,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                GestureDetector(
+                  onTap: () {
+                    _showAdjustBankBalanceBottomSheet(
+                      bankValue: bankValue,
+                      bankName: name,
+                      currentBalance: balance,
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.tune_rounded, size: 13, color: color),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -1288,6 +1310,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 letterSpacing: -0.3,
               ),
             ),
+            if (verifiedDate != null) ...[
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.verified_rounded,
+                    size: 11,
+                    color: Color(0xFF10B981),
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    'Verified ${DateFormat('dd MMM').format(verifiedDate)}',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? Colors.green.shade300
+                          : Colors.green.shade800,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 6),
             Row(
               children: [
@@ -1319,6 +1364,140 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showAdjustBankBalanceBottomSheet({
+    required String bankValue,
+    required String bankName,
+    required double currentBalance,
+  }) {
+    final controller = TextEditingController(
+      text: currentBalance.toStringAsFixed(2),
+    );
+    final verifiedDate = BankBalanceService.instance.getCachedDate(bankValue);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        final isDark = theme.brightness == Brightness.dark;
+
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 24,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.account_balance_rounded,
+                        color: AppTheme.primary,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Verify $bankName Balance',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Enter the actual current balance as shown in your $bankName mobile app or netbanking. Subsequent transactions will adjust from this baseline.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppTheme.outline,
+                  height: 1.4,
+                ),
+              ),
+              if (verifiedDate != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Last verified: ${DateFormat('dd MMM yyyy, hh:mm a').format(verifiedDate)}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                autofocus: true,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                decoration: InputDecoration(
+                  prefixText: '₹ ',
+                  labelText: 'Current Actual Bank Balance',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: () async {
+                  final newBal = double.tryParse(controller.text.trim());
+                  if (newBal == null) return;
+                  await BankBalanceService.instance.setVerifiedBalance(
+                    bankValue,
+                    newBal,
+                    DateTime.now(),
+                  );
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  _recalculateFamilyTotals();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '$bankName balance verified at ₹${newBal.toStringAsFixed(2)}',
+                        ),
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.check_circle_outline_rounded),
+                label: const Text(
+                  'Save Verified Balance',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -2353,7 +2532,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
             : TransactionModel.bankSbi;
         final isCanara = bank == TransactionModel.bankCanara;
 
-        if (t.type == 'Income') {
+        if (t.isTransfer) {
+          // Self-transfers are contra transactions: neutral to personal income & expense totals
+          final isIncoming =
+              t.type == 'Income' ||
+              t.category.toLowerCase().contains('income') ||
+              t.note.toLowerCase().contains('received') ||
+              t.note.toLowerCase().contains('from');
+          if (isCanara) {
+            if (isIncoming) {
+              canaraIn += t.amount;
+            } else {
+              canaraOut += t.amount;
+            }
+          } else {
+            if (isIncoming) {
+              sbiIn += t.amount;
+            } else {
+              sbiOut += t.amount;
+            }
+          }
+        } else if (t.type == 'Income') {
           income += t.amount;
           if (isCanara) {
             canaraIn += t.amount;
@@ -2439,6 +2638,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
           myBase;
     }
 
+    // 7. Calculate accurate live bank balances
+    final computedSbiBalance = BankBalanceService.instance.calculateBankBalance(
+      bank: TransactionModel.bankSbi,
+      transactions: _transactions,
+    );
+    final computedCanaraBalance = BankBalanceService.instance
+        .calculateBankBalance(
+          bank: TransactionModel.bankCanara,
+          transactions: _transactions,
+        );
+
     setState(() {
       _totalIncome = income;
       _totalPersonalExpenses = personalEx;
@@ -2451,10 +2661,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _myCurrentSalary = myCurrent;
       _sbiIncome = sbiIn;
       _sbiExpenses = sbiOut;
-      _sbiBalance = sbiIn - sbiOut;
+      _sbiBalance = computedSbiBalance;
       _canaraIncome = canaraIn;
       _canaraExpenses = canaraOut;
-      _canaraBalance = canaraIn - canaraOut;
+      _canaraBalance = computedCanaraBalance;
     });
 
     _checkSalaryPromptStatus();

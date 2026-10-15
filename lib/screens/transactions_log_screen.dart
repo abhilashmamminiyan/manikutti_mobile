@@ -95,6 +95,9 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
         return Icons.trending_up;
       case 'salary':
         return Icons.payments;
+      case 'transfer':
+      case 'self transfer':
+        return Icons.swap_horiz_rounded;
       default:
         return Icons.attach_money;
     }
@@ -152,9 +155,12 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
     final filtered = _allTransactions.where((t) {
       // 1. Type filter
       if (_typeFilter == 'Personal') {
-        if (t.type != 'Expense' && t.type != 'Income') return false;
+        if (t.type != 'Expense' && t.type != 'Income' && !t.isTransfer)
+          return false;
       } else if (_typeFilter == 'Family') {
         if (t.type != 'Family') return false;
+      } else if (_typeFilter == 'Transfer') {
+        if (!t.isTransfer) return false;
       }
 
       // 2. Date filter
@@ -469,7 +475,9 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(
-                        children: ['All', 'Personal', 'Family'].map((name) {
+                        children: ['All', 'Personal', 'Family', 'Transfer'].map((
+                          name,
+                        ) {
                           final isSelected = _typeFilter == name;
                           return Expanded(
                             child: GestureDetector(
@@ -935,6 +943,31 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                                         ),
                                       ),
                                     ),
+                                    if (t.isTransfer) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 1.5,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(
+                                            0xFF0284C7,
+                                          ).withOpacity(0.12),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'Transfer',
+                                          style: TextStyle(
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF0284C7),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                     if (t.type == 'Family' &&
                                         t.addedBy != null) ...[
                                       Text(
@@ -960,15 +993,19 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '${t.type == 'Income' ? '+' : '-'}₹${t.amount.toStringAsFixed(2)}',
+                                t.isTransfer
+                                    ? '⇄ ₹${t.amount.toStringAsFixed(2)}'
+                                    : '${t.type == 'Income' ? '+' : '-'}₹${t.amount.toStringAsFixed(2)}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 15,
-                                  color: t.type == 'Income'
-                                      ? Colors.green
-                                      : (t.type == 'Family'
-                                            ? Colors.blue
-                                            : Colors.redAccent),
+                                  color: t.isTransfer
+                                      ? const Color(0xFF0284C7)
+                                      : (t.type == 'Income'
+                                            ? Colors.green
+                                            : (t.type == 'Family'
+                                                  ? Colors.blue
+                                                  : Colors.redAccent)),
                                 ),
                               ),
                               const SizedBox(height: 4),
