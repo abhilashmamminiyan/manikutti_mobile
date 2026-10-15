@@ -5,6 +5,7 @@ import '../models/transaction_model.dart';
 import '../services/sync_service.dart';
 import '../theme/app_theme.dart';
 import 'add_transaction_screen.dart';
+import 'bank_statement_screen.dart';
 
 enum DateFilterPreset { allTime, thisMonth, lastMonth, customRange }
 
@@ -366,6 +367,19 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
       appBar: AppBar(
         title: const Text('Transactions Log'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.upload_file_rounded),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const BankStatementScreen()),
+              );
+              if (mounted) {
+                _loadTransactions();
+              }
+            },
+            tooltip: 'Upload Bank Statement',
+          ),
           IconButton(
             icon: const Icon(Icons.sync_rounded),
             onPressed: _syncAndReload,

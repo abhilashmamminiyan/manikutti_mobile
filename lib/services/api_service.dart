@@ -278,6 +278,77 @@ class ApiService {
     }
   }
 
+  Future<bool> batchCreateTransactions({
+    required String sheetName,
+    required List<Map<String, dynamic>> expenses,
+    String? familyCode,
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/sheets/expense'),
+        headers: headers,
+        body: jsonEncode({
+          'sheetName': sheetName,
+          'expenses': expenses,
+          if (familyCode != null) 'familyCode': familyCode,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Error in batchCreateTransactions: $e');
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>> parseBankStatement({
+    required List<int> fileBytes,
+    required String fileName,
+    String? mimeType,
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final base64Content = base64Encode(fileBytes);
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/statement/parse'),
+        headers: headers,
+        body: jsonEncode({
+          'fileBase64': base64Content,
+          'fileName': fileName,
+          'mimeType':
+              mimeType ??
+              (fileName.toLowerCase().endsWith('.pdf')
+                  ? 'application/pdf'
+                  : 'text/csv'),
+        }),
+      );
+
+      final body = jsonDecode(response.body);
+      if (response.statusCode == 200 && body['success'] == true) {
+        return {
+          'success': true,
+          'transactions': body['transactions'] ?? [],
+          'count': body['count'] ?? 0,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': body['error'] ?? 'Failed to parse statement',
+          'transactions': [],
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'error': e.toString(), 'transactions': []};
+    }
+  }
+
   Future<bool> acceptInvitation(String token) async {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();

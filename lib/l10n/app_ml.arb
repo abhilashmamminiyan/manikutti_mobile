@@ -55,5 +55,13 @@
   "personName": "പേര് / സിം പേര്",
   "rechargeNow": "ഇപ്പോൾ റീചാർജ് ചെയ്യുക",
   "rechargedToday": "ഇന്ന് റീചാർജ് ചെയ്തു",
-  "markRecharged": "റീചാർജ് രേഖപ്പെടുത്തുക"
+  "markRecharged": "റീചാർജ് രേഖപ്പെടുത്തുക",
+  "bankStatement": "ബാങ്ക് സ്റ്റേറ്റ്‌മെന്റ്",
+  "uploadBankStatement": "ബാങ്ക് സ്റ്റേറ്റ്‌മെന്റ് അപ്‌ലോഡ്",
+  "noStatementSelected": "ഒരു ബാങ്ക് സ്റ്റേറ്റ്‌മെന്റ് ഫയൽ തിരഞ്ഞെടുക്കുക (.pdf, .csv)",
+  "transactionsFound": "കണ്ടെത്തിയ ഇടപാടുകൾ",
+  "duplicatesFiltered": "ഡ്യൂപ്ലിക്കേറ്റുകൾ ഒഴിവാക്കി",
+  "readyToImport": "ചേർക്കാൻ തയ്യാറുള്ളവ",
+  "addNote": "കുറിപ്പ് ചേർക്കുക",
+  "importTransactions": "ഇടപാടുകൾ ചേർക്കുക"
 }
