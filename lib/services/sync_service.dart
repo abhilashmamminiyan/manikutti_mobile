@@ -75,6 +75,7 @@ class SyncService {
           'type': isFamily
               ? 'Expense'
               : transaction.type, // 'Expense' or 'Income'
+          'bankAccount': transaction.bankAccount ?? 'SBI',
         };
 
         final success = await apiService.createTransaction(
@@ -152,6 +153,7 @@ class SyncService {
             note: item['note'] ?? '',
             isPaid: item['isPaid'] == true,
             type: type,
+            bankAccount: item['bankAccount'] as String? ?? 'SBI',
             synced: true,
           ),
         );

@@ -14,6 +14,7 @@ import 'loans_emi_screen.dart';
 import 'home_loan_screen.dart';
 import 'mobile_recharges_screen.dart';
 import 'transactions_log_screen.dart';
+import 'bank_statement_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/ai_advisor_card.dart';
 import '../widgets/sidebar_pulse_handle.dart';
@@ -35,6 +36,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double _totalIncome = 0;
   double _totalPersonalExpenses = 0;
   double _totalFamilyExpenses = 0;
+
+  // Individual bank balances & monthly totals
+  double _sbiIncome = 0;
+  double _sbiExpenses = 0;
+  double _sbiBalance = 0;
+  double _canaraIncome = 0;
+  double _canaraExpenses = 0;
+  double _canaraBalance = 0;
 
   List<dynamic> _monthlyExpenses = [];
   List<dynamic> _notifications = [];
@@ -604,17 +613,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.account_balance_wallet_rounded,
-                  color: Colors.white,
-                  size: 18,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      'SBI: ₹${_sbiBalance.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      'Canara: ₹${_canaraBalance.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -736,6 +775,221 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBankAccountsSummaryCard(ThemeData theme, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppTheme.darkSurfaceContainerLowest
+            : AppTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppTheme.ambientCardShadow,
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF2C3233)
+              : AppTheme.outlineVariant.withOpacity(0.18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.account_balance_rounded,
+                    size: 16,
+                    color: AppTheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'BANK ACCOUNTS',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.1,
+                      color: isDark
+                          ? AppTheme.darkOnSurfaceVariant
+                          : AppTheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const BankStatementScreen(),
+                    ),
+                  ).then((_) {
+                    _loadData();
+                  });
+                },
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.upload_file_rounded,
+                        size: 13,
+                        color: AppTheme.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Upload Statement',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              // SBI Account Card
+              Expanded(
+                child: _buildSingleBankCard(
+                  name: 'SBI',
+                  balance: _sbiBalance,
+                  income: _sbiIncome,
+                  expense: _sbiExpenses,
+                  color: const Color(0xFF1E88E5),
+                  icon: Icons.account_balance_rounded,
+                  theme: theme,
+                  isDark: isDark,
+                  bankValue: TransactionModel.bankSbi,
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Canara Bank Card
+              Expanded(
+                child: _buildSingleBankCard(
+                  name: 'Canara Bank',
+                  balance: _canaraBalance,
+                  income: _canaraIncome,
+                  expense: _canaraExpenses,
+                  color: const Color(0xFF0284C7),
+                  icon: Icons.account_balance_outlined,
+                  theme: theme,
+                  isDark: isDark,
+                  bankValue: TransactionModel.bankCanara,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSingleBankCard({
+    required String name,
+    required double balance,
+    required double income,
+    required double expense,
+    required Color color,
+    required IconData icon,
+    required ThemeData theme,
+    required bool isDark,
+    required String bankValue,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                const TransactionsLogScreen(initialFilter: 'Personal'),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(isDark ? 0.12 : 0.06),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withOpacity(isDark ? 0.35 : 0.22),
+            width: 1.2,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 16, color: color),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: color,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '₹${balance.toStringAsFixed(2)}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: isDark ? Colors.white : AppTheme.onSurface,
+                fontSize: 17,
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Text(
+                  '+₹${income.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF10B981),
+                  ),
+                ),
+                Text(
+                  ' • ',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppTheme.outline.withOpacity(0.5),
+                  ),
+                ),
+                Text(
+                  '-₹${expense.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFEF4444),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1255,6 +1509,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     double personalEx = 0;
     double familyEx = 0;
 
+    double sbiIn = 0;
+    double sbiOut = 0;
+    double canaraIn = 0;
+    double canaraOut = 0;
+
     // 1. Calculate regular sums for current month
     double regularSum = 0;
     double paidRegularSum = 0;
@@ -1304,13 +1563,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (tDate != null &&
           tDate.year == today.year &&
           tDate.month == today.month) {
+        final bank = (t.bankAccount != null && t.bankAccount!.isNotEmpty)
+            ? t.bankAccount!
+            : TransactionModel.bankSbi;
+        final isCanara = bank == TransactionModel.bankCanara;
+
         if (t.type == 'Income') {
           income += t.amount;
+          if (isCanara) {
+            canaraIn += t.amount;
+          } else {
+            sbiIn += t.amount;
+          }
         } else if (t.type == 'Expense') {
           personalEx += t.amount;
+          if (isCanara) {
+            canaraOut += t.amount;
+          } else {
+            sbiOut += t.amount;
+          }
         } else if (t.type == 'Family') {
           if (!isRegularCommitmentPayment(t)) {
             familyEx += t.amount;
+          }
+          if (isCanara) {
+            canaraOut += t.amount;
+          } else {
+            sbiOut += t.amount;
           }
         }
       }
@@ -1364,6 +1643,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _constantEmiDues = emiDuesTotal;
       _familySalaryIncome = salarySum;
       _familyBaseSalary = baseSalarySum;
+      _sbiIncome = sbiIn;
+      _sbiExpenses = sbiOut;
+      _sbiBalance = sbiIn - sbiOut;
+      _canaraIncome = canaraIn;
+      _canaraExpenses = canaraOut;
+      _canaraBalance = canaraIn - canaraOut;
     });
   }
 
@@ -1563,6 +1848,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     }),
                   ),
                   const SizedBox(height: 16),
+
+                  // Bank Accounts Summary Breakdown
+                  _buildBankAccountsSummaryCard(theme, isDark),
+                  const SizedBox(height: 16),
+
                   // Quick Access Hub
                   Row(
                     children: [

@@ -30,6 +30,7 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
   DateTimeRange? _customDateRange;
   SortOption _sortOption = SortOption.dateDesc;
   String _searchQuery = '';
+  String _bankFilter = 'All'; // 'All' | 'SBI' | 'Canara Bank'
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -203,6 +204,14 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
         final catMatch = t.category.toLowerCase().contains(q);
         final typeMatch = t.type.toLowerCase().contains(q);
         if (!noteMatch && !catMatch && !typeMatch) return false;
+      }
+
+      // 4. Bank account filter
+      if (_bankFilter != 'All') {
+        final itemBank = (t.bankAccount != null && t.bankAccount!.isNotEmpty)
+            ? t.bankAccount!
+            : TransactionModel.bankSbi;
+        if (itemBank != _bankFilter) return false;
       }
 
       return true;
@@ -574,6 +583,27 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 10),
+
+                    // Bank Account Filter Row (Chips)
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildBankFilterChip(label: 'All Banks', bank: 'All'),
+                          const SizedBox(width: 8),
+                          _buildBankFilterChip(
+                            label: 'SBI',
+                            bank: TransactionModel.bankSbi,
+                          ),
+                          const SizedBox(width: 8),
+                          _buildBankFilterChip(
+                            label: 'Canara Bank',
+                            bank: TransactionModel.bankCanara,
+                          ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 12),
 
                     // Sort Filter Pill Button
@@ -873,6 +903,38 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                                             fontSize: 11,
                                           ),
                                     ),
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 1.5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            (t.bankAccount ==
+                                                        TransactionModel
+                                                            .bankCanara
+                                                    ? const Color(0xFF0284C7)
+                                                    : const Color(0xFF1E88E5))
+                                                .withOpacity(0.14),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        (t.bankAccount != null &&
+                                                t.bankAccount!.isNotEmpty)
+                                            ? t.bankAccount!
+                                            : 'SBI',
+                                        style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.w700,
+                                          color:
+                                              t.bankAccount ==
+                                                  TransactionModel.bankCanara
+                                              ? const Color(0xFF0284C7)
+                                              : const Color(0xFF1E88E5),
+                                        ),
+                                      ),
+                                    ),
                                     if (t.type == 'Family' &&
                                         t.addedBy != null) ...[
                                       Text(
@@ -983,6 +1045,61 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
           setState(() {
             _dateFilter = preset;
             _customDateRange = null;
+          });
+        }
+      },
+    );
+  }
+
+  Widget _buildBankFilterChip({required String label, required String bank}) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final isSelected = _bankFilter == bank;
+
+    return ChoiceChip(
+      avatar: bank != 'All'
+          ? Icon(
+              Icons.account_balance_rounded,
+              size: 14,
+              color: isSelected
+                  ? Colors.white
+                  : (bank == TransactionModel.bankCanara
+                        ? const Color(0xFF0284C7)
+                        : const Color(0xFF1E88E5)),
+            )
+          : null,
+      label: Text(label),
+      labelStyle: TextStyle(
+        fontSize: 12,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+        color: isSelected
+            ? Colors.white
+            : (isDark ? AppTheme.darkOnSurface : AppTheme.onSurface),
+      ),
+      selected: isSelected,
+      selectedColor: bank == TransactionModel.bankCanara
+          ? const Color(0xFF0284C7)
+          : (bank == TransactionModel.bankSbi
+                ? const Color(0xFF1E88E5)
+                : AppTheme.primary),
+      backgroundColor: isDark
+          ? AppTheme.darkSurfaceContainer
+          : AppTheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isSelected
+              ? Colors.transparent
+              : (isDark
+                    ? Colors.white12
+                    : AppTheme.outlineVariant.withOpacity(0.3)),
+        ),
+      ),
+      showCheckmark: false,
+      onSelected: (val) {
+        if (val) {
+          setState(() {
+            _bankFilter = bank;
           });
         }
       },

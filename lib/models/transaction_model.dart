@@ -1,4 +1,8 @@
 class TransactionModel {
+  static const String bankSbi = 'SBI';
+  static const String bankCanara = 'Canara Bank';
+  static const List<String> supportedBanks = [bankSbi, bankCanara];
+
   final int? id;
   final String date;
   final double amount;
@@ -9,6 +13,7 @@ class TransactionModel {
   final String? addedBy;
   final String? familyCode;
   final bool synced;
+  final String? bankAccount; // 'SBI' | 'Canara Bank'
 
   TransactionModel({
     this.id,
@@ -21,6 +26,7 @@ class TransactionModel {
     this.addedBy,
     this.familyCode,
     this.synced = false,
+    this.bankAccount = bankSbi,
   });
 
   Map<String, dynamic> toMap() {
@@ -35,6 +41,7 @@ class TransactionModel {
       'addedBy': addedBy,
       'familyCode': familyCode,
       'synced': synced ? 1 : 0,
+      'bankAccount': bankAccount ?? bankSbi,
     };
   }
 
@@ -50,6 +57,7 @@ class TransactionModel {
       addedBy: map['addedBy'],
       familyCode: map['familyCode'],
       synced: map['synced'] == 1,
+      bankAccount: map['bankAccount'] as String? ?? bankSbi,
     );
   }
 
@@ -64,6 +72,7 @@ class TransactionModel {
     String? addedBy,
     String? familyCode,
     bool? synced,
+    String? bankAccount,
   }) {
     return TransactionModel(
       id: id ?? this.id,
@@ -76,6 +85,7 @@ class TransactionModel {
       addedBy: addedBy ?? this.addedBy,
       familyCode: familyCode ?? this.familyCode,
       synced: synced ?? this.synced,
+      bankAccount: bankAccount ?? this.bankAccount,
     );
   }
 }
