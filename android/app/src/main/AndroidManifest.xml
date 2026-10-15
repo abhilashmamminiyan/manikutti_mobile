@@ -34,12 +34,13 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
-            <!-- Deep linking for Widget, Quick Settings Tile, Siri, and Assistant -->
+            <!-- Deep linking for Main App (Add Transaction & Dashboard) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="manikutti" />
+                <data android:scheme="manikutti" android:host="add-transaction" />
+                <data android:scheme="manikutti" android:host="dashboard" />
             </intent-filter>
 
             <!-- App Shortcuts & Assistant Actions -->
@@ -52,17 +53,21 @@
         <activity
             android:name=".VoiceDialogActivity"
             android:theme="@style/TransparentTheme"
-            android:launchMode="singleTop"
-            android:taskAffinity=""
+            android:launchMode="singleInstance"
+            android:taskAffinity="com.abhilash.manikutti.voice"
             android:excludeFromRecents="true"
             android:exported="true"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
+            <meta-data
+                android:name="io.flutter.Entrypoint"
+                android:value="voiceDialogMain" />
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="manikutti" android:host="voice-dialog" />
+                <data android:scheme="manikutti" android:host="voice-expense" />
             </intent-filter>
         </activity>
 

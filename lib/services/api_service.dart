@@ -135,6 +135,7 @@ class ApiService {
     await prefs.remove('family_code');
     await prefs.remove('app_lock_pin');
     await prefs.remove('app_lock_enabled');
+    await prefs.remove('last_app_paused_epoch_ms');
   }
 
   Future<void> clearAuth() async {
@@ -439,6 +440,88 @@ class ApiService {
         body: jsonEncode({'id': id, 'paidDate': paidDate}),
       );
 
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> addMonthlyExpense({
+    required String familyCode,
+    required String title,
+    required double amount,
+    required int dueDay,
+    String assignedTo = 'Family',
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/sheets/monthly'),
+        headers: headers,
+        body: jsonEncode({
+          'familyCode': familyCode,
+          'title': title,
+          'amount': amount,
+          'dueDay': dueDay,
+          'assignedTo': assignedTo,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> updateMonthlyExpense({
+    required int id,
+    required String title,
+    required double amount,
+    required int dueDay,
+    required String status,
+    String assignedTo = 'Family',
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/sheets/monthly'),
+        headers: headers,
+        body: jsonEncode({
+          'id': id,
+          'title': title,
+          'amount': amount,
+          'dueDay': dueDay,
+          'status': status,
+          'assignedTo': assignedTo,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteMonthlyExpense(int id) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/sheets/monthly?id=$id'),
+        headers: headers,
+      );
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
         return body['success'] == true;

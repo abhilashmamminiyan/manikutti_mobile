@@ -9,6 +9,10 @@ class VoiceDialogActivity : FlutterActivity() {
         return BackgroundMode.transparent
     }
 
+    override fun getDartEntrypointFunctionName(): String {
+        return "voiceDialogMain"
+    }
+
     override fun getInitialRoute(): String {
         val data = intent?.data
         val query = data?.getQueryParameter("query") ?: ""

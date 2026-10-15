@@ -114,18 +114,44 @@ void main() async {
     isLoggedIn =
         (email != null && email.isNotEmpty) && (token != null || hasPin);
 
-    runApp(MyApp(isLoggedIn: isLoggedIn, hasPin: hasPin));
+    bool startLocked = false;
+    final defaultRoute =
+        WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+    final isVoiceRoute = defaultRoute.contains('voice-dialog');
+
+    if (isLoggedIn && hasPin && !isVoiceRoute) {
+      final prefs = await SharedPreferences.getInstance();
+      final lastPaused = prefs.getInt('last_app_paused_epoch_ms') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final elapsed = now - lastPaused;
+      // Require unlock if cold start (lastPaused == 0) or if >= 2 minutes (120,000ms) elapsed
+      if (lastPaused == 0 || elapsed >= 2 * 60 * 1000 || elapsed < 0) {
+        startLocked = true;
+      } else {
+        startLocked = false;
+      }
+    }
+
+    runApp(
+      MyApp(isLoggedIn: isLoggedIn, hasPin: hasPin, initialLocked: startLocked),
+    );
   } catch (e, stackTrace) {
     print('Initialization error in main: $e\n$stackTrace');
-    runApp(const MyApp(isLoggedIn: false, hasPin: false));
+    runApp(const MyApp(isLoggedIn: false, hasPin: false, initialLocked: false));
   }
 }
 
 class MyApp extends StatefulWidget {
   final bool isLoggedIn;
   final bool hasPin;
+  final bool initialLocked;
 
-  const MyApp({super.key, required this.isLoggedIn, required this.hasPin});
+  const MyApp({
+    super.key,
+    required this.isLoggedIn,
+    required this.hasPin,
+    this.initialLocked = false,
+  });
 
   static void setLocale(BuildContext context, Locale newLocale) {
     _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
@@ -149,7 +175,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Locale? _locale;
   ThemeMode _themeMode = ThemeMode.system;
-  late bool _isLocked = widget.isLoggedIn && widget.hasPin;
+  late bool _isLocked = widget.initialLocked;
+  int? _lastPausedEpochMs;
+  static const int lockGracePeriodMs = 2 * 60 * 1000; // 2 minutes grace period
 
   void setLocale(Locale locale) {
     setState(() {
@@ -225,27 +253,106 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   Future<void> _checkInitialLockState() async {
+    final defaultRoute =
+        WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+    if (defaultRoute.contains('voice-dialog')) {
+      if (_isLocked) {
+        setState(() {
+          _isLocked = false;
+        });
+      }
+      return;
+    }
+
     final hasPin = await ApiService.instance.hasPin();
-    if (widget.isLoggedIn && hasPin) {
-      setState(() {
-        _isLocked = true;
-      });
+    if (!widget.isLoggedIn || !hasPin) {
+      if (_isLocked) {
+        setState(() {
+          _isLocked = false;
+        });
+      }
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final lastPaused = prefs.getInt('last_app_paused_epoch_ms') ?? 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final elapsed = now - lastPaused;
+
+    if (lastPaused > 0 && elapsed < lockGracePeriodMs && elapsed >= 0) {
+      if (_isLocked) {
+        setState(() {
+          _isLocked = false;
+        });
+      }
+    } else {
+      if (!_isLocked) {
+        setState(() {
+          _isLocked = true;
+        });
+      }
     }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      _checkLockStatusForBackground();
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden) {
+      _handleAppPaused();
+    } else if (state == AppLifecycleState.resumed) {
+      _handleAppResumed();
     }
   }
 
-  Future<void> _checkLockStatusForBackground() async {
+  Future<void> _handleAppPaused() async {
+    // If already locked, don't update timestamp so grace period isn't extended while locked
+    if (_isLocked) return;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    _lastPausedEpochMs = now;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('last_app_paused_epoch_ms', now);
+  }
+
+  Future<void> _handleAppResumed() async {
+    final defaultRoute =
+        WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+    if (defaultRoute.contains('voice-dialog')) {
+      return;
+    }
+
     final hasPin = await ApiService.instance.hasPin();
-    if (widget.isLoggedIn && hasPin) {
+    if (!widget.isLoggedIn || !hasPin) {
+      return;
+    }
+
+    // If already locked, keep locked
+    if (_isLocked) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final lastPaused =
+        _lastPausedEpochMs ?? prefs.getInt('last_app_paused_epoch_ms') ?? 0;
+
+    if (lastPaused == 0) {
       setState(() {
         _isLocked = true;
       });
+      return;
+    }
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final elapsed = now - lastPaused;
+
+    if (elapsed >= lockGracePeriodMs || elapsed < 0) {
+      // 2 minutes or more elapsed since leaving the app: lock it!
+      setState(() {
+        _isLocked = true;
+      });
+    } else {
+      debugPrint(
+        'App resumed within 2-minute grace period ($elapsed ms). No unlock prompt.',
+      );
     }
   }
 
@@ -290,16 +397,24 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         return null;
       },
       builder: (context, child) {
+        final defaultRoute =
+            WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+        final isVoiceRoute = defaultRoute.contains('voice-dialog');
+
         return Stack(
           children: [
             if (child != null) child,
-            if (_isLocked)
+            if (_isLocked && !isVoiceRoute)
               Positioned.fill(
                 child: AppLockScreen(
-                  onUnlock: () {
+                  onUnlock: () async {
                     setState(() {
                       _isLocked = false;
                     });
+                    final now = DateTime.now().millisecondsSinceEpoch;
+                    _lastPausedEpochMs = now;
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setInt('last_app_paused_epoch_ms', now);
                   },
                 ),
               ),
@@ -307,6 +422,41 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         );
       },
       home: widget.isLoggedIn ? const DashboardScreen() : const LoginScreen(),
+    );
+  }
+}
+
+/// Dedicated entrypoint for VoiceDialogActivity (translucent overlay on home screen)
+@pragma('vm:entry-point')
+void voiceDialogMain() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await NotificationService.instance.initialize();
+  } catch (e) {
+    debugPrint('Failed to initialize NotificationService in voice dialog: $e');
+  }
+  runApp(const VoiceDialogApp());
+}
+
+class VoiceDialogApp extends StatelessWidget {
+  const VoiceDialogApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final defaultRoute =
+        WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+    final uri = Uri.tryParse(defaultRoute);
+    final query = uri?.queryParameters['query'];
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: Colors.transparent,
+      ),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: VoiceDialogScreen(initialQuery: query),
     );
   }
 }
