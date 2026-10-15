@@ -17,9 +17,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
 
-  String _transactionType = 'Expense'; // 'Expense' | 'Income' | 'Family'
+  String _transactionType = 'Expense'; // 'Expense' | 'Income' | 'Family' | 'Transfer'
   String _selectedCategory = 'Food';
   String _selectedBankAccount = TransactionModel.bankSbi;
+  String _transferToBankAccount = TransactionModel.bankCanara;
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
 
@@ -56,6 +57,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   // Choose correct categories list based on type
   List<String> get _categories {
     if (_transactionType == 'Income') return _incomeCategories;
+    if (_transactionType == 'Transfer') return ['Transfer'];
     return _expenseCategories;
   }
 
@@ -84,24 +86,69 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       return;
     }
 
+    if (_transactionType == 'Transfer' &&
+        _selectedBankAccount == _transferToBankAccount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Source and destination accounts must be different.'),
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
       final email = await ApiService.instance.getUserEmail();
+      final utcDate = _selectedDate.toUtc().toIso8601String();
 
-      final transaction = TransactionModel(
-        date: _selectedDate.toIso8601String(),
-        amount: amount,
-        category: _selectedCategory,
-        note: _noteController.text.trim(),
-        type: _transactionType,
-        isPaid: true,
-        addedBy: email,
-        synced: false, // Initial state is unsynced, trigger sync after save
-        bankAccount: _selectedBankAccount,
-      );
+      if (_transactionType == 'Transfer') {
+        final noteText = _noteController.text.trim();
+        final outgoing = TransactionModel(
+          date: utcDate,
+          amount: amount,
+          category: 'Transfer',
+          note: noteText.isNotEmpty
+              ? '$noteText (Transfer to $_transferToBankAccount)'
+              : 'Transfer to $_transferToBankAccount',
+          type: 'Expense',
+          isPaid: true,
+          addedBy: email,
+          synced: false,
+          bankAccount: _selectedBankAccount,
+        );
 
-      await DbHelper.instance.insertTransaction(transaction);
+        final incoming = TransactionModel(
+          date: utcDate,
+          amount: amount,
+          category: 'Transfer',
+          note: noteText.isNotEmpty
+              ? '$noteText (Transfer from $_selectedBankAccount)'
+              : 'Transfer from $_selectedBankAccount',
+          type: 'Income',
+          isPaid: true,
+          addedBy: email,
+          synced: false,
+          bankAccount: _transferToBankAccount,
+        );
+
+        await DbHelper.instance.insertTransaction(outgoing);
+        await DbHelper.instance.insertTransaction(incoming);
+      } else {
+        final transaction = TransactionModel(
+          date: utcDate,
+          amount: amount,
+          category: _selectedCategory,
+          note: _noteController.text.trim(),
+          type: _transactionType,
+          isPaid: true,
+          addedBy: email,
+          synced: false, // Initial state is unsynced, trigger sync after save
+          bankAccount: _selectedBankAccount,
+        );
+
+        await DbHelper.instance.insertTransaction(transaction);
+      }
 
       if (mounted) {
         Navigator.pop(context, true); // Returns true to trigger refresh
@@ -151,7 +198,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       Expanded(
                         child: _buildTypeButton(
                           'Expense',
-                          'Personal Exp',
+                          'Expense',
                           Icons.arrow_upward_rounded,
                           AppTheme.error,
                         ),
@@ -159,15 +206,23 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       Expanded(
                         child: _buildTypeButton(
                           'Income',
-                          'Personal Inc',
+                          'Income',
                           Icons.arrow_downward_rounded,
                           const Color(0xFF10B981),
                         ),
                       ),
                       Expanded(
                         child: _buildTypeButton(
+                          'Transfer',
+                          'Transfer',
+                          Icons.swap_horiz_rounded,
+                          const Color(0xFF0284C7),
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildTypeButton(
                           'Family',
-                          'Family Pool',
+                          'Family',
                           Icons.diversity_3_rounded,
                           AppTheme.primary,
                         ),
@@ -277,14 +332,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(
-                            Icons.account_balance_rounded,
+                          Icon(
+                            _transactionType == 'Transfer'
+                                ? Icons.swap_horiz_rounded
+                                : Icons.account_balance_rounded,
                             size: 16,
                             color: AppTheme.primary,
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'BANK ACCOUNT',
+                            _transactionType == 'Transfer'
+                                ? 'TRANSFER ROUTE (FROM → TO)'
+                                : 'BANK ACCOUNT',
                             style: theme.textTheme.labelSmall?.copyWith(
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.2,
@@ -296,27 +355,102 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildBankOption(
-                              name: 'SBI',
-                              bankValue: TransactionModel.bankSbi,
-                              color: const Color(0xFF1E88E5),
-                              icon: Icons.account_balance_rounded,
+                      if (_transactionType == 'Transfer') ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'From Account',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.outline,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  _buildTransferAccountSelector(
+                                    selected: _selectedBankAccount,
+                                    onChanged: (val) {
+                                      setState(() {
+                                        _selectedBankAccount = val;
+                                        if (_transferToBankAccount == val) {
+                                          _transferToBankAccount =
+                                              val == TransactionModel.bankSbi
+                                                  ? TransactionModel.bankCanara
+                                                  : TransactionModel.bankSbi;
+                                        }
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildBankOption(
-                              name: 'Canara Bank',
-                              bankValue: TransactionModel.bankCanara,
-                              color: const Color(0xFF0284C7),
-                              icon: Icons.account_balance_outlined,
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 10),
+                              child: Icon(
+                                Icons.arrow_forward_rounded,
+                                color: AppTheme.primary,
+                                size: 20,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'To Account',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.outline,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  _buildTransferAccountSelector(
+                                    selected: _transferToBankAccount,
+                                    onChanged: (val) {
+                                      setState(() {
+                                        _transferToBankAccount = val;
+                                        if (_selectedBankAccount == val) {
+                                          _selectedBankAccount =
+                                              val == TransactionModel.bankSbi
+                                                  ? TransactionModel.bankCanara
+                                                  : TransactionModel.bankSbi;
+                                        }
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ] else ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildBankOption(
+                                name: 'SBI',
+                                bankValue: TransactionModel.bankSbi,
+                                color: const Color(0xFF1E88E5),
+                                icon: Icons.account_balance_rounded,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildBankOption(
+                                name: 'Canara Bank',
+                                bankValue: TransactionModel.bankCanara,
+                                color: const Color(0xFF0284C7),
+                                icon: Icons.account_balance_outlined,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -393,79 +527,114 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Category Title
-                Text(
-                  'Select Category',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Categories Grid
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 2.2,
-                  ),
-                  itemCount: _categories.length,
-                  itemBuilder: (context, index) {
-                    final cat = _categories[index];
-                    final isSelected = _selectedCategory == cat;
-                    return InkWell(
-                      onTap: () {
-                        setState(() {
-                          _selectedCategory = cat;
-                        });
-                      },
+                if (_transactionType == 'Transfer') ...[
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0284C7).withOpacity(0.08),
                       borderRadius: BorderRadius.circular(14),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppTheme.primary
-                              : (isDark
-                                    ? AppTheme.darkSurfaceContainerLowest
-                                    : AppTheme.surfaceContainerLowest),
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: isSelected
-                              ? AppTheme.subtleFloatShadow
-                              : null,
-                          border: Border.all(
-                            color: isSelected
-                                ? AppTheme.primary
-                                : (isDark
-                                      ? const Color(0xFF2C3233)
-                                      : AppTheme.outlineVariant.withOpacity(
-                                          0.2,
-                                        )),
-                          ),
+                      border: Border.all(
+                        color: const Color(0xFF0284C7).withOpacity(0.2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline_rounded,
+                          color: Color(0xFF0284C7),
+                          size: 20,
                         ),
-                        child: Center(
+                        const SizedBox(width: 10),
+                        Expanded(
                           child: Text(
-                            cat,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              fontWeight: isSelected
-                                  ? FontWeight.w800
-                                  : FontWeight.w600,
-                              color: isSelected
-                                  ? Colors.white
-                                  : (isDark
-                                        ? AppTheme.darkOnSurface
-                                        : AppTheme.onSurface),
+                            'Self-transfers adjust bank balances without affecting personal income or expenditure.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: isDark
+                                  ? const Color(0xFF7DD3FC)
+                                  : const Color(0xFF0369A1),
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  // Category Title
+                  Text(
+                    'Select Category',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Categories Grid
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 2.2,
+                    ),
+                    itemCount: _categories.length,
+                    itemBuilder: (context, index) {
+                      final cat = _categories[index];
+                      final isSelected = _selectedCategory == cat;
+                      return InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedCategory = cat;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppTheme.primary
+                                : (isDark
+                                      ? AppTheme.darkSurfaceContainerLowest
+                                      : AppTheme.surfaceContainerLowest),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: isSelected
+                                ? AppTheme.subtleFloatShadow
+                                : null,
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppTheme.primary
+                                  : (isDark
+                                        ? const Color(0xFF2C3233)
+                                        : AppTheme.outlineVariant.withOpacity(
+                                            0.2,
+                                          )),
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              cat,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                fontWeight: isSelected
+                                    ? FontWeight.w800
+                                    : FontWeight.w600,
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDark
+                                          ? AppTheme.darkOnSurface
+                                          : AppTheme.onSurface),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
                 const SizedBox(height: 36),
 
                 // Save Button
@@ -613,6 +782,46 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransferAccountSelector({
+    required String selected,
+    required ValueChanged<String> onChanged,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark ? AppTheme.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF374151)
+              : AppTheme.outlineVariant.withOpacity(0.3),
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: selected,
+          isExpanded: true,
+          items: TransactionModel.supportedBanks.map((b) {
+            return DropdownMenuItem<String>(
+              value: b,
+              child: Text(
+                b,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: (val) {
+            if (val != null) onChanged(val);
+          },
         ),
       ),
     );
