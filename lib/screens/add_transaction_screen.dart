@@ -19,6 +19,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   String _transactionType = 'Expense'; // 'Expense' | 'Income' | 'Family'
   String _selectedCategory = 'Food';
+  String _selectedBankAccount = TransactionModel.bankSbi;
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
 
@@ -97,6 +98,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         isPaid: true,
         addedBy: email,
         synced: false, // Initial state is unsynced, trigger sync after save
+        bankAccount: _selectedBankAccount,
       );
 
       await DbHelper.instance.insertTransaction(transaction);
@@ -249,6 +251,73 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     labelText: 'Description / Note',
                     hintText: 'e.g., Grocery shopping, Electricity bill...',
                     prefixIcon: Icon(Icons.edit_note_rounded),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Bank Account Selector Card
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppTheme.darkSurfaceContainerLowest
+                        : AppTheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF2C3233)
+                          : AppTheme.outlineVariant.withOpacity(0.18),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.account_balance_rounded,
+                            size: 16,
+                            color: AppTheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'BANK ACCOUNT',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.2,
+                              color: isDark
+                                  ? AppTheme.darkOnSurfaceVariant
+                                  : AppTheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildBankOption(
+                              name: 'SBI',
+                              bankValue: TransactionModel.bankSbi,
+                              color: const Color(0xFF1E88E5),
+                              icon: Icons.account_balance_rounded,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildBankOption(
+                              name: 'Canara Bank',
+                              bankValue: TransactionModel.bankCanara,
+                              color: const Color(0xFF0284C7),
+                              icon: Icons.account_balance_outlined,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -484,6 +553,63 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 color: isSelected
                     ? (isDark ? Colors.white : AppTheme.onSurface)
                     : AppTheme.outline,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBankOption({
+    required String name,
+    required String bankValue,
+    required Color color,
+    required IconData icon,
+  }) {
+    final isSelected = _selectedBankAccount == bankValue;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedBankAccount = bankValue;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color.withOpacity(isDark ? 0.22 : 0.12)
+              : (isDark
+                    ? AppTheme.darkSurfaceContainer.withOpacity(0.6)
+                    : AppTheme.surfaceContainerHigh.withOpacity(0.4)),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? color
+                : (isDark
+                      ? const Color(0xFF374151)
+                      : AppTheme.outlineVariant.withOpacity(0.3)),
+            width: isSelected ? 1.8 : 1.0,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 18, color: isSelected ? color : AppTheme.outline),
+            const SizedBox(width: 8),
+            Text(
+              name,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected
+                    ? (isDark ? Colors.white : color)
+                    : (isDark
+                          ? AppTheme.darkOnSurfaceVariant
+                          : AppTheme.onSurfaceVariant),
               ),
             ),
           ],

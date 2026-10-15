@@ -21,7 +21,7 @@ class DbHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -39,7 +39,8 @@ class DbHelper {
         type TEXT NOT NULL,
         addedBy TEXT,
         familyCode TEXT,
-        synced INTEGER NOT NULL
+        synced INTEGER NOT NULL,
+        bankAccount TEXT
       )
     ''');
     await _createMobileRechargesTable(db);
@@ -48,6 +49,9 @@ class DbHelper {
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createMobileRechargesTable(db);
+    }
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE transactions ADD COLUMN bankAccount TEXT');
     }
   }
 

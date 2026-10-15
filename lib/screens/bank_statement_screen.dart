@@ -60,6 +60,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
   String? _selectedFileName;
   int? _selectedFileSize;
   String? _errorMessage;
+  String _selectedBank = TransactionModel.bankSbi;
 
   List<StatementTransactionItem> _items = [];
   StatementFilterTab _currentTab = StatementFilterTab.readyToImport;
@@ -897,6 +898,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
           'note': finalNote,
           'isPaid': true,
           'type': item.type,
+          'bankAccount': _selectedBank,
         });
 
         localModels.add(
@@ -908,6 +910,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
             isPaid: true,
             type: item.type,
             addedBy: userEmail,
+            bankAccount: _selectedBank,
             synced: true, // directly synced via batch API
           ),
         );
@@ -1221,7 +1224,9 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                 height: 1.4,
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+            _buildBankSelectorCard(theme: theme, isDark: isDark),
+            const SizedBox(height: 20),
 
             if (_isPicking || _isParsing) ...[
               const CircularProgressIndicator(color: AppTheme.primary),
@@ -1411,6 +1416,58 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                           'Change',
                           style: TextStyle(fontSize: 12),
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Bank Account Assignment Indicator & Switcher
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppTheme.darkSurfaceContainer
+                        : AppTheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF2C3233)
+                          : AppTheme.outlineVariant.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.account_balance_rounded,
+                        size: 16,
+                        color: _selectedBank == TransactionModel.bankSbi
+                            ? const Color(0xFF1E88E5)
+                            : const Color(0xFF0284C7),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Target Account:',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      _buildBankChip(
+                        name: 'SBI',
+                        bankValue: TransactionModel.bankSbi,
+                        color: const Color(0xFF1E88E5),
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildBankChip(
+                        name: 'Canara Bank',
+                        bankValue: TransactionModel.bankCanara,
+                        color: const Color(0xFF0284C7),
+                        isDark: isDark,
                       ),
                     ],
                   ),
@@ -1863,6 +1920,175 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBankSelectorCard({
+    required ThemeData theme,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppTheme.darkSurfaceContainer
+            : AppTheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF2C3233)
+              : AppTheme.outlineVariant.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.account_balance_rounded,
+                size: 16,
+                color: AppTheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'TARGET BANK ACCOUNT',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.1,
+                  color: isDark
+                      ? AppTheme.darkOnSurfaceVariant
+                      : AppTheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildBankOption(
+                  name: 'SBI',
+                  bankValue: TransactionModel.bankSbi,
+                  color: const Color(0xFF1E88E5),
+                  icon: Icons.account_balance_rounded,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildBankOption(
+                  name: 'Canara Bank',
+                  bankValue: TransactionModel.bankCanara,
+                  color: const Color(0xFF0284C7),
+                  icon: Icons.account_balance_outlined,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBankOption({
+    required String name,
+    required String bankValue,
+    required Color color,
+    required IconData icon,
+  }) {
+    final isSelected = _selectedBank == bankValue;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedBank = bankValue;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color.withOpacity(isDark ? 0.22 : 0.12)
+              : (isDark
+                    ? AppTheme.darkSurfaceContainer.withOpacity(0.6)
+                    : AppTheme.surfaceContainerHigh.withOpacity(0.4)),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? color
+                : (isDark
+                      ? const Color(0xFF374151)
+                      : AppTheme.outlineVariant.withOpacity(0.3)),
+            width: isSelected ? 1.8 : 1.0,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 17, color: isSelected ? color : AppTheme.outline),
+            const SizedBox(width: 8),
+            Text(
+              name,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected
+                    ? (isDark ? Colors.white : color)
+                    : (isDark
+                          ? AppTheme.darkOnSurfaceVariant
+                          : AppTheme.onSurfaceVariant),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBankChip({
+    required String name,
+    required String bankValue,
+    required Color color,
+    required bool isDark,
+  }) {
+    final isSelected = _selectedBank == bankValue;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedBank = bankValue;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color
+              : (isDark
+                    ? const Color(0xFF262C2D)
+                    : Colors.black.withOpacity(0.04)),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? color
+                : (isDark
+                      ? Colors.white12
+                      : AppTheme.outlineVariant.withOpacity(0.3)),
+          ),
+        ),
+        child: Text(
+          name,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            color: isSelected
+                ? Colors.white
+                : (isDark ? Colors.white70 : AppTheme.onSurfaceVariant),
+          ),
         ),
       ),
     );
