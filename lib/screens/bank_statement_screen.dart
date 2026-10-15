@@ -866,6 +866,11 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
   }
 
   Future<void> _processParsedTransactions(List<dynamic> rawList) async {
+    // 0. Sync latest records from Google Sheets first so all manual entries are in SQLite
+    try {
+      await SyncService.instance.syncData();
+    } catch (_) {}
+
     // 1. Fetch existing local transactions from SQLite for duplicate detection
     final existingTransactions = await DbHelper.instance.getAllTransactions();
 
@@ -875,6 +880,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
     }
 
     final List<StatementTransactionItem> newItems = [];
+    final Set<int> matchedExistingIds = {};
 
     for (final raw in rawList) {
       final String rawDate = (raw['date'] ?? '').toString().trim();
@@ -890,36 +896,71 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
 
       if (amount <= 0 || rawDate.isEmpty) continue;
 
-      // Normalize candidate date string YYYY-MM-DD
+      DateTime? candidateDateTime;
       String normalizedCandidateDate = rawDate;
       try {
-        final parsed = DateTime.parse(rawDate);
-        normalizedCandidateDate = DateFormat('yyyy-MM-dd').format(parsed);
+        candidateDateTime = DateTime.parse(rawDate);
+        normalizedCandidateDate = DateFormat(
+          'yyyy-MM-dd',
+        ).format(candidateDateTime);
       } catch (_) {
         // keep as is
       }
 
-      // Check if duplicate exists on the SAME DATE with SAME AMOUNT
+      // Check if duplicate exists among manual or already logged transactions
       bool isDup = false;
       String? dupReason;
 
       for (final existing in existingTransactions) {
+        if (existing.id != null && matchedExistingIds.contains(existing.id)) {
+          continue; // Already matched to a prior statement row
+        }
+
+        DateTime? existingDt;
         String existingDateOnly = existing.date;
         try {
-          final dt = DateTime.parse(existing.date);
-          existingDateOnly = DateFormat('yyyy-MM-dd').format(dt.toLocal());
+          existingDt = DateTime.parse(existing.date).toLocal();
+          existingDateOnly = DateFormat('yyyy-MM-dd').format(existingDt);
         } catch (_) {}
 
-        final isSameDate = existingDateOnly == normalizedCandidateDate;
         final isSameAmount = (existing.amount - amount).abs() < 0.01;
         final isSameType =
             (existing.type == type) ||
             (type == 'Expense' && existing.type != 'Income');
 
-        if (isSameDate && isSameAmount && isSameType) {
+        if (!isSameAmount || !isSameType) continue;
+
+        final isSameDate = existingDateOnly == normalizedCandidateDate;
+        int daysDiff = 999;
+        if (candidateDateTime != null && existingDt != null) {
+          final cDate = DateTime(
+            candidateDateTime.year,
+            candidateDateTime.month,
+            candidateDateTime.day,
+          );
+          final eDate = DateTime(
+            existingDt.year,
+            existingDt.month,
+            existingDt.day,
+          );
+          daysDiff = cDate.difference(eDate).inDays.abs();
+        }
+
+        // 1. Exact Date Match
+        if (isSameDate || daysDiff == 0) {
           isDup = true;
           dupReason =
-              'Already logged on $normalizedCandidateDate: ₹${existing.amount.toStringAsFixed(2)} (${existing.note.isNotEmpty ? existing.note : existing.category})';
+              'Already logged manually on $existingDateOnly: ₹${existing.amount.toStringAsFixed(2)} (${existing.note.isNotEmpty ? existing.note : existing.category})';
+          if (existing.id != null) matchedExistingIds.add(existing.id!);
+          break;
+        }
+
+        // 2. Near Date Match (±2 days settlement/clearing lag)
+        if (daysDiff <= 2) {
+          isDup = true;
+          dupReason =
+              'Matches manual entry on $existingDateOnly (±$daysDiff days): ₹${existing.amount.toStringAsFixed(2)} (${existing.note.isNotEmpty ? existing.note : existing.category})';
+          if (existing.id != null) matchedExistingIds.add(existing.id!);
           break;
         }
       }
@@ -997,7 +1038,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Confirm Import'),
         content: Text(
-          'Are you sure you want to save ${selectedItems.length} transactions to your Google Sheet and local Transaction Logs?',
+          'Are you sure you want to save ${selectedItems.length} transactions to your Cloud Ledger and local Transaction Logs?',
         ),
         actions: [
           TextButton(
@@ -1064,7 +1105,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         );
       }
 
-      // 1. Batch Save to Google Sheets
+      // 1. Batch Save to Cloud Vault
       final success = await ApiService.instance.batchCreateTransactions(
         sheetName: 'Personal_Expenses',
         expenses: sheetPayload,
@@ -1072,7 +1113,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
 
       if (!success) {
         throw Exception(
-          'Google Sheets batch sync failed. Please check your internet connection.',
+          'Cloud sync failed. Please check your internet connection.',
         );
       }
 
@@ -1136,7 +1177,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '$count transactions have been recorded in your Google Sheet and local Transaction Logs.',
+                  '$count transactions have been recorded in your Cloud Ledger and local Transaction Logs.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: AppTheme.outline,
                   ),
@@ -1365,7 +1406,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Upload your monthly bank statement (.pdf, .csv, .xlsx) to automatically parse all transactions, add notes, filter out duplicates, and sync to Google Sheets.',
+              'Upload your monthly bank statement (.pdf, .csv, .xlsx) to automatically parse all transactions, add notes, filter out duplicates, and sync to your secure Cloud Ledger.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppTheme.outline,

@@ -1,14 +1,23 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/add_transaction_screen.dart';
 import 'services/api_service.dart';
 import 'services/notification_service.dart';
+import 'services/widget_data_service.dart';
+import 'widgets/voice_logging_sheet.dart';
+import 'widgets/voice_dialog_screen.dart';
 import 'theme/app_theme.dart';
 
 import 'l10n/app_localizations.dart';
 import 'screens/app_lock_screen.dart';
+import 'services/whats_new_service.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -37,6 +46,26 @@ void callbackDispatcher() {
           }
         }
       }
+      // Check Day 4 & Day 5 Salary Prompt
+      final today = DateTime.now();
+      if (today.day == 4 || today.day == 5) {
+        final prefs = await SharedPreferences.getInstance();
+        final confirmed =
+            prefs.getBool('salary_confirmed_${today.year}_${today.month}') ??
+            false;
+        final lastPromptDay =
+            prefs.getInt('salary_prompt_sent_${today.year}_${today.month}') ??
+            0;
+        if (!confirmed && lastPromptDay != today.day) {
+          await prefs.setInt(
+            'salary_prompt_sent_${today.year}_${today.month}',
+            today.day,
+          );
+          await NotificationService.instance.showSalaryPromptNotificationNow(
+            isFollowup: today.day == 5,
+          );
+        }
+      }
     } catch (e) {
       print('Background task execution failed: $e');
     }
@@ -55,6 +84,13 @@ void main() async {
       await NotificationService.instance.initialize();
     } catch (e) {
       print('Failed to initialize NotificationService: $e');
+    }
+
+    // Initialize release notes & What's New service
+    try {
+      await WhatsNewService.instance.init();
+    } catch (e) {
+      print('Failed to initialize WhatsNewService: $e');
     }
 
     // Initialize workmanager background sync task
@@ -127,6 +163,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     });
   }
 
+  StreamSubscription? _widgetClickSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -134,6 +172,42 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     _loadLocale();
     _loadThemeMode();
     _checkInitialLockState();
+    _initHomeWidgetAndDeepLinks();
+  }
+
+  Future<void> _initHomeWidgetAndDeepLinks() async {
+    try {
+      final initialUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
+      if (initialUri != null) {
+        _handleDeepLinkUri(initialUri);
+      }
+
+      _widgetClickSubscription = HomeWidget.widgetClicked.listen((Uri? uri) {
+        if (uri != null) {
+          _handleDeepLinkUri(uri);
+        }
+      });
+
+      unawaited(WidgetDataService.updateWidgetData());
+    } catch (e) {
+      debugPrint('Error initializing HomeWidget: $e');
+    }
+  }
+
+  void _handleDeepLinkUri(Uri uri) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = navigatorKey.currentContext;
+      if (context == null) return;
+
+      if (uri.host == 'voice-expense' || uri.host == 'voice-dialog') {
+        final query = uri.queryParameters['query'];
+        VoiceLoggingSheet.show(context, initialQuery: query);
+      } else if (uri.host == 'add-transaction') {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+        );
+      }
+    });
   }
 
   Future<void> _loadThemeMode() async {
@@ -185,6 +259,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _widgetClickSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -192,6 +267,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Manikutti Finance',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
@@ -200,6 +276,19 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       locale: _locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      onGenerateRoute: (settings) {
+        final uri = Uri.tryParse(settings.name ?? '');
+        if (uri != null &&
+            (uri.path == '/voice-dialog' || uri.host == 'voice-dialog')) {
+          final query = uri.queryParameters['query'];
+          return PageRouteBuilder(
+            opaque: false,
+            pageBuilder: (context, _, __) =>
+                VoiceDialogScreen(initialQuery: query),
+          );
+        }
+        return null;
+      },
       builder: (context, child) {
         return Stack(
           children: [

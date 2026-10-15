@@ -126,15 +126,68 @@ jobs:
       name: Production
       url: https://appdistribution.firebase.google.com/
 
+    permissions:
+      contents: read
+      pull-requests: read
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download Production APK Artifact
         uses: actions/download-artifact@v4
         with:
           name: app-release-apk
           path: build/app/outputs/flutter-apk/
+
+      - name: Generate Dynamic Release Notes with PR Title
+        id: generate_release_notes
+        run: |
+          TOKEN="${{ secrets.PAT_TOKEN }}"
+          if [ -z "$TOKEN" ]; then
+            TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          fi
+
+          # Query GitHub API for PR associated with this commit
+          PR_INFO=$(GH_TOKEN="$TOKEN" gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" --jq '.[0] | {title: .title, body: .body}' 2>/dev/null || echo "")
+
+          export PR_TITLE=$(echo "$PR_INFO" | jq -r '.title // empty' 2>/dev/null || echo "")
+          export PR_BODY=$(echo "$PR_INFO" | jq -r '.body // empty' 2>/dev/null || echo "")
+
+          # Fallback to git commit subject and body if no PR was found
+          if [ -z "$PR_TITLE" ]; then
+            export PR_TITLE=$(git log -1 --pretty=format:"%s")
+          fi
+          if [ -z "$PR_BODY" ]; then
+            export PR_BODY=$(git log -1 --pretty=format:"%b")
+          fi
+
+          python3 -c '
+          import os
+
+          pr_title = os.environ.get("PR_TITLE", "").strip()
+          pr_body = os.environ.get("PR_BODY", "").strip()
+
+          notes = []
+          if pr_title:
+              notes.append(pr_title)
+              notes.append("")
+
+          if pr_body:
+              lines = [l.rstrip() for l in pr_body.splitlines()]
+              while lines and not lines[-1]:
+                  lines.pop()
+              notes.extend(lines[:40])
+
+          content = "\n".join(notes).strip() + "\n"
+          with open("release_notes.txt", "w", encoding="utf-8") as f:
+              f.write(content)
+          '
+
+          echo "Generated release notes:"
+          cat release_notes.txt
 
       - name: Upload to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@v1
@@ -143,6 +196,4 @@ jobs:
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           groups: family
           file: build/app/outputs/flutter-apk/app-release.apk
-          releaseNotes: |
-            Production release manually deployed via workflow run #${{ github.run_number }}
-            Commit: ${{ github.sha }}
+          releaseNotesFile: release_notes.txt

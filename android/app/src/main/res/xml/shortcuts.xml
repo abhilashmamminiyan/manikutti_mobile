@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Static Shortcut: Voice Expense -->
+    <shortcut
+        android:shortcutId="voice_expense"
+        android:enabled="true"
+        android:icon="@drawable/ic_tile_mic"
+        android:shortcutShortLabel="@string/shortcut_voice_short"
+        android:shortcutLongLabel="@string/shortcut_voice_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.abhilash.manikutti"
+            android:targetClass="com.abhilash.manikutti.VoiceDialogActivity"
+            android:data="manikutti://voice-dialog" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+
+    <!-- Static Shortcut: Add Expense Form -->
+    <shortcut
+        android:shortcutId="add_expense"
+        android:enabled="true"
+        android:icon="@drawable/ic_widget_add"
+        android:shortcutShortLabel="@string/shortcut_add_short"
+        android:shortcutLongLabel="@string/shortcut_add_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.abhilash.manikutti"
+            android:targetClass="com.abhilash.manikutti.MainActivity"
+            android:data="manikutti://add-transaction" />
+    </shortcut>
+
+    <!-- Google Assistant App Action: Record Expense (Runs in Background/Overlay without opening main app) -->
+    <capability android:name="actions.intent.RECORD_EXPENSE">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.abhilash.manikutti"
+            android:targetClass="com.abhilash.manikutti.VoiceDialogActivity"
+            android:data="manikutti://voice-dialog?query={query}">
+            <parameter
+                android:name="expense.name"
+                android:key="query"/>
+        </intent>
+    </capability>
+
+    <!-- Google Assistant Custom Voice Action / Built-in Intent: Create Note / Item -->
+    <capability android:name="actions.intent.CREATE_ITEM">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.abhilash.manikutti"
+            android:targetClass="com.abhilash.manikutti.VoiceDialogActivity"
+            android:data="manikutti://voice-dialog?query={query}">
+            <parameter
+                android:name="item.name"
+                android:key="query"/>
+        </intent>
+    </capability>
+</shortcuts>
