@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 import '../database/db_helper.dart';
 import '../models/transaction_model.dart';
@@ -117,6 +118,41 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         return;
       }
 
+      // Check if file is a PDF and if it's password protected
+      if (file.name.toLowerCase().endsWith('.pdf')) {
+        bool isProtected = false;
+        try {
+          final testDoc = PdfLoadedDocument(fileBytes);
+          testDoc.close();
+        } catch (e) {
+          final msg = e.toString().toLowerCase();
+          if (msg.contains('password') ||
+              msg.contains('encrypted') ||
+              msg.contains('security')) {
+            isProtected = true;
+          } else {
+            final sample = String.fromCharCodes(fileBytes.take(4096));
+            if (sample.contains('/Encrypt')) {
+              isProtected = true;
+            }
+          }
+        }
+
+        if (isProtected) {
+          setState(() => _isPicking = false);
+          final unlocked = await _showPdfPasswordDialog(
+            context,
+            fileBytes,
+            file.name,
+          );
+          if (unlocked == null) {
+            // User cancelled
+            return;
+          }
+          fileBytes = unlocked;
+        }
+      }
+
       setState(() {
         _isPicking = false;
         _isParsing = true;
@@ -163,6 +199,243 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
           _errorMessage = 'Error reading file: $e';
         });
       }
+    }
+  }
+
+  Future<Uint8List?> _showPdfPasswordDialog(
+    BuildContext context,
+    Uint8List originalBytes,
+    String fileName,
+  ) async {
+    final passwordController = TextEditingController();
+    bool obscure = true;
+    String? errorText;
+    bool isUnlocking = false;
+
+    return showDialog<Uint8List?>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            final theme = Theme.of(dialogContext);
+            final isDark = theme.brightness == Brightness.dark;
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.lock_rounded,
+                      color: AppTheme.primary,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Protected PDF Statement',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'The PDF "$fileName" is protected with a password. Enter your password below to unlock and extract transactions.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.outline,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: passwordController,
+                      obscureText: obscure,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        labelText: 'Statement Password',
+                        hintText: 'Enter bank statement password',
+                        prefixIcon: const Icon(Icons.key_rounded, size: 20),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscure
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            setDialogState(() => obscure = !obscure);
+                          },
+                        ),
+                        errorText: errorText,
+                        filled: true,
+                        fillColor: isDark
+                            ? AppTheme.darkSurfaceContainer
+                            : AppTheme.surfaceContainerLow,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onSubmitted: (_) {
+                        _attemptUnlock(
+                          dialogContext,
+                          setDialogState,
+                          originalBytes,
+                          passwordController.text,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Helpful Bank Password Hints Card
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF1E2829)
+                            : const Color(0xFFF0FDF4),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppTheme.primary.withOpacity(0.25),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.lightbulb_outline_rounded,
+                                size: 16,
+                                color: AppTheme.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Common Bank Password Patterns',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            '• SBI: 5 letters of Name (lower) + last 4 digits of Mobile, or DOB (DDMMYYYY) + last 4 digits of Mobile.\n'
+                            '• HDFC: Customer ID (8-9 digits).\n'
+                            '• ICICI: 4 letters of Name (lower) + DOB in DDMM format.\n'
+                            '• Axis Bank: 4 letters of Name (CAPS) + last 4 digits of Mobile/Cust ID.\n'
+                            '• Federal Bank: 14-digit Account Number or Customer ID.\n'
+                            '• Canara Bank: 4 letters of Name (lower) + last 4 digits of Mobile.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              height: 1.45,
+                              color: AppTheme.outline,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isUnlocking
+                      ? null
+                      : () => Navigator.pop(ctx, null),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: isUnlocking
+                      ? null
+                      : () {
+                          _attemptUnlock(
+                            dialogContext,
+                            setDialogState,
+                            originalBytes,
+                            passwordController.text,
+                          );
+                        },
+                  child: isUnlocking
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Unlock & Parse'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _attemptUnlock(
+    BuildContext dialogContext,
+    void Function(void Function()) setDialogState,
+    Uint8List originalBytes,
+    String password,
+  ) {
+    if (password.trim().isEmpty) {
+      setDialogState(() {
+        // Validation error
+      });
+      return;
+    }
+
+    setDialogState(() {
+      // Begin unlocking
+    });
+
+    try {
+      final doc = PdfLoadedDocument(originalBytes, password: password.trim());
+      // Remove passwords so the resulting document is unlocked for the AI parser
+      doc.security.userPassword = '';
+      doc.security.ownerPassword = '';
+      final unlockedBytes = doc.saveSync();
+      doc.close();
+
+      // Return decrypted bytes
+      Navigator.pop(dialogContext, Uint8List.fromList(unlockedBytes));
+    } catch (e) {
+      setDialogState(() {
+        // Failed
+      });
+      ScaffoldMessenger.of(dialogContext).showSnackBar(
+        const SnackBar(
+          content: Text('Incorrect password. Please verify and try again.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 
