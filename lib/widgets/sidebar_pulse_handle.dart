@@ -63,7 +63,7 @@ class _SidebarPulseHandleState extends State<SidebarPulseHandle>
         : AppTheme.surfaceContainerLowest;
     final borderColor = isDark
         ? const Color(0xFF2C3233)
-        : AppTheme.outlineVariant.withOpacity(0.35);
+        : AppTheme.outlineVariant.withValues(alpha: 0.35);
 
     return Material(
       color: Colors.transparent,
@@ -88,7 +88,7 @@ class _SidebarPulseHandleState extends State<SidebarPulseHandle>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.35 : 0.08),
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
                   blurRadius: 10,
                   offset: const Offset(2, 3),
                 ),
@@ -108,7 +108,7 @@ class _SidebarPulseHandleState extends State<SidebarPulseHandle>
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: AppTheme.primary.withOpacity(0.16),
+                            color: AppTheme.primary.withValues(alpha: 0.16),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
