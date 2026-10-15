@@ -275,7 +275,8 @@ class AppDrawer extends StatelessWidget {
                     icon: Icons.upload_file_rounded,
                     title: l10n.bankStatement,
                     onTap: () {
-                      Navigator.pushReplacement(
+                      Navigator.pop(context);
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => const BankStatementScreen(),
