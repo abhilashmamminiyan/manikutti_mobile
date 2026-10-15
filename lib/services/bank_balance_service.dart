@@ -31,6 +31,22 @@ class BankBalanceService {
           if (d != null) _cachedDates[bank] = d;
         }
       }
+
+      // Seed default verified baselines if not yet initialized
+      if (!_cachedBalances.containsKey(TransactionModel.bankSbi)) {
+        await setVerifiedBalance(
+          TransactionModel.bankSbi,
+          7017.00,
+          DateTime(2026, 10, 15),
+        );
+      }
+      if (!_cachedBalances.containsKey(TransactionModel.bankCanara)) {
+        await setVerifiedBalance(
+          TransactionModel.bankCanara,
+          3516.92,
+          DateTime(2026, 10, 15),
+        );
+      }
       _initialized = true;
     } catch (e) {
       debugPrint('[BankBalanceService] Error in init: $e');
@@ -54,8 +70,13 @@ class BankBalanceService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('$_prefixBalance$bank', balance);
-      await prefs.setString('$_prefixDate$bank', asOfDate.toUtc().toIso8601String());
-      debugPrint('[BankBalanceService] Set verified balance for $bank: ₹$balance as of $asOfDate');
+      await prefs.setString(
+        '$_prefixDate$bank',
+        asOfDate.toUtc().toIso8601String(),
+      );
+      debugPrint(
+        '[BankBalanceService] Set verified balance for $bank: ₹$balance as of $asOfDate',
+      );
     } catch (e) {
       debugPrint('[BankBalanceService] Error saving verified balance: $e');
     }
@@ -133,7 +154,8 @@ class BankBalanceService {
         if (tDate.isAfter(effectiveDate)) {
           if (t.type == TransactionModel.typeIncome) {
             running += t.amount;
-          } else if (t.type == TransactionModel.typeExpense || t.type == TransactionModel.typeFamily) {
+          } else if (t.type == TransactionModel.typeExpense ||
+              t.type == TransactionModel.typeFamily) {
             running -= t.amount;
           } else if (t.isTransfer) {
             if (t.category.toLowerCase().contains('income') ||
@@ -159,7 +181,8 @@ class BankBalanceService {
 
       if (t.type == TransactionModel.typeIncome) {
         running += t.amount;
-      } else if (t.type == TransactionModel.typeExpense || t.type == TransactionModel.typeFamily) {
+      } else if (t.type == TransactionModel.typeExpense ||
+          t.type == TransactionModel.typeFamily) {
         running -= t.amount;
       } else if (t.isTransfer) {
         if (t.category.toLowerCase().contains('income') ||
