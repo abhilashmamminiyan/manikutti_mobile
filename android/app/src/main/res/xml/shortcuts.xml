@@ -12,7 +12,11 @@
             android:targetPackage="com.abhilash.manikutti"
             android:targetClass="com.abhilash.manikutti.VoiceDialogActivity"
             android:data="manikutti://voice-dialog" />
-        <categories android:name="android.shortcut.conversation" />
+        <capability-binding android:key="actions.intent.OPEN_APP_FEATURE">
+            <parameter-binding
+                android:key="feature"
+                android:value="@array/voice_feature_synonyms" />
+        </capability-binding>
     </shortcut>
 
     <!-- Static Shortcut: Add Expense Form -->
@@ -27,22 +31,27 @@
             android:targetPackage="com.abhilash.manikutti"
             android:targetClass="com.abhilash.manikutti.MainActivity"
             android:data="manikutti://add-transaction" />
+        <capability-binding android:key="actions.intent.OPEN_APP_FEATURE">
+            <parameter-binding
+                android:key="feature"
+                android:value="@array/add_feature_synonyms" />
+        </capability-binding>
     </shortcut>
 
-    <!-- Google Assistant App Action: Record Expense (Runs in Background/Overlay without opening main app) -->
-    <capability android:name="actions.intent.RECORD_EXPENSE">
+    <!-- Google Assistant Capability: Open App Feature (Hey Google, open Voice Expense in Manikutti) -->
+    <capability android:name="actions.intent.OPEN_APP_FEATURE">
         <intent
             android:action="android.intent.action.VIEW"
             android:targetPackage="com.abhilash.manikutti"
             android:targetClass="com.abhilash.manikutti.VoiceDialogActivity"
-            android:data="manikutti://voice-dialog?query={query}">
+            android:data="manikutti://voice-dialog">
             <parameter
-                android:name="expense.name"
-                android:key="query"/>
+                android:name="feature"
+                android:key="feature" />
         </intent>
     </capability>
 
-    <!-- Google Assistant Custom Voice Action / Built-in Intent: Create Note / Item -->
+    <!-- Google Assistant Custom Voice Action / Built-in Intent: Create Item -->
     <capability android:name="actions.intent.CREATE_ITEM">
         <intent
             android:action="android.intent.action.VIEW"
