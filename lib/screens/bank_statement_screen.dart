@@ -11,6 +11,7 @@ import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
 import 'transactions_log_screen.dart';
+import 'dashboard_screen.dart';
 
 enum StatementFilterTab { readyToImport, all, duplicates }
 
@@ -151,7 +152,36 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         _errorMessage = null;
       });
 
-      // Send to backend Gemini parser API with direct textContent if available
+      // 1. If text was extracted from PDF, run on-device statement parser immediately
+      if (extractedText != null && extractedText.trim().isNotEmpty) {
+        final localStatementRows = _parseIndianBankStatementText(extractedText);
+        if (localStatementRows.isNotEmpty) {
+          await _processParsedTransactions(localStatementRows);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Extracted ${localStatementRows.length} transactions from statement.',
+                ),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+          return;
+        }
+      }
+
+      // 2. If file is CSV, try local CSV parser
+      if (file.name.toLowerCase().endsWith('.csv')) {
+        final text = utf8.decode(fileBytes, allowMalformed: true);
+        final localParsed = _parseCsvLocally(text);
+        if (localParsed.isNotEmpty) {
+          await _processParsedTransactions(localParsed);
+          return;
+        }
+      }
+
+      // 3. Fallback to backend Gemini parser API
       final parseResult = await ApiService.instance.parseBankStatement(
         fileBytes: fileBytes,
         fileName: file.name,
@@ -166,42 +196,11 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         final List<dynamic> rawList = parseResult['transactions'];
         await _processParsedTransactions(rawList);
       } else {
-        // Fallback 1: If extracted text is available from PDF, run on-device Indian Bank Statement parser
-        if (extractedText != null && extractedText.trim().isNotEmpty) {
-          final localStatementRows = _parseIndianBankStatementText(
-            extractedText,
-          );
-          if (localStatementRows.isNotEmpty) {
-            await _processParsedTransactions(localStatementRows);
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Extracted ${localStatementRows.length} transactions via on-device statement parser.',
-                  ),
-                  duration: const Duration(seconds: 3),
-                ),
-              );
-            }
-            return;
-          }
-        }
-
-        // Fallback 2: If file is CSV, try local CSV parser
-        if (file.name.toLowerCase().endsWith('.csv')) {
-          final text = utf8.decode(fileBytes, allowMalformed: true);
-          final localParsed = _parseCsvLocally(text);
-          if (localParsed.isNotEmpty) {
-            await _processParsedTransactions(localParsed);
-            return;
-          }
-        }
-
         setState(() {
           _isParsing = false;
           _errorMessage =
               parseResult['error'] ??
-              'Failed to parse transactions from statement. Please ensure it is a valid bank statement.';
+              'Failed to parse transactions from statement. Please ensure it contains readable statement tables.';
         });
       }
     } catch (e) {
@@ -467,13 +466,42 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
 
   /// On-device regex parser for Indian bank statement text (SBI, HDFC, ICICI, Canara, etc.)
   List<Map<String, dynamic>> _parseIndianBankStatementText(String rawText) {
-    final lines = rawText
+    final cleanedText = rawText.replaceAll('\u00A0', ' ');
+    final rawLines = cleanedText
         .split(RegExp(r'\r?\n'))
         .map((l) => l.trim())
-        .where((l) => l.isNotEmpty)
         .toList();
-    final results = <Map<String, dynamic>>[];
 
+    final List<String> consolidatedLines = [];
+    String currentBlock = '';
+
+    const monthNames = 'jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec';
+    final lineDatePattern = RegExp(
+      r'(?:^|\s|\b)(\d{1,2}[\s/-]+(?:' +
+          monthNames +
+          r')[a-z]*[\s/-]+\d{2,4}|\d{1,4}[-/.]\d{1,2}[-/.]\d{1,4})',
+      caseSensitive: false,
+    );
+
+    for (final line in rawLines) {
+      if (line.isEmpty) continue;
+      final match = lineDatePattern.firstMatch(line);
+      final hasDateAtStart = match != null && match.start <= 8;
+
+      if (hasDateAtStart) {
+        if (currentBlock.isNotEmpty) {
+          consolidatedLines.add(currentBlock);
+        }
+        currentBlock = line;
+      } else if (currentBlock.isNotEmpty) {
+        currentBlock += ' $line';
+      }
+    }
+    if (currentBlock.isNotEmpty) {
+      consolidatedLines.add(currentBlock);
+    }
+
+    final results = <Map<String, dynamic>>[];
     const monthMap = {
       'jan': '01',
       'feb': '02',
@@ -489,58 +517,71 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
       'dec': '12',
     };
 
-    final dateRegex = RegExp(
-      r'^(\d{1,2})[\s/-]+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s/-]+(\d{2,4})|^(\d{1,4})[-/.](\d{1,2})[-/.](\d{1,4})',
-      caseSensitive: false,
-    );
+    for (final block in consolidatedLines) {
+      final dateMatch = lineDatePattern.firstMatch(block);
+      if (dateMatch == null || dateMatch.start > 8) continue;
 
-    for (final line in lines) {
-      final match = dateRegex.firstMatch(line);
-      if (match == null) continue;
-
+      final dateStr = dateMatch.group(1)!;
       String parsedDate = '';
-      String remainder = '';
 
-      if (match.group(1) != null &&
-          match.group(2) != null &&
-          match.group(3) != null) {
-        final day = match.group(1)!.padLeft(2, '0');
-        final monthKey = match.group(2)!.toLowerCase().substring(0, 3);
-        final month = monthMap[monthKey] ?? '01';
-        String year = match.group(3)!;
+      final alphaMonthMatch = RegExp(
+        r'^(\d{1,2})[\s/-]+([A-Za-z]{3})[a-z]*[\s/-]+(\d{2,4})$',
+      ).firstMatch(dateStr);
+      if (alphaMonthMatch != null) {
+        final day = alphaMonthMatch.group(1)!.padLeft(2, '0');
+        final month = monthMap[alphaMonthMatch.group(2)!.toLowerCase()] ?? '01';
+        String year = alphaMonthMatch.group(3)!;
         if (year.length == 2) year = '20$year';
         parsedDate = '$year-$month-$day';
-        remainder = line.substring(match.end).trim();
-      } else if (match.group(4) != null &&
-          match.group(5) != null &&
-          match.group(6) != null) {
-        final p1 = match.group(4)!;
-        final p2 = match.group(5)!.padLeft(2, '0');
-        final p3 = match.group(6)!;
-        if (p1.length == 4) {
-          parsedDate = '$p1-$p2-${p3.padLeft(2, '0')}';
-        } else {
-          final year = p3.length == 2 ? '20$p3' : p3;
-          parsedDate = '$year-$p2-${p1.padLeft(2, '0')}';
+      } else {
+        final numParts = dateStr.split(RegExp(r'[-/.]'));
+        if (numParts.length == 3) {
+          if (numParts[0].length == 4) {
+            parsedDate =
+                '${numParts[0]}-${numParts[1].padLeft(2, '0')}-${numParts[2].padLeft(2, '0')}';
+          } else {
+            String year = numParts[2];
+            if (year.length == 2) year = '20$year';
+            parsedDate =
+                '$year-${numParts[1].padLeft(2, '0')}-${numParts[0].padLeft(2, '0')}';
+          }
         }
-        remainder = line.substring(match.end).trim();
       }
 
       if (parsedDate.isEmpty) continue;
 
-      // Optional second date (Value date)
-      final secondDate = dateRegex.firstMatch(remainder);
-      if (secondDate != null && secondDate.start == 0) {
-        remainder = remainder.substring(secondDate.end).trim();
+      String remainder = block.substring(dateMatch.end).trim();
+      final secondDateMatch = lineDatePattern.firstMatch(remainder);
+      if (secondDateMatch != null && secondDateMatch.start <= 2) {
+        remainder = remainder.substring(secondDateMatch.end).trim();
       }
 
-      // Extract trailing amount tokens
-      final tokens = remainder.split(RegExp(r'\s+'));
+      String textForAmounts = remainder;
+      final trailMatch = RegExp(
+        r'[\s(]+(cr|dr)[\s)]*$',
+        caseSensitive: false,
+      ).firstMatch(textForAmounts);
+      if (trailMatch != null) {
+        textForAmounts = textForAmounts.substring(0, trailMatch.start).trim();
+      }
+
+      final tokens = textForAmounts.split(RegExp(r'\s+'));
       final amountTokens = <double>[];
       final descTokens = List<String>.from(tokens);
 
       while (descTokens.isNotEmpty) {
-        final last = descTokens.last.replaceAll(',', '');
+        String last = descTokens.last.replaceAll(',', '');
+        if (last.toLowerCase().endsWith('cr')) {
+          last = last.substring(0, last.length - 2);
+        } else if (last.toLowerCase().endsWith('dr')) {
+          last = last.substring(0, last.length - 2);
+        }
+
+        if (last == '-' || last == '--') {
+          descTokens.removeLast();
+          continue;
+        }
+
         final num = double.tryParse(last);
         if (num != null && RegExp(r'^\d+(?:\.\d{1,2})?$').hasMatch(last)) {
           amountTokens.insert(0, num);
@@ -556,25 +597,41 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
       if (description.isEmpty) continue;
 
       double amount = 0.0;
-      if (amountTokens.length >= 2) {
-        amount = amountTokens[amountTokens.length - 2];
+      String type = 'Expense';
+
+      if (amountTokens.length >= 3) {
+        final debit = amountTokens[amountTokens.length - 3];
+        final credit = amountTokens[amountTokens.length - 2];
+        if (credit > 0 && debit == 0) {
+          amount = credit;
+          type = 'Income';
+        } else {
+          amount = debit > 0 ? debit : credit;
+          type = debit > 0 ? 'Expense' : 'Income';
+        }
+      } else if (amountTokens.length == 2) {
+        amount = amountTokens[0];
       } else {
-        amount = amountTokens.first;
+        amount = amountTokens[0];
       }
 
       if (amount <= 0) continue;
 
       final lowerDesc = description.toLowerCase();
-      final isCredit =
-          lowerDesc.contains(' cr') ||
-          lowerDesc.contains('credit') ||
-          lowerDesc.contains('salary') ||
-          lowerDesc.contains('by transfer') ||
-          lowerDesc.contains('refund') ||
-          lowerDesc.contains('interest') ||
-          lowerDesc.contains('dividend');
-
-      final type = isCredit ? 'Income' : 'Expense';
+      if (type != 'Income') {
+        final isCreditDesc =
+            lowerDesc.contains('salary') ||
+            lowerDesc.contains('by transfer') ||
+            lowerDesc.contains('refund') ||
+            lowerDesc.contains('interest') ||
+            lowerDesc.contains('dividend') ||
+            lowerDesc.contains('/cr/') ||
+            lowerDesc.startsWith('cr ') ||
+            lowerDesc.endsWith(' cr');
+        if (isCreditDesc) {
+          type = 'Income';
+        }
+      }
 
       String category = 'General';
       if (lowerDesc.contains('swiggy') ||
@@ -599,6 +656,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
       } else if (lowerDesc.contains('salary') ||
           lowerDesc.contains('payroll')) {
         category = 'Salary';
+        type = 'Income';
       } else if (lowerDesc.contains('electric') ||
           lowerDesc.contains('kseb') ||
           lowerDesc.contains('bescom') ||
@@ -1002,96 +1060,123 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
       totalSelectedAmount += item.amount;
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.uploadBankStatement),
-        actions: [
-          if (_items.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.upload_file_rounded),
-              tooltip: 'Choose another statement',
-              onPressed: _isSaving || _isParsing
-                  ? null
-                  : _pickAndParseStatement,
-            ),
-        ],
-      ),
-      bottomNavigationBar: _items.isNotEmpty
-          ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppTheme.darkSurfaceContainer
-                    : AppTheme.surfaceContainerLow,
-                border: Border(
-                  top: BorderSide(
-                    color: isDark
-                        ? const Color(0xFF2C3233)
-                        : AppTheme.outlineVariant.withOpacity(0.25),
+    return PopScope(
+      canPop: Navigator.canPop(context),
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        );
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            tooltip: 'Back to Dashboard',
+            onPressed: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                );
+              }
+            },
+          ),
+          title: Text(l10n.uploadBankStatement),
+          actions: [
+            if (_items.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.upload_file_rounded),
+                tooltip: 'Choose another statement',
+                onPressed: _isSaving || _isParsing
+                    ? null
+                    : _pickAndParseStatement,
+              ),
+          ],
+        ),
+        bottomNavigationBar: _items.isNotEmpty
+            ? Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppTheme.darkSurfaceContainer
+                      : AppTheme.surfaceContainerLow,
+                  border: Border(
+                    top: BorderSide(
+                      color: isDark
+                          ? const Color(0xFF2C3233)
+                          : AppTheme.outlineVariant.withOpacity(0.25),
+                    ),
                   ),
                 ),
-              ),
-              child: SafeArea(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '$selectedCount selected',
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            '₹${totalSelectedAmount.toStringAsFixed(2)}',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      onPressed: (_isSaving || selectedCount == 0)
-                          ? null
-                          : _saveSelectedTransactions,
-                      icon: _isSaving
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
+                child: SafeArea(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$selectedCount selected',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
                               ),
-                            )
-                          : const Icon(Icons.cloud_upload_rounded),
-                      label: Text(
-                        _isSaving ? 'Saving...' : 'Import & Save',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              '₹${totalSelectedAmount.toStringAsFixed(2)}',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        onPressed: (_isSaving || selectedCount == 0)
+                            ? null
+                            : _saveSelectedTransactions,
+                        icon: _isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.cloud_upload_rounded),
+                        label: Text(
+                          _isSaving ? 'Saving...' : 'Import & Save',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            )
-          : null,
-      body: _items.isEmpty
-          ? _buildUploadPlaceholder(theme, isDark, l10n)
-          : _buildReviewContent(theme, isDark, readyCount, duplicateCount),
+              )
+            : null,
+        body: _items.isEmpty
+            ? _buildUploadPlaceholder(theme, isDark, l10n)
+            : _buildReviewContent(theme, isDark, readyCount, duplicateCount),
+      ),
     );
   }
 
@@ -1226,6 +1311,31 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                 ),
               ),
             ],
+
+            const SizedBox(height: 28),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+              onPressed: () {
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                } else {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                  );
+                }
+              },
+              icon: const Icon(Icons.arrow_back_rounded, size: 18),
+              label: const Text('Back to Dashboard'),
+            ),
           ],
         ),
       ),
