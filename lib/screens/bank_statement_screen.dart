@@ -568,6 +568,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
 
       final tokens = textForAmounts.split(RegExp(r'\s+'));
       final amountTokens = <double>[];
+      final rawAmountTokens = <String>[];
       final descTokens = List<String>.from(tokens);
 
       while (descTokens.isNotEmpty) {
@@ -586,6 +587,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         final num = double.tryParse(last);
         if (num != null && RegExp(r'^\d+(?:\.\d{1,2})?$').hasMatch(last)) {
           amountTokens.insert(0, num);
+          rawAmountTokens.insert(0, last);
           descTokens.removeLast();
         } else {
           break;
@@ -594,29 +596,76 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
 
       if (amountTokens.isEmpty) continue;
 
-      final description = descTokens.join(' ').trim();
-      if (description.isEmpty) continue;
-
       double amount = 0.0;
       String type = 'Expense';
+      String? detectedTransId;
 
       if (amountTokens.length >= 3) {
-        final debit = amountTokens[amountTokens.length - 3];
-        final credit = amountTokens[amountTokens.length - 2];
-        if (credit > 0 && debit == 0) {
-          amount = credit;
-          type = 'Income';
+        final candidateAmounts = amountTokens.sublist(
+          0,
+          amountTokens.length - 1,
+        );
+        final candidateRaws = rawAmountTokens.sublist(
+          0,
+          rawAmountTokens.length - 1,
+        );
+
+        if (candidateAmounts.length >= 2) {
+          final tFirst = candidateAmounts[candidateAmounts.length - 2];
+          final tSecond = candidateAmounts[candidateAmounts.length - 1];
+          final rawFirst = candidateRaws[candidateRaws.length - 2];
+
+          // Check if both are positive numbers
+          if (tFirst > 0 && tSecond > 0) {
+            // In banking, a transaction CANNOT have both Debit > 0 and Credit > 0 in a single row.
+            // Therefore, tFirst is a TRANS ID / Cheque No / Reference No, and tSecond is the real transaction amount!
+            detectedTransId = rawFirst;
+            amount = tSecond;
+          } else if (tFirst > 0 && tSecond == 0) {
+            amount = tFirst;
+            type = 'Expense';
+            if (candidateAmounts.length >= 3) {
+              detectedTransId = candidateRaws[candidateRaws.length - 3];
+            }
+          } else if (tFirst == 0 && tSecond > 0) {
+            amount = tSecond;
+            type = 'Income';
+            if (candidateAmounts.length >= 3) {
+              detectedTransId = candidateRaws[candidateRaws.length - 3];
+            }
+          } else {
+            amount = tFirst > 0 ? tFirst : tSecond;
+          }
         } else {
-          amount = debit > 0 ? debit : credit;
-          type = debit > 0 ? 'Expense' : 'Income';
+          amount = candidateAmounts[0];
         }
       } else if (amountTokens.length == 2) {
-        amount = amountTokens[0];
+        final t0 = amountTokens[0];
+        final t1 = amountTokens[1];
+        final raw0 = rawAmountTokens[0];
+
+        // If t0 is a 6+ digit integer ID without decimal and t1 > 0
+        if (!raw0.contains('.') && t0 >= 100000 && t1 > 0 && t0 > t1 * 5) {
+          detectedTransId = raw0;
+          amount = t1;
+        } else {
+          amount = t0;
+        }
       } else {
         amount = amountTokens[0];
       }
 
       if (amount <= 0) continue;
+
+      String description = descTokens.join(' ').trim();
+      if (detectedTransId != null && detectedTransId.isNotEmpty) {
+        if (!description.contains(detectedTransId)) {
+          description = description.isEmpty
+              ? 'Ref: $detectedTransId'
+              : '$description (Txn: $detectedTransId)';
+        }
+      }
+      if (description.isEmpty) description = 'Bank Transaction';
 
       final lowerDesc = description.toLowerCase();
       if (type != 'Income') {
@@ -691,27 +740,126 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
     final lines = csvText.split(RegExp(r'\r?\n')).map((l) => l.trim()).toList();
     if (lines.length < 2) return [];
 
+    // Check header row for column mapping
+    final headerCols = lines[0]
+        .split(',')
+        .map((c) => c.replaceAll('"', '').trim().toLowerCase())
+        .toList();
+
+    int dateIdx = -1;
+    int descIdx = -1;
+    int debitIdx = -1;
+    int creditIdx = -1;
+    int amountIdx = -1;
+    int transIdIdx = -1;
+
+    for (int i = 0; i < headerCols.length; i++) {
+      final h = headerCols[i];
+      if (dateIdx == -1 &&
+          (h.contains('txn date') ||
+              h.contains('trans date') ||
+              h.contains('date'))) {
+        dateIdx = i;
+      } else if (descIdx == -1 &&
+          (h.contains('particular') ||
+              h.contains('description') ||
+              h.contains('narration') ||
+              h.contains('remarks'))) {
+        descIdx = i;
+      } else if (debitIdx == -1 &&
+          (h.contains('debit') ||
+              h.contains('withdrawal') ||
+              h == 'dr' ||
+              h.contains('dr amount'))) {
+        debitIdx = i;
+      } else if (creditIdx == -1 &&
+          (h.contains('credit') ||
+              h.contains('deposit') ||
+              h == 'cr' ||
+              h.contains('cr amount'))) {
+        creditIdx = i;
+      } else if (transIdIdx == -1 &&
+          (h.contains('tran id') ||
+              h.contains('trans id') ||
+              h.contains('txn id') ||
+              h.contains('reference') ||
+              h.contains('chq'))) {
+        transIdIdx = i;
+      } else if (amountIdx == -1 &&
+          (h.contains('amount') && !h.contains('balance'))) {
+        amountIdx = i;
+      }
+    }
+
     final results = <Map<String, dynamic>>[];
     for (int i = 1; i < lines.length; i++) {
       final cols = lines[i]
           .split(',')
           .map((c) => c.replaceAll('"', '').trim())
           .toList();
-      if (cols.length < 3) continue;
+      if (cols.length < 2) continue;
 
-      // Simple heuristic for date, desc, amount
-      final dateStr = cols[0];
-      final desc = cols[1];
-      final amount = double.tryParse(cols[2].replaceAll(',', '')) ?? 0.0;
+      String dateStr = '';
+      if (dateIdx >= 0 && dateIdx < cols.length) {
+        dateStr = cols[dateIdx];
+      } else if (cols.isNotEmpty) {
+        dateStr = cols[0];
+      }
+
+      String desc = '';
+      if (descIdx >= 0 && descIdx < cols.length) {
+        desc = cols[descIdx];
+      } else if (cols.length > 1) {
+        desc = cols[1];
+      }
+
+      String transId = '';
+      if (transIdIdx >= 0 && transIdIdx < cols.length) {
+        transId = cols[transIdIdx];
+        if (transId.isNotEmpty && !desc.contains(transId)) {
+          desc = desc.isNotEmpty ? '$desc (Txn: $transId)' : 'Ref: $transId';
+        }
+      }
+
+      double amount = 0.0;
+      String type = 'Expense';
+
+      if (debitIdx >= 0 &&
+          debitIdx < cols.length &&
+          creditIdx >= 0 &&
+          creditIdx < cols.length) {
+        final debit =
+            double.tryParse(cols[debitIdx].replaceAll(',', '')) ?? 0.0;
+        final credit =
+            double.tryParse(cols[creditIdx].replaceAll(',', '')) ?? 0.0;
+        if (credit > 0 && debit == 0) {
+          amount = credit;
+          type = 'Income';
+        } else {
+          amount = debit > 0 ? debit : credit;
+          type = debit > 0 ? 'Expense' : 'Income';
+        }
+      } else if (debitIdx >= 0 && debitIdx < cols.length) {
+        amount = double.tryParse(cols[debitIdx].replaceAll(',', '')) ?? 0.0;
+        type = 'Expense';
+      } else if (creditIdx >= 0 && creditIdx < cols.length) {
+        amount = double.tryParse(cols[creditIdx].replaceAll(',', '')) ?? 0.0;
+        type = 'Income';
+      } else if (amountIdx >= 0 && amountIdx < cols.length) {
+        amount = double.tryParse(cols[amountIdx].replaceAll(',', '')) ?? 0.0;
+      } else if (cols.length > 2) {
+        amount = double.tryParse(cols[2].replaceAll(',', '')) ?? 0.0;
+      }
+
       if (amount <= 0) continue;
 
       results.add({
         'date': dateStr,
         'amount': amount,
-        'type': 'Expense',
+        'type': type,
         'category': 'General',
-        'description': desc,
-        'note': desc,
+        'description': desc.isNotEmpty ? desc : 'Bank Transaction',
+        'note': desc.length > 60 ? desc.substring(0, 60) : desc,
       });
     }
     return results;

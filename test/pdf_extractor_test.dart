@@ -105,6 +105,7 @@ List<Map<String, dynamic>> parseIndianBankStatementText(String rawText) {
 
     final tokens = textForAmounts.split(RegExp(r'\s+'));
     final amountTokens = <double>[];
+    final rawAmountTokens = <String>[];
     final descTokens = List<String>.from(tokens);
 
     while (descTokens.isNotEmpty) {
@@ -123,6 +124,7 @@ List<Map<String, dynamic>> parseIndianBankStatementText(String rawText) {
       final num = double.tryParse(last);
       if (num != null && RegExp(r'^\d+(?:\.\d{1,2})?$').hasMatch(last)) {
         amountTokens.insert(0, num);
+        rawAmountTokens.insert(0, last);
         descTokens.removeLast();
       } else {
         break;
@@ -131,29 +133,73 @@ List<Map<String, dynamic>> parseIndianBankStatementText(String rawText) {
 
     if (amountTokens.isEmpty) continue;
 
-    final description = descTokens.join(' ').trim();
-    if (description.isEmpty) continue;
-
     double amount = 0.0;
     String type = 'Expense';
+    String? detectedTransId;
 
     if (amountTokens.length >= 3) {
-      final debit = amountTokens[amountTokens.length - 3];
-      final credit = amountTokens[amountTokens.length - 2];
-      if (credit > 0 && debit == 0) {
-        amount = credit;
-        type = 'Income';
+      final candidateAmounts = amountTokens.sublist(0, amountTokens.length - 1);
+      final candidateRaws = rawAmountTokens.sublist(
+        0,
+        rawAmountTokens.length - 1,
+      );
+
+      if (candidateAmounts.length >= 2) {
+        final tFirst = candidateAmounts[candidateAmounts.length - 2];
+        final tSecond = candidateAmounts[candidateAmounts.length - 1];
+        final rawFirst = candidateRaws[candidateRaws.length - 2];
+
+        // Check if both are positive numbers
+        if (tFirst > 0 && tSecond > 0) {
+          // In banking, a transaction CANNOT have both Debit > 0 and Credit > 0 in a single row.
+          // Therefore, tFirst is a TRANS ID / Cheque No / Reference No, and tSecond is the real transaction amount!
+          detectedTransId = rawFirst;
+          amount = tSecond;
+        } else if (tFirst > 0 && tSecond == 0) {
+          amount = tFirst;
+          type = 'Expense';
+          if (candidateAmounts.length >= 3) {
+            detectedTransId = candidateRaws[candidateRaws.length - 3];
+          }
+        } else if (tFirst == 0 && tSecond > 0) {
+          amount = tSecond;
+          type = 'Income';
+          if (candidateAmounts.length >= 3) {
+            detectedTransId = candidateRaws[candidateRaws.length - 3];
+          }
+        } else {
+          amount = tFirst > 0 ? tFirst : tSecond;
+        }
       } else {
-        amount = debit > 0 ? debit : credit;
-        type = debit > 0 ? 'Expense' : 'Income';
+        amount = candidateAmounts[0];
       }
     } else if (amountTokens.length == 2) {
-      amount = amountTokens[0];
+      final t0 = amountTokens[0];
+      final t1 = amountTokens[1];
+      final raw0 = rawAmountTokens[0];
+
+      // If t0 is a 6+ digit integer ID without decimal and t1 > 0
+      if (!raw0.contains('.') && t0 >= 100000 && t1 > 0 && t0 > t1 * 5) {
+        detectedTransId = raw0;
+        amount = t1;
+      } else {
+        amount = t0;
+      }
     } else {
       amount = amountTokens[0];
     }
 
     if (amount <= 0) continue;
+
+    String description = descTokens.join(' ').trim();
+    if (detectedTransId != null && detectedTransId.isNotEmpty) {
+      if (!description.contains(detectedTransId)) {
+        description = description.isEmpty
+            ? 'Ref: $detectedTransId'
+            : '$description (Txn: $detectedTransId)';
+      }
+    }
+    if (description.isEmpty) description = 'Bank Transaction';
 
     final lowerDesc = description.toLowerCase();
     if (type != 'Income') {
@@ -279,5 +325,41 @@ UPI/3284729182/swiggy TRANSFER
     expect(results[2]['amount'], equals(450.0));
     expect(results[2]['category'], equals('Transport'));
     expect(results[2]['date'], equals('2026-10-10'));
+  });
+
+  test('Test Canara Bank statements with TRANS ID / Cheque No', () {
+    const canaraSample = '''
+1 02-09-2024 02-09-2024 UPI/424512345678/SWIGGY 40281928 250.00 15,240.50
+2 03-09-2024 03-09-2024 BY TRANSFER/SALARY 40281929 50,000.00 65,240.50
+3 04-09-2024 04-09-2024 CHQ PAYMENT 123456 40281930 1,500.00 63,740.50
+4 05-09-2024 05-09-2024 UPI/PAYTM 40281931 300.00 0.00 63,440.50
+''';
+
+    final results = parseIndianBankStatementText(canaraSample);
+    expect(results.length, equals(4));
+
+    // Row 1: UPI Swiggy with TRANS ID 40281928
+    expect(results[0]['amount'], equals(250.0));
+    expect(results[0]['type'], equals('Expense'));
+    expect(results[0]['category'], equals('Food'));
+    expect(results[0]['date'], equals('2024-09-02'));
+    expect(results[0]['description'].contains('40281928'), isTrue);
+
+    // Row 2: Salary Credit with TRANS ID 40281929
+    expect(results[1]['amount'], equals(50000.0));
+    expect(results[1]['type'], equals('Income'));
+    expect(results[1]['category'], equals('Salary'));
+    expect(results[1]['date'], equals('2024-09-03'));
+    expect(results[1]['description'].contains('40281929'), isTrue);
+
+    // Row 3: Cheque 123456 with TRANS ID 40281930
+    expect(results[2]['amount'], equals(1500.0));
+    expect(results[2]['type'], equals('Expense'));
+    expect(results[2]['date'], equals('2024-09-04'));
+
+    // Row 4: With 0.00 in deposit column
+    expect(results[3]['amount'], equals(300.0));
+    expect(results[3]['type'], equals('Expense'));
+    expect(results[3]['date'], equals('2024-09-05'));
   });
 }
