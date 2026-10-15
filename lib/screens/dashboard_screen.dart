@@ -2163,7 +2163,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _canaraBalance = canaraIn - canaraOut;
     });
 
-    await _checkSalaryPromptStatus();
+    _checkSalaryPromptStatus();
   }
 
   String _getMemberNickname(String email) {

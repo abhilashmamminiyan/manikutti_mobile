@@ -8,6 +8,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 import '../database/db_helper.dart';
 import '../models/transaction_model.dart';
 import '../services/api_service.dart';
+import '../services/sync_service.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
 import 'transactions_log_screen.dart';
