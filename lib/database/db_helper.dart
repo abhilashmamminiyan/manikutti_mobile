@@ -75,7 +75,9 @@ class DbHelper {
     return await db.insert('transactions', transaction.toMap());
   }
 
-  Future<void> batchInsertTransactions(List<TransactionModel> transactions) async {
+  Future<void> batchInsertTransactions(
+    List<TransactionModel> transactions,
+  ) async {
     if (transactions.isEmpty) return;
     final db = await instance.database;
     final batch = db.batch();

@@ -372,9 +372,7 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
             onPressed: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const BankStatementScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const BankStatementScreen()),
               );
               if (mounted) {
                 _loadTransactions();

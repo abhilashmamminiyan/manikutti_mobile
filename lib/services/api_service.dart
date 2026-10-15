@@ -322,7 +322,8 @@ class ApiService {
         body: jsonEncode({
           'fileBase64': base64Content,
           'fileName': fileName,
-          'mimeType': mimeType ??
+          'mimeType':
+              mimeType ??
               (fileName.toLowerCase().endsWith('.pdf')
                   ? 'application/pdf'
                   : 'text/csv'),
@@ -344,11 +345,7 @@ class ApiService {
         };
       }
     } catch (e) {
-      return {
-        'success': false,
-        'error': e.toString(),
-        'transactions': [],
-      };
+      return {'success': false, 'error': e.toString(), 'transactions': []};
     }
   }
 

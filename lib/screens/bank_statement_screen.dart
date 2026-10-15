@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -92,25 +91,20 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
     });
 
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final files = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'csv', 'xlsx', 'xls'],
-        withData: true, // Needed for web/desktop and direct byte access
       );
 
-      if (result == null || result.files.isEmpty) {
+      if (files.isEmpty) {
         setState(() => _isPicking = false);
         return;
       }
 
-      final file = result.files.first;
-      Uint8List? fileBytes = file.bytes;
+      final file = files.first;
+      Uint8List fileBytes = await file.readAsBytes();
 
-      if (fileBytes == null && file.path != null) {
-        fileBytes = await File(file.path!).readAsBytes();
-      }
-
-      if (fileBytes == null || fileBytes.isEmpty) {
+      if (fileBytes.isEmpty) {
         setState(() {
           _isPicking = false;
           _errorMessage = 'Could not read the selected file.';
@@ -122,8 +116,8 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
       if (file.name.toLowerCase().endsWith('.pdf')) {
         bool isProtected = false;
         try {
-          final testDoc = PdfLoadedDocument(fileBytes);
-          testDoc.close();
+          final testDoc = PdfDocument(inputBytes: fileBytes);
+          testDoc.dispose();
         } catch (e) {
           final msg = e.toString().toLowerCase();
           if (msg.contains('password') ||
@@ -140,6 +134,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
 
         if (isProtected) {
           setState(() => _isPicking = false);
+          if (!mounted) return;
           final unlocked = await _showPdfPasswordDialog(
             context,
             fileBytes,
@@ -157,7 +152,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
         _isPicking = false;
         _isParsing = true;
         _selectedFileName = file.name;
-        _selectedFileSize = file.size;
+        _selectedFileSize = file.lengthSync() ?? fileBytes.length;
         _errorMessage = null;
       });
 
@@ -299,6 +294,8 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                           setDialogState,
                           originalBytes,
                           passwordController.text,
+                          (v) => isUnlocking = v,
+                          (e) => errorText = e,
                         );
                       },
                     ),
@@ -313,7 +310,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                             : const Color(0xFFF0FDF4),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: AppTheme.primary.withOpacity(0.25),
+                          color: AppTheme.primary.withValues(alpha: 0.25),
                         ),
                       ),
                       child: Column(
@@ -378,6 +375,8 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                             setDialogState,
                             originalBytes,
                             passwordController.text,
+                            (v) => isUnlocking = v,
+                            (e) => errorText = e,
                           );
                         },
                   child: isUnlocking
@@ -399,43 +398,55 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
     );
   }
 
-  void _attemptUnlock(
+  Future<void> _attemptUnlock(
     BuildContext dialogContext,
     void Function(void Function()) setDialogState,
     Uint8List originalBytes,
     String password,
-  ) {
-    if (password.trim().isEmpty) {
+    void Function(bool) setUnlocking,
+    void Function(String?) setError,
+  ) async {
+    final cleanPassword = password.trim();
+    if (cleanPassword.isEmpty) {
       setDialogState(() {
-        // Validation error
+        setError('Please enter the statement password.');
       });
       return;
     }
 
     setDialogState(() {
-      // Begin unlocking
+      setError(null);
+      setUnlocking(true);
     });
 
     try {
-      final doc = PdfLoadedDocument(originalBytes, password: password.trim());
+      final doc = PdfDocument(
+        inputBytes: originalBytes,
+        password: cleanPassword,
+      );
       // Remove passwords so the resulting document is unlocked for the AI parser
       doc.security.userPassword = '';
       doc.security.ownerPassword = '';
-      final unlockedBytes = doc.saveSync();
-      doc.close();
+      final unlockedBytes = await doc.save();
+      doc.dispose();
 
       // Return decrypted bytes
-      Navigator.pop(dialogContext, Uint8List.fromList(unlockedBytes));
+      if (dialogContext.mounted) {
+        Navigator.pop(dialogContext, Uint8List.fromList(unlockedBytes));
+      }
     } catch (e) {
       setDialogState(() {
-        // Failed
+        setUnlocking(false);
+        setError('Incorrect password. Please verify and try again.');
       });
-      ScaffoldMessenger.of(dialogContext).showSnackBar(
-        const SnackBar(
-          content: Text('Incorrect password. Please verify and try again.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      if (dialogContext.mounted) {
+        ScaffoldMessenger.of(dialogContext).showSnackBar(
+          const SnackBar(
+            content: Text('Incorrect password. Please verify and try again.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
@@ -445,7 +456,10 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
 
     final results = <Map<String, dynamic>>[];
     for (int i = 1; i < lines.length; i++) {
-      final cols = lines[i].split(',').map((c) => c.replaceAll('"', '').trim()).toList();
+      final cols = lines[i]
+          .split(',')
+          .map((c) => c.replaceAll('"', '').trim())
+          .toList();
       if (cols.length < 3) continue;
 
       // Simple heuristic for date, desc, amount
@@ -468,8 +482,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
 
   Future<void> _processParsedTransactions(List<dynamic> rawList) async {
     // 1. Fetch existing local transactions from SQLite for duplicate detection
-    final existingTransactions =
-        await DbHelper.instance.getAllTransactions();
+    final existingTransactions = await DbHelper.instance.getAllTransactions();
 
     // 2. Dispose previous controllers
     for (final item in _items) {
@@ -485,7 +498,9 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
           : (double.tryParse(raw['amount'].toString()) ?? 0.0);
       final String type = (raw['type'] == 'Income') ? 'Income' : 'Expense';
       final String category = (raw['category'] ?? 'General').toString().trim();
-      final String description = (raw['description'] ?? 'Bank Transaction').toString().trim();
+      final String description = (raw['description'] ?? 'Bank Transaction')
+          .toString()
+          .trim();
       final String note = (raw['note'] ?? description).toString().trim();
 
       if (amount <= 0 || rawDate.isEmpty) continue;
@@ -512,7 +527,8 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
 
         final isSameDate = existingDateOnly == normalizedCandidateDate;
         final isSameAmount = (existing.amount - amount).abs() < 0.01;
-        final isSameType = (existing.type == type) ||
+        final isSameType =
+            (existing.type == type) ||
             (type == 'Expense' && existing.type != 'Income');
 
         if (isSameDate && isSameAmount && isSameType) {
@@ -532,7 +548,8 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
           description: description,
           note: note,
           isDuplicate: isDup,
-          isSelected: !isDup, // Duplicate is filtered out / unselected by default!
+          isSelected:
+              !isDup, // Duplicate is filtered out / unselected by default!
           duplicateReason: dupReason,
         ),
       );
@@ -815,7 +832,9 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
             IconButton(
               icon: const Icon(Icons.upload_file_rounded),
               tooltip: 'Choose another statement',
-              onPressed: _isSaving || _isParsing ? null : _pickAndParseStatement,
+              onPressed: _isSaving || _isParsing
+                  ? null
+                  : _pickAndParseStatement,
             ),
         ],
       ),
@@ -894,12 +913,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
           : null,
       body: _items.isEmpty
           ? _buildUploadPlaceholder(theme, isDark, l10n)
-          : _buildReviewContent(
-              theme,
-              isDark,
-              readyCount,
-              duplicateCount,
-            ),
+          : _buildReviewContent(theme, isDark, readyCount, duplicateCount),
     );
   }
 
@@ -1011,13 +1025,15 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                 decoration: BoxDecoration(
                   color: AppTheme.error.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: AppTheme.error.withOpacity(0.3),
-                  ),
+                  border: Border.all(color: AppTheme.error.withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline, color: AppTheme.error, size: 20),
+                    const Icon(
+                      Icons.error_outline,
+                      color: AppTheme.error,
+                      size: 20,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -1056,7 +1072,10 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
               children: [
                 // File info banner
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: isDark
                         ? AppTheme.darkSurfaceContainer
@@ -1065,7 +1084,11 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.description_rounded, size: 20, color: AppTheme.primary),
+                      const Icon(
+                        Icons.description_rounded,
+                        size: 20,
+                        color: AppTheme.primary,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
@@ -1073,22 +1096,33 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                           children: [
                             Text(
                               _selectedFileName ?? 'Statement Document',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                             if (_selectedFileSize != null)
                               Text(
                                 '${(_selectedFileSize! / 1024).toStringAsFixed(1)} KB • ${_items.length} total rows parsed',
-                                style: const TextStyle(fontSize: 11, color: AppTheme.outline),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppTheme.outline,
+                                ),
                               ),
                           ],
                         ),
                       ),
                       TextButton.icon(
-                        style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                        ),
                         onPressed: _pickAndParseStatement,
                         icon: const Icon(Icons.refresh_rounded, size: 14),
-                        label: const Text('Change', style: TextStyle(fontSize: 12)),
+                        label: const Text(
+                          'Change',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                     ],
                   ),
@@ -1104,8 +1138,11 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                         count: readyCount,
                         color: Colors.green,
                         icon: Icons.check_circle_outline_rounded,
-                        isSelected: _currentTab == StatementFilterTab.readyToImport,
-                        onTap: () => setState(() => _currentTab = StatementFilterTab.readyToImport),
+                        isSelected:
+                            _currentTab == StatementFilterTab.readyToImport,
+                        onTap: () => setState(
+                          () => _currentTab = StatementFilterTab.readyToImport,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -1115,8 +1152,11 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                         count: duplicateCount,
                         color: Colors.amber[800]!,
                         icon: Icons.filter_alt_outlined,
-                        isSelected: _currentTab == StatementFilterTab.duplicates,
-                        onTap: () => setState(() => _currentTab = StatementFilterTab.duplicates),
+                        isSelected:
+                            _currentTab == StatementFilterTab.duplicates,
+                        onTap: () => setState(
+                          () => _currentTab = StatementFilterTab.duplicates,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -1127,7 +1167,9 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                         color: AppTheme.primary,
                         icon: Icons.list_alt_rounded,
                         isSelected: _currentTab == StatementFilterTab.all,
-                        onTap: () => setState(() => _currentTab = StatementFilterTab.all),
+                        onTap: () => setState(
+                          () => _currentTab = StatementFilterTab.all,
+                        ),
                       ),
                     ),
                   ],
@@ -1135,7 +1177,8 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                 const SizedBox(height: 12),
 
                 // Duplicate info callout
-                if (duplicateCount > 0 && _currentTab == StatementFilterTab.duplicates)
+                if (duplicateCount > 0 &&
+                    _currentTab == StatementFilterTab.duplicates)
                   Container(
                     padding: const EdgeInsets.all(12),
                     margin: const EdgeInsets.only(bottom: 12),
@@ -1146,14 +1189,20 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline, color: Colors.amber[900], size: 18),
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.amber[900],
+                          size: 18,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             '$duplicateCount transaction(s) have matching dates and amounts with existing records. They are unselected by default to prevent duplicate entries.',
                             style: TextStyle(
                               fontSize: 12,
-                              color: isDark ? Colors.amber[200] : Colors.amber[900],
+                              color: isDark
+                                  ? Colors.amber[200]
+                                  : Colors.amber[900],
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -1176,19 +1225,34 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                     Row(
                       children: [
                         TextButton(
-                          style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                          ),
                           onPressed: () => _selectAll(true),
-                          child: const Text('Select All', style: TextStyle(fontSize: 12)),
+                          child: const Text(
+                            'Select All',
+                            style: TextStyle(fontSize: 12),
+                          ),
                         ),
                         TextButton(
-                          style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                          ),
                           onPressed: () => _selectAll(false),
-                          child: const Text('Deselect', style: TextStyle(fontSize: 12)),
+                          child: const Text(
+                            'Deselect',
+                            style: TextStyle(fontSize: 12),
+                          ),
                         ),
                         TextButton(
-                          style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                          ),
                           onPressed: _selectNonDuplicatesOnly,
-                          child: const Text('Only New', style: TextStyle(fontSize: 12)),
+                          child: const Text(
+                            'Only New',
+                            style: TextStyle(fontSize: 12),
+                          ),
                         ),
                       ],
                     ),
@@ -1208,20 +1272,19 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                     _currentTab == StatementFilterTab.duplicates
                         ? 'No duplicate transactions detected! All rows are fresh.'
                         : 'No transactions found under this tab.',
-                    style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.outline),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.outline,
+                    ),
                   ),
                 ),
               )
             : SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final item = displayed[index];
-                      return _buildTransactionRow(item, theme, isDark);
-                    },
-                    childCount: displayed.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final item = displayed[index];
+                    return _buildTransactionRow(item, theme, isDark);
+                  }, childCount: displayed.length),
                 ),
               ),
       ],
@@ -1287,7 +1350,9 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
     bool isDark,
   ) {
     final isIncome = item.type == 'Income';
-    final amountColor = isIncome ? Colors.green : (isDark ? Colors.red[300]! : Colors.red[700]!);
+    final amountColor = isIncome
+        ? Colors.green
+        : (isDark ? Colors.red[300]! : Colors.red[700]!);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -1298,12 +1363,16 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
           color: item.isDuplicate
               ? Colors.amber.withOpacity(0.5)
               : (item.isSelected
-                  ? AppTheme.primary.withOpacity(0.4)
-                  : (isDark ? const Color(0xFF2C3233) : AppTheme.outlineVariant.withOpacity(0.2))),
+                    ? AppTheme.primary.withOpacity(0.4)
+                    : (isDark
+                          ? const Color(0xFF2C3233)
+                          : AppTheme.outlineVariant.withOpacity(0.2))),
           width: item.isSelected ? 1.5 : 1.0,
         ),
       ),
-      color: isDark ? AppTheme.darkSurfaceContainer : AppTheme.surfaceContainerLow,
+      color: isDark
+          ? AppTheme.darkSurfaceContainer
+          : AppTheme.surfaceContainerLow,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -1334,9 +1403,13 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                           ),
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
-                              color: (isIncome ? Colors.green : Colors.red).withOpacity(0.12),
+                              color: (isIncome ? Colors.green : Colors.red)
+                                  .withOpacity(0.12),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -1353,7 +1426,10 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                       const SizedBox(height: 2),
                       Text(
                         item.description,
-                        style: const TextStyle(fontSize: 11, color: AppTheme.outline),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.outline,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1375,7 +1451,10 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
             if (item.isDuplicate) ...[
               const SizedBox(height: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.amber.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -1383,11 +1462,16 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded, size: 14, color: Colors.amber[800]),
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      size: 14,
+                      color: Colors.amber[800],
+                    ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        item.duplicateReason ?? 'Duplicate: same date & amount already in database',
+                        item.duplicateReason ??
+                            'Duplicate: same date & amount already in database',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -1409,19 +1493,28 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
               children: [
                 // Category Dropdown
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: isDark ? AppTheme.darkSurface : Colors.white,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isDark ? const Color(0xFF374041) : AppTheme.outlineVariant.withOpacity(0.3),
+                      color: isDark
+                          ? const Color(0xFF374041)
+                          : AppTheme.outlineVariant.withOpacity(0.3),
                     ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
-                      value: _categories.contains(item.category) ? item.category : 'General',
+                      value: _categories.contains(item.category)
+                          ? item.category
+                          : 'General',
                       isDense: true,
-                      style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                       items: _categories.map((cat) {
                         return DropdownMenuItem<String>(
                           value: cat,
@@ -1445,22 +1538,32 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
                     style: const TextStyle(fontSize: 12),
                     decoration: InputDecoration(
                       hintText: 'Add note for this transaction...',
-                      hintStyle: const TextStyle(fontSize: 11, color: AppTheme.outline),
+                      hintStyle: const TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.outline,
+                      ),
                       prefixIcon: const Icon(Icons.edit_note_rounded, size: 18),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 10,
+                      ),
                       isDense: true,
                       filled: true,
                       fillColor: isDark ? AppTheme.darkSurface : Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide(
-                          color: isDark ? const Color(0xFF374041) : AppTheme.outlineVariant.withOpacity(0.3),
+                          color: isDark
+                              ? const Color(0xFF374041)
+                              : AppTheme.outlineVariant.withOpacity(0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide(
-                          color: isDark ? const Color(0xFF374041) : AppTheme.outlineVariant.withOpacity(0.3),
+                          color: isDark
+                              ? const Color(0xFF374041)
+                              : AppTheme.outlineVariant.withOpacity(0.3),
                         ),
                       ),
                     ),
