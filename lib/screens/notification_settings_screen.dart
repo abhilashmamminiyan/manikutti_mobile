@@ -5,7 +5,6 @@ import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/voice_logging_sheet.dart';
 
-
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
 
@@ -144,7 +143,6 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   }
 
   @override
-
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;

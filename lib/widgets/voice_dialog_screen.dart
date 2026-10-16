@@ -28,8 +28,9 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
   String? _errorMessage;
   VoiceActionResult? _actionResult;
 
-  static const MethodChannel _channel =
-      MethodChannel('com.abhilash.manikutti/voice_dialog');
+  static const MethodChannel _channel = MethodChannel(
+    'com.abhilash.manikutti/voice_dialog',
+  );
 
   @override
   void initState() {
@@ -67,7 +68,6 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
     _speech.stop();
     super.dispose();
   }
-
 
   Future<void> _initSpeechOrProcessQuery() async {
     // Warm up NotificationService and notification channel

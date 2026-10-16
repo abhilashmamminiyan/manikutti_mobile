@@ -227,13 +227,15 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       final context = navigatorKey.currentContext;
       if (context == null) return;
 
-      final isVoice = uri.host == 'voice-expense' ||
+      final isVoice =
+          uri.host == 'voice-expense' ||
           uri.host == 'voice-dialog' ||
           (uri.host == 'manikutti.vercel.app' &&
               (uri.path.contains('voice-dialog') ||
                   uri.path.contains('voice-expense')));
 
-      final isAdd = uri.host == 'add-transaction' ||
+      final isAdd =
+          uri.host == 'add-transaction' ||
           (uri.host == 'manikutti.vercel.app' &&
               uri.path.contains('add-transaction'));
 
@@ -396,7 +398,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       onGenerateRoute: (settings) {
         final uri = Uri.tryParse(settings.name ?? '');
         if (uri != null) {
-          final isVoice = uri.path.contains('voice-dialog') ||
+          final isVoice =
+              uri.path.contains('voice-dialog') ||
               uri.host == 'voice-dialog' ||
               uri.path.contains('voice-expense') ||
               uri.host == 'voice-expense';
