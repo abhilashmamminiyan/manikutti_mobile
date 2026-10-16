@@ -46,6 +46,9 @@ class VoiceDialogActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
+        // Ensure all system notification channels exist natively in Android OS
+        NotificationChannelHelper.createChannels(this)
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SETTINGS_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "openNotificationSettings" -> {
