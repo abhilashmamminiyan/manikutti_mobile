@@ -44,15 +44,29 @@
             android:action="android.intent.action.VIEW"
             android:targetPackage="com.abhilash.manikutti"
             android:targetClass="com.abhilash.manikutti.VoiceDialogActivity"
-            android:data="manikutti://voice-dialog">
+            android:data="https://manikutti.vercel.app/voice-dialog">
             <parameter
                 android:name="feature"
                 android:key="feature" />
         </intent>
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.abhilash.manikutti"
+            android:targetClass="com.abhilash.manikutti.VoiceDialogActivity"
+            android:data="manikutti://voice-dialog" />
     </capability>
 
     <!-- Google Assistant Custom Voice Action / Built-in Intent: Create Item -->
     <capability android:name="actions.intent.CREATE_ITEM">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.abhilash.manikutti"
+            android:targetClass="com.abhilash.manikutti.VoiceDialogActivity"
+            android:data="https://manikutti.vercel.app/voice-dialog?query={query}">
+            <parameter
+                android:name="item.name"
+                android:key="query"/>
+        </intent>
         <intent
             android:action="android.intent.action.VIEW"
             android:targetPackage="com.abhilash.manikutti"
@@ -64,3 +78,4 @@
         </intent>
     </capability>
 </shortcuts>
+

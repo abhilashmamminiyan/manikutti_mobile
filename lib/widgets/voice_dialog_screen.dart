@@ -28,14 +28,43 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
   String? _errorMessage;
   VoiceActionResult? _actionResult;
 
+  static const MethodChannel _channel = MethodChannel(
+    'com.abhilash.manikutti/voice_dialog',
+  );
+
   @override
   void initState() {
     super.initState();
+    _channel.setMethodCallHandler(_handleNativeCall);
     _initSpeechOrProcessQuery();
+  }
+
+  Future<dynamic> _handleNativeCall(MethodCall call) async {
+    if (call.method == 'onNewQuery') {
+      final query = call.arguments as String?;
+      if (!mounted) return;
+      if (query != null && query.trim().isNotEmpty) {
+        if (_isListening) {
+          await _speech.stop();
+        }
+        setState(() {
+          _words = query.trim();
+          _isProcessing = true;
+          _actionResult = null;
+          _errorMessage = null;
+        });
+        await _processTranscript(_words);
+      } else {
+        if (!_isListening && !_isProcessing) {
+          _startListening();
+        }
+      }
+    }
   }
 
   @override
   void dispose() {
+    _channel.setMethodCallHandler(null);
     _speech.stop();
     super.dispose();
   }

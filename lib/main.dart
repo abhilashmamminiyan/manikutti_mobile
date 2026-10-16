@@ -227,10 +227,22 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       final context = navigatorKey.currentContext;
       if (context == null) return;
 
-      if (uri.host == 'voice-expense' || uri.host == 'voice-dialog') {
+      final isVoice =
+          uri.host == 'voice-expense' ||
+          uri.host == 'voice-dialog' ||
+          (uri.host == 'manikutti.vercel.app' &&
+              (uri.path.contains('voice-dialog') ||
+                  uri.path.contains('voice-expense')));
+
+      final isAdd =
+          uri.host == 'add-transaction' ||
+          (uri.host == 'manikutti.vercel.app' &&
+              uri.path.contains('add-transaction'));
+
+      if (isVoice) {
         final query = uri.queryParameters['query'];
         VoiceLoggingSheet.show(context, initialQuery: query);
-      } else if (uri.host == 'add-transaction') {
+      } else if (isAdd) {
         navigatorKey.currentState?.push(
           MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
         );
@@ -385,14 +397,20 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       supportedLocales: AppLocalizations.supportedLocales,
       onGenerateRoute: (settings) {
         final uri = Uri.tryParse(settings.name ?? '');
-        if (uri != null &&
-            (uri.path == '/voice-dialog' || uri.host == 'voice-dialog')) {
-          final query = uri.queryParameters['query'];
-          return PageRouteBuilder(
-            opaque: false,
-            pageBuilder: (context, _, __) =>
-                VoiceDialogScreen(initialQuery: query),
-          );
+        if (uri != null) {
+          final isVoice =
+              uri.path.contains('voice-dialog') ||
+              uri.host == 'voice-dialog' ||
+              uri.path.contains('voice-expense') ||
+              uri.host == 'voice-expense';
+          if (isVoice) {
+            final query = uri.queryParameters['query'];
+            return PageRouteBuilder(
+              opaque: false,
+              pageBuilder: (context, _, __) =>
+                  VoiceDialogScreen(initialQuery: query),
+            );
+          }
         }
         return null;
       },
