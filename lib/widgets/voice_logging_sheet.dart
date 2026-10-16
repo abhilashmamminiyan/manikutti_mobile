@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import '../models/transaction_model.dart';
 import '../services/voice_expense_service.dart';
 import '../theme/app_theme.dart';
 import '../screens/add_transaction_screen.dart';
@@ -42,7 +41,7 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
   String _selectedLocale =
       'ml_IN'; // Default to Malayalam, with quick toggle to en_IN
   String? _errorMessage;
-  TransactionModel? _savedTransaction;
+  VoiceActionResult? _actionResult;
 
   @override
   void initState() {
@@ -69,19 +68,29 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
     try {
       final available = await _speech.initialize(
         onError: (err) {
-          if (mounted) {
-            setState(() {
-              _isListening = false;
-              _errorMessage = err.errorMsg;
-            });
+          if (!mounted) return;
+          if (_words.trim().isNotEmpty &&
+              _actionResult == null &&
+              !_isProcessing) {
+            _processTranscript(_words);
+            return;
           }
+          setState(() {
+            _isListening = false;
+            if (err.errorMsg.contains('timeout') ||
+                err.errorMsg.contains('no_match')) {
+              _errorMessage = null;
+            } else {
+              _errorMessage = err.errorMsg;
+            }
+          });
         },
         onStatus: (status) {
           if (status == 'done' || status == 'notListening') {
             if (mounted && _isListening) {
               setState(() => _isListening = false);
               if (_words.trim().isNotEmpty &&
-                  _savedTransaction == null &&
+                  _actionResult == null &&
                   !_isProcessing) {
                 _processTranscript(_words);
               }
@@ -95,7 +104,11 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
           _isInit = available;
         });
         if (available) {
-          _startListening();
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted && !_isListening && !_isProcessing) {
+              _startListening();
+            }
+          });
         } else {
           _errorMessage =
               'Microphone permission not granted or speech recognition unavailable.';
@@ -115,7 +128,8 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
     setState(() {
       _isListening = true;
       _errorMessage = null;
-      _savedTransaction = null;
+      _actionResult = null;
+      _words = '';
     });
 
     try {
@@ -125,14 +139,22 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
             setState(() {
               _words = result.recognizedWords;
             });
+            if (result.finalResult &&
+                result.recognizedWords.trim().isNotEmpty &&
+                _actionResult == null &&
+                !_isProcessing) {
+              _processTranscript(result.recognizedWords);
+            }
           }
         },
         listenOptions: stt.SpeechListenOptions(
-          listenMode: stt.ListenMode.confirmation,
-          cancelOnError: true,
+          listenMode: stt.ListenMode.dictation,
+          cancelOnError: false,
           partialResults: true,
+          localeId: _selectedLocale,
+          listenFor: const Duration(seconds: 30),
+          pauseFor: const Duration(seconds: 5),
         ),
-        localeId: _selectedLocale,
       );
     } catch (e) {
       if (mounted) {
@@ -147,7 +169,7 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
   Future<void> _stopListening() async {
     await _speech.stop();
     setState(() => _isListening = false);
-    if (_words.trim().isNotEmpty && _savedTransaction == null) {
+    if (_words.trim().isNotEmpty && _actionResult == null) {
       await _processTranscript(_words);
     }
   }
@@ -159,12 +181,19 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
     });
 
     try {
-      final tx = await VoiceExpenseService.instance.processAndSaveVoiceExpense(
-        transcript,
-      );
+      final result = await VoiceExpenseService.instance
+          .processAndSaveVoiceExpense(transcript);
       if (mounted) {
+        if (!result.success) {
+          setState(() {
+            _errorMessage = result.message;
+            _isProcessing = false;
+          });
+          return;
+        }
+
         setState(() {
-          _savedTransaction = tx;
+          _actionResult = result;
           _isProcessing = false;
         });
         widget.onExpenseAdded?.call();
@@ -172,7 +201,7 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Failed to parse expense: $e';
+          _errorMessage = 'Failed to process voice request: $e';
           _isProcessing = false;
         });
       }
@@ -292,7 +321,7 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
           const SizedBox(height: 24),
 
           // Main Animation or Success Display
-          if (_savedTransaction != null) ...[
+          if (_actionResult != null && _actionResult!.success) ...[
             _buildSuccessCard(theme, isDark),
           ] else ...[
             _buildRecordingUI(theme, isDark),
@@ -405,7 +434,85 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
   }
 
   Widget _buildSuccessCard(ThemeData theme, bool isDark) {
-    final tx = _savedTransaction!;
+    final result = _actionResult;
+    if (result == null) return const SizedBox.shrink();
+
+    if (result.isDelete) {
+      return Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFFEF3C7),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.amber.withOpacity(0.4)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade700,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.delete_sweep_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Transactions Deleted!',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.amber.shade900,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        result.message,
+                        style: TextStyle(
+                          color: isDark
+                              ? Colors.white60
+                              : Colors.amber.shade800,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: const Text('Done'),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final tx = result.transaction;
+    if (tx == null) return const SizedBox.shrink();
+
     return Column(
       children: [
         Container(

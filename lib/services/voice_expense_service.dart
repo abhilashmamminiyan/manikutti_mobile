@@ -7,6 +7,25 @@ import 'notification_service.dart';
 import 'sync_service.dart';
 import 'widget_data_service.dart';
 
+class VoiceActionResult {
+  final String action; // 'create' | 'delete' | 'error'
+  final TransactionModel? transaction;
+  final int deletedCount;
+  final String message;
+  final bool success;
+
+  const VoiceActionResult({
+    required this.action,
+    this.transaction,
+    this.deletedCount = 0,
+    required this.message,
+    required this.success,
+  });
+
+  bool get isDelete => action == 'delete';
+  bool get isCreate => action == 'create';
+}
+
 class VoiceExpenseService {
   static final VoiceExpenseService instance = VoiceExpenseService._init();
 
@@ -17,7 +36,80 @@ class VoiceExpenseService {
   Map<String, dynamic> parseLocally(String text, {String defaultBank = 'SBI'}) {
     final lower = text.toLowerCase().trim();
 
-    // 1. Amount Extraction
+    // 1. Detect Delete / Undo Intent
+    final isDeleteKeyword =
+        lower.contains('delete') ||
+        lower.contains('remove') ||
+        lower.contains('undo') ||
+        lower.contains('cancel') ||
+        lower.contains('clear') ||
+        lower.contains('ഡിലീറ്റ്') ||
+        lower.contains('കളയുക') ||
+        lower.contains('ഒഴിവാക്കുക') ||
+        lower.contains('മാറ്റുക');
+
+    final hasDeleteTarget =
+        lower.contains('transaction') ||
+        lower.contains('transactions') ||
+        lower.contains('expense') ||
+        lower.contains('expenses') ||
+        lower.contains('record') ||
+        lower.contains('entry') ||
+        lower.contains('entries') ||
+        lower.contains('last') ||
+        lower.contains('recent') ||
+        lower.contains('avasaana') ||
+        lower.contains('avasaanathe') ||
+        lower.contains('kazhinja') ||
+        lower.contains('ഇടപാട്') ||
+        lower.contains('അവസാന');
+
+    if (isDeleteKeyword && hasDeleteTarget) {
+      int count = 1;
+      if (RegExp(
+            r'\b(two|randu|rendu|രണ്ട്)\b',
+            caseSensitive: false,
+          ).hasMatch(lower) ||
+          lower.contains('2')) {
+        count = 2;
+      } else if (RegExp(
+            r'\b(three|moonnu|മൂന്ന്)\b',
+            caseSensitive: false,
+          ).hasMatch(lower) ||
+          lower.contains('3')) {
+        count = 3;
+      } else if (RegExp(
+            r'\b(four|naalu|നാല്)\b',
+            caseSensitive: false,
+          ).hasMatch(lower) ||
+          lower.contains('4')) {
+        count = 4;
+      } else if (RegExp(
+            r'\b(five|anchu|അഞ്ച്)\b',
+            caseSensitive: false,
+          ).hasMatch(lower) ||
+          lower.contains('5')) {
+        count = 5;
+      } else {
+        final match = RegExp(r'\b(\d+)\b').firstMatch(lower);
+        if (match != null && match.group(1) != null) {
+          count = int.tryParse(match.group(1)!) ?? 1;
+        }
+      }
+      if (count > 10) count = 10;
+
+      return {
+        'action': 'delete',
+        'count': count,
+        'amount': 0.0,
+        'category': 'Other',
+        'note': text,
+        'type': 'Expense',
+        'bankAccount': defaultBank,
+      };
+    }
+
+    // 2. Amount Extraction
     double amount = 0;
     final numMatch = RegExp(
       r'(?:₹|rs\.?|inr|roopa|rupa|roopakku|rupakku|രൂപ)?\s*(\d+(?:\.\d+)?)\s*(?:₹|rs\.?|inr|roopa|rupa|roopakku|rupakku|രൂപ)?',
@@ -28,7 +120,7 @@ class VoiceExpenseService {
       amount = double.tryParse(numMatch.group(1)!) ?? 0;
     }
 
-    // 2. Type Detection
+    // 3. Type Detection
     String type = 'Expense';
     if (lower.contains('family') ||
         lower.contains('കുടുംബം') ||
@@ -39,15 +131,51 @@ class VoiceExpenseService {
         lower.contains('income') ||
         lower.contains('kittiyathu') ||
         lower.contains('കിട്ടി') ||
-        lower.contains('വരുമാനം')) {
+        lower.contains('വരുമാനം') ||
+        lower.contains('credited') ||
+        lower.contains('thannu') ||
+        lower.contains('thanu') ||
+        lower.contains('thannathu') ||
+        lower.contains('തന്നു') ||
+        lower.contains('തന്നത്') ||
+        lower.contains('കിട്ടിയത്') ||
+        lower.contains('ലഭിച്ചു') ||
+        lower.contains('ലഭിച്ച') ||
+        lower.contains('വരവ്') ||
+        lower.contains('received') ||
+        lower.contains('got') ||
+        lower.contains('cashback') ||
+        lower.contains('refund') ||
+        lower.contains('repaid') ||
+        lower.contains('returned') ||
+        lower.contains('deposit')) {
       type = 'Income';
     }
 
-    // 3. Category & Note Detection
+    // 4. Category & Note Detection
     String category = 'Other';
     String note = text;
 
-    if (lower.contains('petrol') ||
+    if (type == 'Income') {
+      if (lower.contains('salary') || lower.contains('ശമ്പളം')) {
+        category = 'Investment';
+        note = 'Salary';
+      } else if (lower.contains('cashback') || lower.contains('refund')) {
+        category = 'Other';
+        note = 'Cashback / Refund';
+      } else {
+        category = 'Other';
+        final nameMatch = RegExp(
+          r'^([a-zA-Z]+)\s+.*(?:thannu|thanu|thannathu|തന്നു)',
+          caseSensitive: false,
+        ).firstMatch(text.trim());
+        if (nameMatch != null && nameMatch.group(1) != null) {
+          note = 'Received from ${nameMatch.group(1)}';
+        } else {
+          note = text;
+        }
+      }
+    } else if (lower.contains('petrol') ||
         lower.contains('diesel') ||
         lower.contains('auto') ||
         lower.contains('taxi') ||
@@ -141,6 +269,7 @@ class VoiceExpenseService {
     }
 
     return {
+      'action': 'create',
       'amount': amount,
       'category': category,
       'note': note,
@@ -149,8 +278,11 @@ class VoiceExpenseService {
     };
   }
 
-  /// Parses voice input via Gemini AI API (or local fallback) and commits it to SQLite
-  Future<TransactionModel> processAndSaveVoiceExpense(String transcript) async {
+  /// Parses voice input via Gemini AI API (or local fallback), executes create/delete,
+  /// updates SQLite, widgets, and returns a structured VoiceActionResult.
+  Future<VoiceActionResult> processAndSaveVoiceExpense(
+    String transcript,
+  ) async {
     final cleanText = transcript.trim();
     if (cleanText.isEmpty) {
       throw Exception('Transcript is empty');
@@ -175,9 +307,107 @@ class VoiceExpenseService {
       parsedData = parseLocally(cleanText);
     }
 
+    final String action = parsedData['action']?.toString() ?? 'create';
+
+    // 1. Handle Deletion Intent
+    if (action == 'delete') {
+      int count = 1;
+      if (parsedData['count'] != null) {
+        if (parsedData['count'] is num) {
+          count = (parsedData['count'] as num).toInt();
+        } else {
+          count = int.tryParse(parsedData['count'].toString()) ?? 1;
+        }
+      }
+      if (count <= 0) count = 1;
+
+      // Clean up any zero/negative amount transactions first
+      await DbHelper.instance.deleteZeroOrNegativeTransactions();
+
+      // Retrieve last N transactions from SQLite
+      final lastTransactions = await DbHelper.instance.getLastTransactions(
+        count,
+      );
+
+      int actuallyDeleted = 0;
+      if (lastTransactions.isNotEmpty) {
+        final syncedCount = lastTransactions.where((t) => t.synced).length;
+
+        for (final t in lastTransactions) {
+          if (t.id != null) {
+            await DbHelper.instance.deleteTransaction(t.id!);
+            actuallyDeleted++;
+          }
+        }
+
+        // If any of the deleted transactions were already synced to Google Sheets, delete from Sheets too
+        if (syncedCount > 0) {
+          try {
+            await ApiService.instance.deleteLastTransactions(
+              count: syncedCount,
+            );
+          } catch (e) {
+            if (kDebugMode) {
+              print('Error calling deleteLastTransactions in API: $e');
+            }
+          }
+        }
+      } else {
+        // If local DB had no transactions, attempt deleting from Google Sheets directly
+        try {
+          actuallyDeleted = await ApiService.instance.deleteLastTransactions(
+            count: count,
+          );
+        } catch (_) {}
+      }
+
+      // Re-align with cloud and refresh widget
+      unawaited(SyncService.instance.syncData());
+      unawaited(WidgetDataService.updateWidgetData());
+
+      final deleteMessage = actuallyDeleted > 0
+          ? 'Deleted last $actuallyDeleted transaction${actuallyDeleted > 1 ? "s" : ""}'
+          : 'No transactions found to delete';
+
+      try {
+        await NotificationService.instance.showImmediateNotification(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          title: 'Manikutti: Transaction Deleted',
+          body: deleteMessage,
+          channelId: 'voice_expense_channel',
+          channelName: 'Voice & Widget Expenses',
+          channelDescription:
+              'Instant confirmation alerts for expenses and income logged via voice or widget',
+        );
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error posting voice notification: $e');
+        }
+      }
+
+      return VoiceActionResult(
+        action: 'delete',
+        deletedCount: actuallyDeleted,
+        message: deleteMessage,
+        success: actuallyDeleted > 0,
+      );
+    }
+
+    // 2. Handle Creation Intent
     final double amount = (parsedData['amount'] is num)
         ? (parsedData['amount'] as num).toDouble()
         : double.tryParse(parsedData['amount'].toString()) ?? 0.0;
+
+    // Safety guard: NEVER save transactions with amount <= 0!
+    if (amount <= 0.0) {
+      const errorMsg =
+          'Could not detect an amount. Please specify an amount (e.g., "100 roopa petrol").';
+      return const VoiceActionResult(
+        action: 'create',
+        success: false,
+        message: errorMsg,
+      );
+    }
 
     final String category = parsedData['category']?.toString() ?? 'Other';
     final String note = parsedData['note']?.toString() ?? cleanText;
@@ -221,13 +451,21 @@ class VoiceExpenseService {
 
     // Post immediate confirmation notification
     try {
-      unawaited(
-        NotificationService.instance.showImmediateNotification(
-          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          title: 'Manikutti: Record Saved',
-          body:
-              'Saved ₹${savedTx.amount.toStringAsFixed(0)} for ${savedTx.note} (${savedTx.category})',
-        ),
+      final notifTitle = savedTx.type == 'Income'
+          ? 'Manikutti: Income Recorded'
+          : 'Manikutti: Expense Saved';
+      final notifBody = savedTx.type == 'Income'
+          ? 'Recorded +₹${savedTx.amount.toStringAsFixed(0)} for ${savedTx.note} (${savedTx.category})'
+          : 'Saved ₹${savedTx.amount.toStringAsFixed(0)} for ${savedTx.note} (${savedTx.category})';
+
+      await NotificationService.instance.showImmediateNotification(
+        id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        title: notifTitle,
+        body: notifBody,
+        channelId: 'voice_expense_channel',
+        channelName: 'Voice & Widget Expenses',
+        channelDescription:
+            'Instant confirmation alerts for expenses and income logged via voice or widget',
       );
     } catch (e) {
       if (kDebugMode) {
@@ -235,6 +473,12 @@ class VoiceExpenseService {
       }
     }
 
-    return savedTx;
+    return VoiceActionResult(
+      action: 'create',
+      transaction: savedTx,
+      message:
+          'Saved ₹${savedTx.amount.toStringAsFixed(0)} for ${savedTx.note}',
+      success: true,
+    );
   }
 }

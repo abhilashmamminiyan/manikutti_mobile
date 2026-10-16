@@ -49,6 +49,29 @@ class NotificationService {
           AndroidFlutterLocalNotificationsPlugin
         >();
     await androidPlugin?.requestNotificationsPermission();
+    if (androidPlugin != null) {
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'voice_expense_channel',
+          'Voice & Widget Expenses',
+          description:
+              'Instant confirmation alerts for expenses and income logged via voice or widget',
+          importance: Importance.max,
+          enableVibration: true,
+          playSound: true,
+        ),
+      );
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'payment_channel',
+          'Payment Notifications',
+          description: 'Alerts when someone pays a family commitment',
+          importance: Importance.max,
+          enableVibration: true,
+          playSound: true,
+        ),
+      );
+    }
     try {
       await androidPlugin?.requestExactAlarmsPermission();
     } catch (e) {
@@ -59,6 +82,15 @@ class NotificationService {
     print(
       '[NotificationService] Local notifications initialized successfully.',
     );
+  }
+
+  Future<bool> requestPermission() async {
+    final androidPlugin = _localNotifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    final granted = await androidPlugin?.requestNotificationsPermission();
+    return granted ?? false;
   }
 
   Future<void> _safeZonedSchedule({
@@ -115,16 +147,41 @@ class NotificationService {
     required String title,
     required String body,
     String? payload,
+    String channelId = 'voice_expense_channel',
+    String channelName = 'Voice & Widget Expenses',
+    String channelDescription =
+        'Instant confirmation alerts for expenses and income logged via voice or widget',
   }) async {
-    const details = NotificationDetails(
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    final androidPlugin = _localNotifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    final areEnabled = await androidPlugin?.areNotificationsEnabled();
+    if (areEnabled == false) {
+      await androidPlugin?.requestNotificationsPermission();
+    }
+
+    final details = NotificationDetails(
       android: AndroidNotificationDetails(
-        'payment_channel',
-        'Payment Notifications',
-        channelDescription: 'Alerts when someone pays a family commitment',
+        channelId,
+        channelName,
+        channelDescription: channelDescription,
         importance: Importance.max,
         priority: Priority.high,
+        playSound: true,
+        enableVibration: true,
+        visibility: NotificationVisibility.public,
+        styleInformation: BigTextStyleInformation(body),
       ),
-      iOS: DarwinNotificationDetails(),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
 
     await _localNotifications.show(id, title, body, details, payload: payload);
