@@ -83,7 +83,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadData();
     _checkFamilyMembership();
     _initPackageInfo();
-    NotificationService.instance.requestPermission();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService.instance.requestPermission();
+    });
   }
 
   @override
