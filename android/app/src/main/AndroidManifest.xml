@@ -43,6 +43,15 @@
                 <data android:scheme="manikutti" android:host="dashboard" />
             </intent-filter>
 
+            <!-- HTTPS App Links for Next.js Web Domain (MainActivity) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="manikutti.vercel.app" android:pathPrefix="/add-transaction" />
+                <data android:scheme="https" android:host="manikutti.vercel.app" android:pathPrefix="/dashboard" />
+            </intent-filter>
+
             <!-- App Shortcuts & Assistant Actions -->
             <meta-data
                 android:name="android.app.shortcuts"
@@ -69,7 +78,17 @@
                 <data android:scheme="manikutti" android:host="voice-dialog" />
                 <data android:scheme="manikutti" android:host="voice-expense" />
             </intent-filter>
+
+            <!-- HTTPS App Links for Next.js Web Domain (VoiceDialogActivity) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="manikutti.vercel.app" android:pathPrefix="/voice-dialog" />
+                <data android:scheme="https" android:host="manikutti.vercel.app" android:pathPrefix="/voice-expense" />
+            </intent-filter>
         </activity>
+
 
         <!-- Quick Settings Tile in Android Notification Shade -->
         <service

@@ -14,6 +14,9 @@ class MainActivity : FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
+        // Publish dynamic shortcuts for Android OS and Google Assistant
+        ShortcutHelper.publishShortcuts(this)
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SETTINGS_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "openNotificationSettings" -> {
@@ -34,8 +37,13 @@ class MainActivity : FlutterFragmentActivity() {
                         result.error("ERROR", e.localizedMessage, null)
                     }
                 }
+                "publishShortcuts" -> {
+                    ShortcutHelper.publishShortcuts(this)
+                    result.success(true)
+                }
                 else -> result.notImplemented()
             }
         }
     }
 }
+
