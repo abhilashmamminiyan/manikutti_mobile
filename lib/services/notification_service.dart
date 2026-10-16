@@ -26,8 +26,10 @@ class NotificationService {
     // Initialize Timezone Database
     tz.initializeTimeZones();
 
-    // Android Settings: Using dedicated vector notification icon
-    const androidSettings = AndroidInitializationSettings('ic_notification');
+    // Android Settings: Using dedicated launcher icon for universal compatibility
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/launcher_icon',
+    );
 
     // iOS Settings
     const iosSettings = DarwinInitializationSettings(
