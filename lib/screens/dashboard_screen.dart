@@ -83,6 +83,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadData();
     _checkFamilyMembership();
     _initPackageInfo();
+    NotificationService.instance.requestPermission();
   }
 
   @override

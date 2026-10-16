@@ -370,12 +370,14 @@ class VoiceExpenseService {
           : 'No transactions found to delete';
 
       try {
-        unawaited(
-          NotificationService.instance.showImmediateNotification(
-            id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-            title: 'Manikutti: Transaction Deleted',
-            body: deleteMessage,
-          ),
+        await NotificationService.instance.showImmediateNotification(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          title: 'Manikutti: Transaction Deleted',
+          body: deleteMessage,
+          channelId: 'voice_expense_channel',
+          channelName: 'Voice & Widget Expenses',
+          channelDescription:
+              'Instant confirmation alerts for expenses and income logged via voice or widget',
         );
       } catch (e) {
         if (kDebugMode) {
@@ -449,13 +451,21 @@ class VoiceExpenseService {
 
     // Post immediate confirmation notification
     try {
-      unawaited(
-        NotificationService.instance.showImmediateNotification(
-          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          title: 'Manikutti: Record Saved',
-          body:
-              'Saved ₹${savedTx.amount.toStringAsFixed(0)} for ${savedTx.note} (${savedTx.category})',
-        ),
+      final notifTitle = savedTx.type == 'Income'
+          ? 'Manikutti: Income Recorded'
+          : 'Manikutti: Expense Saved';
+      final notifBody = savedTx.type == 'Income'
+          ? 'Recorded +₹${savedTx.amount.toStringAsFixed(0)} for ${savedTx.note} (${savedTx.category})'
+          : 'Saved ₹${savedTx.amount.toStringAsFixed(0)} for ${savedTx.note} (${savedTx.category})';
+
+      await NotificationService.instance.showImmediateNotification(
+        id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        title: notifTitle,
+        body: notifBody,
+        channelId: 'voice_expense_channel',
+        channelName: 'Voice & Widget Expenses',
+        channelDescription:
+            'Instant confirmation alerts for expenses and income logged via voice or widget',
       );
     } catch (e) {
       if (kDebugMode) {

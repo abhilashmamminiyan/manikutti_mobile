@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../services/voice_expense_service.dart';
+import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 import 'spiral_voice_waves.dart';
 
@@ -40,6 +41,9 @@ class _VoiceDialogScreenState extends State<VoiceDialogScreen> {
   }
 
   Future<void> _initSpeechOrProcessQuery() async {
+    // Warm up NotificationService and notification channel
+    unawaited(NotificationService.instance.initialize());
+
     // 1. If triggered by Google Assistant with a captured query, process headlessly and close
     if (widget.initialQuery != null && widget.initialQuery!.trim().isNotEmpty) {
       setState(() {
