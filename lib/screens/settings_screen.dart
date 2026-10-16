@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'setup_app_lock_screen.dart';
 import 'about_app_screen.dart';
 import 'whats_new_screen.dart';
+import 'notification_settings_screen.dart';
 import '../services/whats_new_service.dart';
 import '../theme/app_theme.dart';
 
@@ -269,6 +270,60 @@ class SettingsScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const SetupAppLockScreen(),
+                      ),
+                    );
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Divider(
+                    color: isDark
+                        ? const Color(0xFF2C3233)
+                        : AppTheme.outlineVariant.withOpacity(0.15),
+                  ),
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F766E).withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.notifications_active_rounded,
+                      color: Color(0xFF0F766E),
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'Notifications',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Voice alerts, salary & bill reminders, permissions',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isDark
+                          ? AppTheme.darkOnSurfaceVariant
+                          : AppTheme.onSurfaceVariant.withOpacity(0.7),
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                    color: AppTheme.outlineVariant,
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const NotificationSettingsScreen(),
                       ),
                     );
                   },
