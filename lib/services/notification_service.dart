@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -7,6 +9,10 @@ class NotificationService {
   static final NotificationService instance = NotificationService._init();
   static final ValueNotifier<String?> onNotificationPayload =
       ValueNotifier<String?>(null);
+
+  static const MethodChannel _settingsChannel = MethodChannel(
+    'com.abhilash.manikutti/settings',
+  );
 
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -20,8 +26,8 @@ class NotificationService {
     // Initialize Timezone Database
     tz.initializeTimeZones();
 
-    // Android Settings: Using default launcher icon
-    const androidSettings = AndroidInitializationSettings('app_icon');
+    // Android Settings: Using dedicated vector notification icon
+    const androidSettings = AndroidInitializationSettings('ic_notification');
 
     // iOS Settings
     const iosSettings = DarwinInitializationSettings(
@@ -50,17 +56,26 @@ class NotificationService {
         >();
     if (androidPlugin != null) {
       try {
+        // Upgrade to voice_expense_channel_v2 to ensure high importance & sound
         await androidPlugin.createNotificationChannel(
           const AndroidNotificationChannel(
-            'voice_expense_channel',
+            'voice_expense_channel_v2',
             'Voice & Widget Expenses',
             description:
                 'Instant confirmation alerts for expenses and income logged via voice or widget',
             importance: Importance.max,
             enableVibration: true,
             playSound: true,
+            showBadge: true,
           ),
         );
+        // Clean up legacy channel
+        try {
+          await androidPlugin.deleteNotificationChannel(
+            'voice_expense_channel',
+          );
+        } catch (_) {}
+
         await androidPlugin.createNotificationChannel(
           const AndroidNotificationChannel(
             'payment_channel',
@@ -93,6 +108,34 @@ class NotificationService {
     debugPrint(
       '[NotificationService] Local notifications initialized successfully.',
     );
+  }
+
+  Future<bool> areNotificationsEnabled() async {
+    try {
+      final androidPlugin = _localNotifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      final enabled = await androidPlugin?.areNotificationsEnabled();
+      return enabled ?? false;
+    } catch (e) {
+      debugPrint('[NotificationService] areNotificationsEnabled error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> openSystemNotificationSettings() async {
+    try {
+      final result = await _settingsChannel.invokeMethod<bool>(
+        'openNotificationSettings',
+      );
+      return result ?? false;
+    } catch (e) {
+      debugPrint(
+        '[NotificationService] openSystemNotificationSettings error: $e',
+      );
+      return false;
+    }
   }
 
   Future<bool> requestPermission() async {
@@ -163,10 +206,11 @@ class NotificationService {
     required String title,
     required String body,
     String? payload,
-    String channelId = 'voice_expense_channel',
+    String channelId = 'voice_expense_channel_v2',
     String channelName = 'Voice & Widget Expenses',
     String channelDescription =
         'Instant confirmation alerts for expenses and income logged via voice or widget',
+    String icon = 'ic_tile_mic',
   }) async {
     try {
       if (!_isInitialized) {
@@ -197,6 +241,7 @@ class NotificationService {
             importance: Importance.max,
             enableVibration: true,
             playSound: true,
+            showBadge: true,
           ),
         );
       } catch (e) {
@@ -210,9 +255,13 @@ class NotificationService {
           channelDescription: channelDescription,
           importance: Importance.max,
           priority: Priority.high,
+          icon: icon,
           playSound: true,
           enableVibration: true,
           visibility: NotificationVisibility.public,
+          channelShowBadge: true,
+          autoCancel: true,
+          color: const Color(0xFF0F766E),
           styleInformation: BigTextStyleInformation(body),
         ),
         iOS: const DarwinNotificationDetails(
@@ -237,6 +286,20 @@ class NotificationService {
         '[NotificationService] Failed to post immediate notification: $e',
       );
     }
+  }
+
+  Future<void> sendTestNotification() async {
+    await showImmediateNotification(
+      id: 99999,
+      title: 'Manikutti: Expense Saved (Test)',
+      body: 'Saved ₹100 for Petrol (Travel / Transport)',
+      payload: 'test_notification',
+      channelId: 'voice_expense_channel_v2',
+      channelName: 'Voice & Widget Expenses',
+      channelDescription:
+          'Instant confirmation alerts for expenses and income logged via voice or widget',
+      icon: 'ic_tile_mic',
+    );
   }
 
   Future<void> scheduleMonthlyReminder({

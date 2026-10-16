@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../database/db_helper.dart';
 import '../models/transaction_model.dart';
 import 'api_service.dart';
@@ -370,15 +371,22 @@ class VoiceExpenseService {
           : 'No transactions found to delete';
 
       try {
-        await NotificationService.instance.showImmediateNotification(
-          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          title: 'Manikutti: Transaction Deleted',
-          body: deleteMessage,
-          channelId: 'voice_expense_channel',
-          channelName: 'Voice & Widget Expenses',
-          channelDescription:
-              'Instant confirmation alerts for expenses and income logged via voice or widget',
-        );
+        final prefs = await SharedPreferences.getInstance();
+        final isVoiceNotifEnabled =
+            prefs.getBool('key_voice_notifications_enabled') ?? true;
+
+        if (isVoiceNotifEnabled) {
+          await NotificationService.instance.showImmediateNotification(
+            id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            title: 'Manikutti: Transaction Deleted',
+            body: deleteMessage,
+            channelId: 'voice_expense_channel_v2',
+            channelName: 'Voice & Widget Expenses',
+            channelDescription:
+                'Instant confirmation alerts for expenses and income logged via voice or widget',
+            icon: 'ic_tile_mic',
+          );
+        }
       } catch (e) {
         if (kDebugMode) {
           print('Error posting voice notification: $e');
@@ -451,22 +459,35 @@ class VoiceExpenseService {
 
     // Post immediate confirmation notification
     try {
-      final notifTitle = savedTx.type == 'Income'
-          ? 'Manikutti: Income Recorded'
-          : 'Manikutti: Expense Saved';
-      final notifBody = savedTx.type == 'Income'
-          ? 'Recorded +₹${savedTx.amount.toStringAsFixed(0)} for ${savedTx.note} (${savedTx.category})'
-          : 'Saved ₹${savedTx.amount.toStringAsFixed(0)} for ${savedTx.note} (${savedTx.category})';
+      final prefs = await SharedPreferences.getInstance();
+      final isVoiceNotifEnabled =
+          prefs.getBool('key_voice_notifications_enabled') ?? true;
 
-      await NotificationService.instance.showImmediateNotification(
-        id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        title: notifTitle,
-        body: notifBody,
-        channelId: 'voice_expense_channel',
-        channelName: 'Voice & Widget Expenses',
-        channelDescription:
-            'Instant confirmation alerts for expenses and income logged via voice or widget',
-      );
+      if (isVoiceNotifEnabled) {
+        final notifTitle = savedTx.type == 'Income'
+            ? 'Manikutti: Income Recorded'
+            : 'Manikutti: Expense Saved';
+        final notifBody = savedTx.type == 'Income'
+            ? 'Recorded +₹${savedTx.amount.toStringAsFixed(0)} for ${savedTx.note} (${savedTx.category})'
+            : 'Saved ₹${savedTx.amount.toStringAsFixed(0)} for ${savedTx.note} (${savedTx.category})';
+
+        await NotificationService.instance.showImmediateNotification(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          title: notifTitle,
+          body: notifBody,
+          channelId: 'voice_expense_channel_v2',
+          channelName: 'Voice & Widget Expenses',
+          channelDescription:
+              'Instant confirmation alerts for expenses and income logged via voice or widget',
+          icon: 'ic_tile_mic',
+        );
+      } else {
+        if (kDebugMode) {
+          print(
+            '[VoiceExpenseService] Voice notification skipped: disabled in preferences',
+          );
+        }
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error posting voice notification: $e');
