@@ -85,6 +85,37 @@ class NotificationService {
             playSound: true,
           ),
         );
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'salary_channel',
+            'Salary Reminders',
+            description:
+                'Prompts on 4th & 5th of each month for recording salary',
+            importance: Importance.max,
+            enableVibration: true,
+            playSound: true,
+          ),
+        );
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'dues_channel',
+            'Due Reminders',
+            description: 'Reminders for regular family dues',
+            importance: Importance.max,
+            enableVibration: true,
+            playSound: true,
+          ),
+        );
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'recharge_channel',
+            'Recharge Reminders',
+            description: 'Reminders before mobile recharge expiry',
+            importance: Importance.max,
+            enableVibration: true,
+            playSound: true,
+          ),
+        );
       } catch (e) {
         debugPrint('[NotificationService] Channel creation notice: $e');
       }
@@ -209,7 +240,7 @@ class NotificationService {
     String channelName = 'Voice & Widget Expenses',
     String channelDescription =
         'Instant confirmation alerts for expenses and income logged via voice or widget',
-    String icon = 'ic_tile_mic',
+    String icon = 'ic_notification',
   }) async {
     try {
       if (!_isInitialized) {
@@ -270,13 +301,50 @@ class NotificationService {
         ),
       );
 
-      await _localNotifications.show(
-        id,
-        title,
-        body,
-        details,
-        payload: payload,
-      );
+      try {
+        await _localNotifications.show(
+          id,
+          title,
+          body,
+          details,
+          payload: payload,
+        );
+      } catch (showError) {
+        debugPrint(
+          '[NotificationService] Post with custom icon failed ($showError), retrying with launcher icon...',
+        );
+        // Fallback to standard launcher icon if custom vector icon causes issues on specific Android ROMs
+        final fallbackDetails = NotificationDetails(
+          android: AndroidNotificationDetails(
+            channelId,
+            channelName,
+            channelDescription: channelDescription,
+            importance: Importance.max,
+            priority: Priority.high,
+            icon: '@mipmap/launcher_icon',
+            playSound: true,
+            enableVibration: true,
+            visibility: NotificationVisibility.public,
+            channelShowBadge: true,
+            autoCancel: true,
+            color: const Color(0xFF0F766E),
+            styleInformation: BigTextStyleInformation(body),
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        );
+        await _localNotifications.show(
+          id,
+          title,
+          body,
+          fallbackDetails,
+          payload: payload,
+        );
+      }
+
       debugPrint(
         '[NotificationService] Immediate notification posted: #$id - $title',
       );

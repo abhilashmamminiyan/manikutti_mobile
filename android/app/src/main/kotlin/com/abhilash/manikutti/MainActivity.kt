@@ -14,6 +14,9 @@ class MainActivity : FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
+        // Ensure all system notification channels exist natively in Android OS
+        NotificationChannelHelper.createChannels(this)
+
         // Publish dynamic shortcuts for Android OS and Google Assistant
         ShortcutHelper.publishShortcuts(this)
 

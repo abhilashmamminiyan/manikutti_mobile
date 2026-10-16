@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import '../services/notification_service.dart';
 import '../services/voice_expense_service.dart';
 import '../theme/app_theme.dart';
 import '../screens/add_transaction_screen.dart';
@@ -56,6 +58,9 @@ class _VoiceLoggingSheetState extends State<VoiceLoggingSheet> {
   }
 
   Future<void> _initSpeech() async {
+    // Warm up NotificationService and notification channel
+    unawaited(NotificationService.instance.initialize());
+
     if (widget.initialQuery != null && widget.initialQuery!.trim().isNotEmpty) {
       // Process pre-supplied voice text directly (e.g. from Google Assistant)
       setState(() {
