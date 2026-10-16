@@ -75,7 +75,6 @@ class NotificationService {
             'voice_expense_channel',
           );
         } catch (_) {}
-
         await androidPlugin.createNotificationChannel(
           const AndroidNotificationChannel(
             'payment_channel',
