@@ -114,6 +114,25 @@
                 android:resource="@xml/manikutti_widget_info" />
         </receiver>
 
+        <!-- Interactive Home Screen Keypad Quick-Log Widget Receiver -->
+        <receiver
+            android:name=".ManikuttiQuickLogWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.abhilash.manikutti.ACTION_KEYPAD_DIGIT" />
+                <action android:name="com.abhilash.manikutti.ACTION_KEYPAD_PRESET" />
+                <action android:name="com.abhilash.manikutti.ACTION_KEYPAD_BACKSPACE" />
+                <action android:name="com.abhilash.manikutti.ACTION_KEYPAD_CLEAR" />
+                <action android:name="com.abhilash.manikutti.ACTION_SET_CATEGORY" />
+                <action android:name="com.abhilash.manikutti.ACTION_CYCLE_CATEGORY" />
+                <action android:name="com.abhilash.manikutti.ACTION_SAVE_EXPENSE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/manikutti_quick_log_widget_info" />
+        </receiver>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
