@@ -62,7 +62,10 @@ class _CategoryPreferencesScreenState extends State<CategoryPreferencesScreen> {
             children: [
               const Text(
                 'Enter a name for the new expense category:',
-                style: TextStyle(fontSize: 13, color: AppTheme.onSurfaceVariant),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppTheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -94,7 +97,9 @@ class _CategoryPreferencesScreenState extends State<CategoryPreferencesScreen> {
                 final name = _categoryController.text.trim();
                 if (name.isEmpty) return;
 
-                final success = await CategoryService.instance.addCategory(name);
+                final success = await CategoryService.instance.addCategory(
+                  name,
+                );
                 if (ctx.mounted) {
                   Navigator.pop(ctx);
                 }
@@ -346,8 +351,8 @@ class _CategoryPreferencesScreenState extends State<CategoryPreferencesScreen> {
                     ),
                     itemBuilder: (context, index) {
                       final category = _categories[index];
-                      final isDefault =
-                          CategoryService.defaultCategories.contains(category);
+                      final isDefault = CategoryService.defaultCategories
+                          .contains(category);
 
                       return ListTile(
                         contentPadding: const EdgeInsets.symmetric(

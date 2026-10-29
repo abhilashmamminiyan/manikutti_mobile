@@ -377,8 +377,7 @@ class SettingsScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            const CategoryPreferencesScreen(),
+                        builder: (context) => const CategoryPreferencesScreen(),
                       ),
                     );
                   },

@@ -79,7 +79,9 @@ class WidgetDataService {
 
       // 4. Request Widget Updates (Summary Widget & Interactive Keypad Widget)
       await HomeWidget.updateWidget(androidName: androidWidgetProvider);
-      await HomeWidget.updateWidget(androidName: 'ManikuttiQuickLogWidgetProvider');
+      await HomeWidget.updateWidget(
+        androidName: 'ManikuttiQuickLogWidgetProvider',
+      );
       if (kDebugMode) {
         print(
           'Widget updated successfully: Total=$formattedTotal, Alert=$pendingText',

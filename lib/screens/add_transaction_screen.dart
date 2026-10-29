@@ -48,7 +48,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     if (mounted) {
       setState(() {
         _expenseCategories = list;
-        if (!_expenseCategories.contains(_selectedCategory) && _transactionType != 'Income') {
+        if (!_expenseCategories.contains(_selectedCategory) &&
+            _transactionType != 'Income') {
           _selectedCategory = _expenseCategories.first;
         }
       });
