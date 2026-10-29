@@ -9,4 +9,6 @@
     <string name="widget_month_default">This Month</string>
     <string name="widget_total_default">₹0</string>
     <string name="widget_pending_default">No pending bills</string>
+    <string name="quick_log_widget_title">Manikutti Quick Keypad</string>
+    <string name="quick_log_widget_description">Interactive on-screen numpad to log expenses instantly from home screen.</string>
 </resources>

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
+import 'category_service.dart';
 import 'package:intl/intl.dart';
 import '../database/db_helper.dart';
 
@@ -69,8 +70,16 @@ class WidgetDataService {
       );
       await HomeWidget.saveWidgetData<bool>('has_alert', hasAlert);
 
-      // 4. Request Widget Update
+      // Sync custom categories for Quick Log Widget
+      final categories = await CategoryService.instance.getExpenseCategories();
+      await HomeWidget.saveWidgetData<String>(
+        'widget_categories',
+        categories.join(','),
+      );
+
+      // 4. Request Widget Updates (Summary Widget & Interactive Keypad Widget)
       await HomeWidget.updateWidget(androidName: androidWidgetProvider);
+      await HomeWidget.updateWidget(androidName: 'ManikuttiQuickLogWidgetProvider');
       if (kDebugMode) {
         print(
           'Widget updated successfully: Total=$formattedTotal, Alert=$pendingText',

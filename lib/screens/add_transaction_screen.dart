@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/category_service.dart';
 import 'package:intl/intl.dart';
 import '../database/db_helper.dart';
 import '../models/transaction_model.dart';
@@ -26,15 +27,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
 
-  final List<String> _expenseCategories = [
-    'Food',
-    'Housing',
-    'Transport',
-    'Leisure',
-    'Health',
-    'Shopping',
-    'Investment',
-  ];
+  List<String> _expenseCategories = CategoryService.defaultCategories;
 
   final List<String> _incomeCategories = [
     'Salary',
@@ -47,6 +40,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   void initState() {
     super.initState();
     _selectedCategory = _expenseCategories.first;
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    final list = await CategoryService.instance.getExpenseCategories();
+    if (mounted) {
+      setState(() {
+        _expenseCategories = list;
+        if (!_expenseCategories.contains(_selectedCategory) && _transactionType != 'Income') {
+          _selectedCategory = _expenseCategories.first;
+        }
+      });
+    }
   }
 
   @override

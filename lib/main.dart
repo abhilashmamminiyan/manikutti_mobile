@@ -16,6 +16,7 @@ import 'theme/app_theme.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/app_lock_screen.dart';
 import 'services/whats_new_service.dart';
+import 'services/category_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -91,6 +92,13 @@ void main() async {
       await WhatsNewService.instance.init();
     } catch (e) {
       print('Failed to initialize WhatsNewService: $e');
+    }
+
+    // Initialize category preferences & sync with home widget
+    try {
+      await CategoryService.instance.init();
+    } catch (e) {
+      print('Failed to initialize CategoryService: $e');
     }
 
     // Initialize workmanager background sync task
