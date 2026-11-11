@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../database/db_helper.dart';
 import '../models/transaction_model.dart';
 import '../services/api_service.dart';
+import '../services/feature_flag_service.dart';
 import '../services/sync_service.dart';
 import '../services/widget_data_service.dart';
 import '../theme/app_theme.dart';
@@ -549,34 +550,41 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(
-                        children: ['All', 'Personal', 'Family', 'Transfer'].map((
-                          name,
-                        ) {
-                          final isSelected = _typeFilter == name;
-                          return Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => _typeFilter = name),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? (isDark
-                                            ? AppTheme.primaryContainer
-                                            : AppTheme.primary)
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: isSelected
-                                      ? AppTheme.subtleFloatShadow
-                                      : null,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    name,
-                                    style: theme.textTheme.labelMedium
-                                        ?.copyWith(
+                        children:
+                            [
+                              'All',
+                              'Personal',
+                              if (FeatureFlagService.instance.isEnabled(
+                                FeatureKeys.familyLedger,
+                              ))
+                                'Family',
+                              'Transfer',
+                            ].map((name) {
+                              final isSelected = _typeFilter == name;
+                              return Expanded(
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      setState(() => _typeFilter = name),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 180),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? (isDark
+                                                ? AppTheme.primaryContainer
+                                                : AppTheme.primary)
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(10),
+                                      boxShadow: isSelected
+                                          ? AppTheme.subtleFloatShadow
+                                          : null,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        name,
+                                        style: theme.textTheme.labelMedium?.copyWith(
                                           color: isSelected
                                               ? (isDark
                                                     ? AppTheme
@@ -591,12 +599,12 @@ class _TransactionsLogScreenState extends State<TransactionsLogScreen> {
                                               ? FontWeight.w700
                                               : FontWeight.w600,
                                         ),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                              );
+                            }).toList(),
                       ),
                     ),
                     const SizedBox(height: 12),

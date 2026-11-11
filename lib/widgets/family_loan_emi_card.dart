@@ -6,6 +6,7 @@ import '../models/home_loan_model.dart';
 import '../theme/app_theme.dart';
 import '../screens/home_loan_screen.dart';
 import '../screens/loans_emi_screen.dart';
+import '../services/feature_flag_service.dart';
 
 class FamilyLoanEmiSection extends StatelessWidget {
   final List<EmiBill> emiBills;
@@ -632,8 +633,15 @@ class FamilyLoanEmiSection extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final hasHomeLoan = homeLoanHistory.isNotEmpty;
-    final hasEmis = emiBills.isNotEmpty;
+    final showHomeLoan = FeatureFlagService.instance.isEnabled(
+      FeatureKeys.homeLoan,
+    );
+    final showLoansEmi = FeatureFlagService.instance.isEnabled(
+      FeatureKeys.loansEmiLedger,
+    );
+
+    final hasHomeLoan = showHomeLoan && homeLoanHistory.isNotEmpty;
+    final hasEmis = showLoansEmi && emiBills.isNotEmpty;
 
     if (!hasHomeLoan && !hasEmis) {
       return const SizedBox.shrink();

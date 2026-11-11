@@ -10,6 +10,7 @@ import '../screens/mobile_recharges_screen.dart';
 import '../screens/screenshots_screen.dart';
 import '../screens/bank_statement_screen.dart';
 import '../services/api_service.dart';
+import '../services/feature_flag_service.dart';
 import '../services/whats_new_service.dart';
 import '../screens/login_screen.dart';
 import '../screens/about_app_screen.dart';
@@ -189,177 +190,193 @@ class AppDrawer extends StatelessWidget {
 
             // Navigation List
             Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.dashboard_rounded,
-                    title: l10n.dashboard,
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const DashboardScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.receipt_long_rounded,
-                    title: l10n.bills,
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const BillsDashboard(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.account_balance_rounded,
-                    title: l10n.loansAndEmi,
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const LoansEmiScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.home_work_rounded,
-                    title: l10n.homeLoan,
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const HomeLoanScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.phone_android_rounded,
-                    title: l10n.mobileRecharges,
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const MobileRechargesScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.document_scanner_rounded,
-                    title: l10n.smartScan,
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SmartScanScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.image_search_rounded,
-                    title: l10n.screenshots,
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ScreenshotsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.upload_file_rounded,
-                    title: l10n.bankStatement,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const BankStatementScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.auto_awesome_rounded,
-                    title: l10n.aboutApp,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const AboutAppScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    child: Divider(
-                      color: isDark
-                          ? const Color(0xFF2C3233)
-                          : AppTheme.outlineVariant.withOpacity(0.25),
-                      thickness: 1,
-                    ),
-                  ),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: WhatsNewService.instance.hasUnreadNotifier,
-                    builder: (context, hasUnread, _) {
-                      return _buildDrawerItem(
+              child: ValueListenableBuilder<Map<String, bool>>(
+                valueListenable:
+                    FeatureFlagService.instance.permissionsNotifier,
+                builder: (context, perms, _) {
+                  final flags = FeatureFlagService.instance;
+                  return ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      _buildDrawerItem(
                         context: context,
-                        icon: Icons.settings_rounded,
-                        title: l10n.settings,
-                        hasBadge: hasUnread,
+                        icon: Icons.dashboard_rounded,
+                        title: l10n.dashboard,
                         onTap: () {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const SettingsScreen(),
+                              builder: (_) => const DashboardScreen(),
                             ),
                           );
                         },
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.logout_rounded,
-                    title: l10n.logout,
-                    isDestructive: true,
-                    onTap: () async {
-                      await ApiService.instance.clearSession();
-                      if (context.mounted) {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const LoginScreen(),
-                          ),
-                          (route) => false,
-                        );
-                      }
-                    },
-                  ),
-                ],
+                      ),
+                      if (flags.isEnabled(FeatureKeys.billsUtilities))
+                        _buildDrawerItem(
+                          context: context,
+                          icon: Icons.receipt_long_rounded,
+                          title: l10n.bills,
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const BillsDashboard(),
+                              ),
+                            );
+                          },
+                        ),
+                      if (flags.isEnabled(FeatureKeys.loansEmiLedger))
+                        _buildDrawerItem(
+                          context: context,
+                          icon: Icons.account_balance_rounded,
+                          title: l10n.loansAndEmi,
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const LoansEmiScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      if (flags.isEnabled(FeatureKeys.homeLoan))
+                        _buildDrawerItem(
+                          context: context,
+                          icon: Icons.home_work_rounded,
+                          title: l10n.homeLoan,
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const HomeLoanScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      if (flags.isEnabled(FeatureKeys.mobileRecharges))
+                        _buildDrawerItem(
+                          context: context,
+                          icon: Icons.phone_android_rounded,
+                          title: l10n.mobileRecharges,
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const MobileRechargesScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      if (flags.isEnabled(FeatureKeys.smartScan))
+                        _buildDrawerItem(
+                          context: context,
+                          icon: Icons.document_scanner_rounded,
+                          title: l10n.smartScan,
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SmartScanScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      if (flags.isEnabled(FeatureKeys.screenshots))
+                        _buildDrawerItem(
+                          context: context,
+                          icon: Icons.image_search_rounded,
+                          title: l10n.screenshots,
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ScreenshotsScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      if (flags.isEnabled(FeatureKeys.bankStatement))
+                        _buildDrawerItem(
+                          context: context,
+                          icon: Icons.upload_file_rounded,
+                          title: l10n.bankStatement,
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const BankStatementScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      if (flags.isEnabled(FeatureKeys.aboutApp))
+                        _buildDrawerItem(
+                          context: context,
+                          icon: Icons.auto_awesome_rounded,
+                          title: l10n.aboutApp,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AboutAppScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        child: Divider(
+                          color: isDark
+                              ? const Color(0xFF2C3233)
+                              : AppTheme.outlineVariant.withOpacity(0.25),
+                          thickness: 1,
+                        ),
+                      ),
+                      ValueListenableBuilder<bool>(
+                        valueListenable:
+                            WhatsNewService.instance.hasUnreadNotifier,
+                        builder: (context, hasUnread, _) {
+                          return _buildDrawerItem(
+                            context: context,
+                            icon: Icons.settings_rounded,
+                            title: l10n.settings,
+                            hasBadge: hasUnread,
+                            onTap: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SettingsScreen(),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      _buildDrawerItem(
+                        context: context,
+                        icon: Icons.logout_rounded,
+                        title: l10n.logout,
+                        isDestructive: true,
+                        onTap: () async {
+                          await ApiService.instance.clearSession();
+                          if (context.mounted) {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const LoginScreen(),
+                              ),
+                              (route) => false,
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
 

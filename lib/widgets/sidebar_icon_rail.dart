@@ -9,6 +9,7 @@ import '../screens/smart_scan_screen.dart';
 import '../screens/screenshots_screen.dart';
 import '../screens/bank_statement_screen.dart';
 import '../screens/settings_screen.dart';
+import '../services/feature_flag_service.dart';
 import '../services/whats_new_service.dart';
 
 /// Top-left pulsing arrow button designed to replace the standard hamburger icon.
@@ -205,179 +206,214 @@ class SidebarIconRail extends StatelessWidget {
         color: bgColor,
         border: Border(right: BorderSide(color: borderColor, width: 1.0)),
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 6.0),
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Top quick-open handle pointing into the full sidebar
-            Tooltip(
-              message: 'Full Sidebar / മുഴുവൻ മെനു',
-              child: InkWell(
-                onTap: onOpenDrawer,
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6.0),
-                  child: Icon(
-                    Icons.view_sidebar_rounded,
-                    size: 20,
-                    color: isDark ? AppTheme.darkOnSurface : AppTheme.primary,
+      child: ValueListenableBuilder<Map<String, bool>>(
+        valueListenable: FeatureFlagService.instance.permissionsNotifier,
+        builder: (context, _, _) {
+          final flags = FeatureFlagService.instance;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 6.0),
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Top quick-open handle pointing into the full sidebar
+                Tooltip(
+                  message: 'Full Sidebar / മുഴുവൻ മെനു',
+                  child: InkWell(
+                    onTap: onOpenDrawer,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6.0),
+                      child: Icon(
+                        Icons.view_sidebar_rounded,
+                        size: 20,
+                        color: isDark
+                            ? AppTheme.darkOnSurface
+                            : AppTheme.primary,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              height: 1,
-              color: borderColor,
-            ),
-
-            // 1. Dashboard
-            _buildRailItem(
-              context: context,
-              icon: Icons.dashboard_rounded,
-              tooltip: 'Dashboard / ഡാഷ്‌ബോർഡ്',
-              isActive: activeRoute == 'dashboard',
-              onTap: () {
-                if (activeRoute != 'dashboard') {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const DashboardScreen()),
-                  );
-                }
-              },
-            ),
-
-            // 2. Bills & Utilities
-            _buildRailItem(
-              context: context,
-              icon: Icons.receipt_long_rounded,
-              tooltip: 'Bills / ബില്ലുകൾ',
-              isActive: activeRoute == 'bills',
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BillsDashboard()),
-                );
-              },
-            ),
-
-            // 3. Loans & EMI
-            _buildRailItem(
-              context: context,
-              icon: Icons.account_balance_rounded,
-              tooltip: 'Loans & EMI / വായ്പകൾ',
-              isActive: activeRoute == 'loans',
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoansEmiScreen()),
-                );
-              },
-            ),
-
-            // 4. Home Loan
-            _buildRailItem(
-              context: context,
-              icon: Icons.home_work_rounded,
-              tooltip: 'Home Loan / ഭവന വായ്പ',
-              isActive: activeRoute == 'home_loan',
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HomeLoanScreen()),
-                );
-              },
-            ),
-
-            // 5. Mobile Recharges
-            _buildRailItem(
-              context: context,
-              icon: Icons.phone_android_rounded,
-              tooltip: 'Mobile Recharges / റീചാർജ്',
-              isActive: activeRoute == 'recharges',
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const MobileRechargesScreen(),
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
                   ),
-                );
-              },
-            ),
+                  height: 1,
+                  color: borderColor,
+                ),
 
-            // 6. Smart Scan
-            _buildRailItem(
-              context: context,
-              icon: Icons.document_scanner_rounded,
-              tooltip: 'Smart Scan / സ്കാൻ',
-              isActive: activeRoute == 'smart_scan',
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SmartScanScreen()),
-                );
-              },
-            ),
-
-            // 7. Screenshots
-            _buildRailItem(
-              context: context,
-              icon: Icons.image_search_rounded,
-              tooltip: 'Screenshots / സ്ക്രീൻഷോട്ടുകൾ',
-              isActive: activeRoute == 'screenshots',
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ScreenshotsScreen()),
-                );
-              },
-            ),
-
-            // 8. Bank Statement
-            _buildRailItem(
-              context: context,
-              icon: Icons.upload_file_rounded,
-              tooltip: 'Bank Statement / സ്റ്റേറ്റ്‌മെന്റ്',
-              isActive: activeRoute == 'bank_statement',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const BankStatementScreen(),
-                  ),
-                );
-              },
-            ),
-
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              height: 1,
-              color: borderColor,
-            ),
-
-            // 9. Settings with unread update indicator
-            ValueListenableBuilder<bool>(
-              valueListenable: WhatsNewService.instance.hasUnreadNotifier,
-              builder: (context, hasUnread, _) {
-                return _buildRailItem(
+                // 1. Dashboard
+                _buildRailItem(
                   context: context,
-                  icon: Icons.settings_rounded,
-                  tooltip: 'Settings / ക്രമീകരണങ്ങൾ',
-                  isActive: activeRoute == 'settings',
-                  hasBadge: hasUnread,
+                  icon: Icons.dashboard_rounded,
+                  tooltip: 'Dashboard / ഡാഷ്‌ബോർഡ്',
+                  isActive: activeRoute == 'dashboard',
                   onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    if (activeRoute != 'dashboard') {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DashboardScreen(),
+                        ),
+                      );
+                    }
+                  },
+                ),
+
+                // 2. Bills & Utilities
+                if (flags.isEnabled(FeatureKeys.billsUtilities))
+                  _buildRailItem(
+                    context: context,
+                    icon: Icons.receipt_long_rounded,
+                    tooltip: 'Bills / ബില്ലുകൾ',
+                    isActive: activeRoute == 'bills',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BillsDashboard(),
+                        ),
+                      );
+                    },
+                  ),
+
+                // 3. Loans & EMI
+                if (flags.isEnabled(FeatureKeys.loansEmiLedger))
+                  _buildRailItem(
+                    context: context,
+                    icon: Icons.account_balance_rounded,
+                    tooltip: 'Loans & EMI / വായ്പകൾ',
+                    isActive: activeRoute == 'loans',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const LoansEmiScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
+                // 4. Home Loan
+                if (flags.isEnabled(FeatureKeys.homeLoan))
+                  _buildRailItem(
+                    context: context,
+                    icon: Icons.home_work_rounded,
+                    tooltip: 'Home Loan / ഭവന വായ്പ',
+                    isActive: activeRoute == 'home_loan',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const HomeLoanScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
+                // 5. Mobile Recharges
+                if (flags.isEnabled(FeatureKeys.mobileRecharges))
+                  _buildRailItem(
+                    context: context,
+                    icon: Icons.phone_android_rounded,
+                    tooltip: 'Mobile Recharges / റീചാർജ്',
+                    isActive: activeRoute == 'recharges',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MobileRechargesScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
+                // 6. Smart Scan
+                if (flags.isEnabled(FeatureKeys.smartScan))
+                  _buildRailItem(
+                    context: context,
+                    icon: Icons.document_scanner_rounded,
+                    tooltip: 'Smart Scan / സ്കാൻ',
+                    isActive: activeRoute == 'smart_scan',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SmartScanScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
+                // 7. Screenshots
+                if (flags.isEnabled(FeatureKeys.screenshots))
+                  _buildRailItem(
+                    context: context,
+                    icon: Icons.image_search_rounded,
+                    tooltip: 'Screenshots / സ്ക്രീൻഷോട്ടുകൾ',
+                    isActive: activeRoute == 'screenshots',
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ScreenshotsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
+                // 8. Bank Statement
+                if (flags.isEnabled(FeatureKeys.bankStatement))
+                  _buildRailItem(
+                    context: context,
+                    icon: Icons.upload_file_rounded,
+                    tooltip: 'Bank Statement / സ്റ്റേറ്റ്‌മെന്റ്',
+                    isActive: activeRoute == 'bank_statement',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BankStatementScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  height: 1,
+                  color: borderColor,
+                ),
+
+                // 9. Settings with unread update indicator
+                ValueListenableBuilder<bool>(
+                  valueListenable: WhatsNewService.instance.hasUnreadNotifier,
+                  builder: (context, hasUnread, _) {
+                    return _buildRailItem(
+                      context: context,
+                      icon: Icons.settings_rounded,
+                      tooltip: 'Settings / ക്രമീകരണങ്ങൾ',
+                      isActive: activeRoute == 'settings',
+                      hasBadge: hasUnread,
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SettingsScreen(),
+                          ),
+                        );
+                      },
                     );
                   },
-                );
-              },
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

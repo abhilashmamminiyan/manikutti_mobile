@@ -71,6 +71,25 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
+      - name: Decode Firebase google-services.json
+        env:
+          GOOGLE_SERVICES_RAW: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          python3 -c '
+          import os, base64, json
+          raw = (os.environ.get("GOOGLE_SERVICES_RAW") or "").strip()
+          if not raw:
+              print("GOOGLE_SERVICES_JSON secret not set; skipping google-services.json.")
+          else:
+              content = raw
+              if not raw.startswith("{"):
+                  content = base64.b64decode(raw).decode("utf-8")
+              json.loads(content)
+              with open("android/app/google-services.json", "w", encoding="utf-8") as f:
+                  f.write(content)
+              print("Wrote android/app/google-services.json cleanly.")
+          '
+
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
