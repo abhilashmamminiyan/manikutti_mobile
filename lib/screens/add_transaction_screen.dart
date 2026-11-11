@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../database/db_helper.dart';
 import '../models/transaction_model.dart';
 import '../services/api_service.dart';
+import '../services/feature_flag_service.dart';
 import '../services/widget_data_service.dart';
 import '../theme/app_theme.dart';
 
@@ -229,14 +230,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           const Color(0xFF0284C7),
                         ),
                       ),
-                      Expanded(
-                        child: _buildTypeButton(
-                          'Family',
-                          'Family',
-                          Icons.diversity_3_rounded,
-                          AppTheme.primary,
+                      if (FeatureFlagService.instance.isEnabled(
+                        FeatureKeys.familyLedger,
+                      ))
+                        Expanded(
+                          child: _buildTypeButton(
+                            'Family',
+                            'Family',
+                            Icons.diversity_3_rounded,
+                            AppTheme.primary,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),

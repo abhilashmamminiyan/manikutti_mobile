@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
@@ -17,8 +20,17 @@ import 'l10n/app_localizations.dart';
 import 'screens/app_lock_screen.dart';
 import 'services/whats_new_service.dart';
 import 'services/category_service.dart';
+import 'services/feature_flag_service.dart';
+import 'screens/share_expense_sheet.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  try {
+    await Firebase.initializeApp();
+  } catch (_) {}
+}
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -80,9 +92,27 @@ void main() async {
   bool isLoggedIn = false;
 
   try {
+    // Initialize Firebase & FCM gracefully (skips cleanly if google-services.json absent in dev)
+    try {
+      await Firebase.initializeApp();
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
+      );
+    } catch (e) {
+      print('Firebase initialize notice: $e');
+    }
+
+    // Initialize role feature flags cache offline-first
+    try {
+      await FeatureFlagService.instance.init();
+    } catch (e) {
+      print('Failed to initialize FeatureFlagService: $e');
+    }
+
     // Initialize notification service safely
     try {
       await NotificationService.instance.initialize();
+      unawaited(NotificationService.instance.initializeFirebasePush());
     } catch (e) {
       print('Failed to initialize NotificationService: $e');
     }
@@ -200,6 +230,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   StreamSubscription? _widgetClickSubscription;
+  static const MethodChannel _shareChannel = MethodChannel(
+    'com.abhilash.manikutti/share',
+  );
+  String? _pendingSharedImagePath;
 
   @override
   void initState() {
@@ -209,6 +243,44 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     _loadThemeMode();
     _checkInitialLockState();
     _initHomeWidgetAndDeepLinks();
+    _initShareReceiver();
+  }
+
+  Future<void> _initShareReceiver() async {
+    _shareChannel.setMethodCallHandler((call) async {
+      if (call.method == 'onSharedImage') {
+        final path = call.arguments as String?;
+        _handleIncomingSharedImage(path);
+      }
+    });
+    try {
+      final initialPath = await _shareChannel.invokeMethod<String>(
+        'getInitialSharedImage',
+      );
+      _handleIncomingSharedImage(initialPath);
+    } catch (e) {
+      debugPrint('Share channel init notice: $e');
+    }
+  }
+
+  void _handleIncomingSharedImage(String? path) {
+    if (path == null || path.trim().isEmpty) return;
+    if (!widget.isLoggedIn || _isLocked) {
+      _pendingSharedImagePath = path;
+      return;
+    }
+    _openShareSheetWhenReady(path);
+  }
+
+  void _openShareSheetWhenReady(String path) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = navigatorKey.currentContext;
+      if (ctx != null) {
+        ShareExpenseSheet.show(ctx, imagePath: path);
+      } else {
+        _pendingSharedImagePath = path;
+      }
+    });
   }
 
   Future<void> _initHomeWidgetAndDeepLinks() async {
@@ -441,6 +513,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                     _lastPausedEpochMs = now;
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setInt('last_app_paused_epoch_ms', now);
+                    if (_pendingSharedImagePath != null) {
+                      final p = _pendingSharedImagePath!;
+                      _pendingSharedImagePath = null;
+                      _openShareSheetWhenReady(p);
+                    }
                   },
                 ),
               ),

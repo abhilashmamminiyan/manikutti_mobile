@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/foundation.dart';
+import 'feature_flag_service.dart';
 
 class ApiService {
   static final ApiService instance = ApiService._init();
@@ -136,6 +137,7 @@ class ApiService {
     await prefs.remove('app_lock_pin');
     await prefs.remove('app_lock_enabled');
     await prefs.remove('last_app_paused_epoch_ms');
+    await FeatureFlagService.instance.clear();
   }
 
   Future<void> clearAuth() async {
@@ -216,6 +218,17 @@ class ApiService {
         if (body['familyCode'] != null) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('family_code', body['familyCode']);
+        }
+        if (body is Map<String, dynamic> && body['role'] != null) {
+          await FeatureFlagService.instance.updateFromServer(
+            roleName: body['role'].toString(),
+            permissions: body['permissions'] is Map<String, dynamic>
+                ? body['permissions'] as Map<String, dynamic>
+                : null,
+            aiEnabled: body['aiEnabled'] is bool
+                ? body['aiEnabled'] as bool
+                : null,
+          );
         }
         return body;
       }
@@ -1067,6 +1080,59 @@ class ApiService {
       return null;
     } catch (e) {
       print('Error calling /api/ai/voice-expense: $e');
+      return null;
+    }
+  }
+
+  /// Sends FCM device token to backend Firestore `users/{email}.fcmTokens`.
+  Future<bool> registerFcmToken(String fcmToken) async {
+    if (fcmToken.trim().isEmpty) return false;
+    final token = await getSessionToken();
+    if (token == null || token.isEmpty) return false;
+
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/notifications/register-token'),
+        headers: headers,
+        body: jsonEncode({'fcmToken': fcmToken.trim()}),
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Calls Gemini Flash Lite on the server to extract transaction fields
+  /// from payment screenshots (sending OCR text first; image only as fallback).
+  Future<Map<String, dynamic>?> extractScreenshotWithAi({
+    required String ocrText,
+    String? imageBase64,
+    String mimeType = 'image/jpeg',
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/ai/extract-screenshot'),
+        headers: headers,
+        body: jsonEncode({
+          'ocrText': ocrText,
+          if (imageBase64 != null && imageBase64.isNotEmpty)
+            'imageBase64': imageBase64,
+          'mimeType': mimeType,
+        }),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (_) {
       return null;
     }
   }

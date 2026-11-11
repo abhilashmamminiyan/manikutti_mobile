@@ -1,9 +1,12 @@
+import 'dart:async';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'api_service.dart';
 
 class NotificationService {
   static final NotificationService instance = NotificationService._init();
@@ -723,5 +726,68 @@ class NotificationService {
     if (month == 12) return 31;
     final date = DateTime(year, month + 1, 0);
     return date.day;
+  }
+
+  bool _fcmInitialized = false;
+
+  Future<void> initializeFirebasePush() async {
+    if (_fcmInitialized) return;
+    _fcmInitialized = true;
+    try {
+      final messaging = FirebaseMessaging.instance;
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
+
+      final token = await messaging.getToken();
+      if (token != null && token.isNotEmpty) {
+        unawaited(ApiService.instance.registerFcmToken(token));
+      }
+
+      messaging.onTokenRefresh.listen((newToken) {
+        if (newToken.isNotEmpty) {
+          unawaited(ApiService.instance.registerFcmToken(newToken));
+        }
+      });
+
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+        final title =
+            message.notification?.title ??
+            message.data['title']?.toString() ??
+            'Manikutti Alert';
+        final body =
+            message.notification?.body ??
+            message.data['body']?.toString() ??
+            '';
+        final channelId =
+            message.data['channelId']?.toString() ?? 'payment_channel';
+        await showImmediateNotification(
+          id: DateTime.now().millisecondsSinceEpoch % 100000,
+          title: title,
+          body: body,
+          channelId: channelId,
+          channelName: 'Payment Notifications',
+          payload: message.data['type']?.toString(),
+        );
+      });
+
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        onNotificationPayload.value = message.data['type']?.toString();
+      });
+
+      final initialMsg = await messaging.getInitialMessage();
+      if (initialMsg != null) {
+        onNotificationPayload.value = initialMsg.data['type']?.toString();
+      }
+    } catch (e) {
+      debugPrint('[NotificationService] FCM push setup skipped: $e');
+    }
+  }
+
+  Future<void> syncFcmTokenWithServer() async {
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null && token.isNotEmpty) {
+        await ApiService.instance.registerFcmToken(token);
+      }
+    } catch (_) {}
   }
 }
