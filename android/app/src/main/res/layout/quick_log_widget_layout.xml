@@ -4,11 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/widget_card_bg"
-    android:padding="10dp"
+    android:background="@android:color/transparent"
+    android:padding="8dp"
     android:gravity="center">
 
-    <!-- Top Header Bar -->
+    <!-- Top Floating Glass Header Pills -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -18,35 +18,57 @@
 
         <TextView
             android:id="@+id/quick_log_title"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="MANIKUTTI • QUICK LOG"
-            android:textColor="#94A3B8"
-            android:textSize="11sp"
+            android:background="@drawable/widget_glass_pill_bg"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:text="MANIKUTTI • QUICK"
+            android:textColor="@color/widget_glass_text_secondary"
+            android:textSize="10sp"
             android:textStyle="bold"
-            android:letterSpacing="0.06" />
+            android:letterSpacing="0.06"
+            android:shadowColor="@color/widget_glass_text_shadow"
+            android:shadowDx="0"
+            android:shadowDy="1"
+            android:shadowRadius="2" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
 
         <TextView
             android:id="@+id/quick_log_month_total"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/widget_glass_pill_bg"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
             android:text="Month: ₹0"
-            android:textColor="#FDBA74"
-            android:textSize="11sp"
-            android:textStyle="bold" />
+            android:textColor="@color/widget_glass_month_text"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:shadowColor="@color/widget_glass_text_shadow"
+            android:shadowDx="0"
+            android:shadowDy="1"
+            android:shadowRadius="2" />
     </LinearLayout>
 
-    <!-- Digital Display Screen -->
+    <!-- Frosted Glass Digital Display Card -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@drawable/widget_display_card_bg"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:paddingTop="5dp"
-        android:paddingBottom="5dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="7dp"
+        android:paddingBottom="7dp"
         android:layout_marginBottom="6dp">
 
         <LinearLayout
@@ -61,22 +83,26 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="₹ 0"
-                android:textColor="#F8FAFC"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:textColor="@color/widget_glass_text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2" />
 
             <TextView
                 android:id="@+id/quick_log_active_category"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Food"
-                android:textColor="#2DD4BF"
-                android:textSize="12sp"
+                android:textColor="@color/widget_glass_cat_active_text"
+                android:textSize="11sp"
                 android:textStyle="bold"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:paddingTop="3dp"
-                android:paddingBottom="3dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
                 android:background="@drawable/widget_cat_chip_active_bg" />
         </LinearLayout>
 
@@ -84,17 +110,18 @@
             android:id="@+id/quick_log_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
             android:text=""
-            android:textColor="#34D399"
+            android:textColor="@color/widget_glass_status_text"
             android:textSize="10sp"
             android:textStyle="bold"
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- Category Selector Strip -->
+    <!-- Floating Glass Category Selector Strip -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="28dp"
+        android:layout_height="30dp"
         android:orientation="horizontal"
         android:layout_marginBottom="6dp">
 
@@ -103,39 +130,57 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_marginEnd="3dp"
+            android:layout_marginEnd="5dp"
             android:background="@drawable/widget_cat_chip_active_bg"
             android:text="Food"
-            android:textColor="#FFFFFF"
-            android:textSize="10sp"
+            android:textAllCaps="false"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/widget_glass_cat_active_text"
+            android:textSize="11sp"
             android:textStyle="bold"
-            android:padding="0dp" />
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp" />
 
         <Button
             android:id="@+id/btn_cat_2"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_marginEnd="3dp"
+            android:layout_marginEnd="5dp"
             android:background="@drawable/widget_cat_chip_bg"
             android:text="Fuel"
-            android:textColor="#94A3B8"
-            android:textSize="10sp"
+            android:textAllCaps="false"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/widget_glass_text_secondary"
+            android:textSize="11sp"
             android:textStyle="bold"
-            android:padding="0dp" />
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp" />
 
         <Button
             android:id="@+id/btn_cat_3"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_marginEnd="3dp"
+            android:layout_marginEnd="5dp"
             android:background="@drawable/widget_cat_chip_bg"
             android:text="Shop"
-            android:textColor="#94A3B8"
-            android:textSize="10sp"
+            android:textAllCaps="false"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/widget_glass_text_secondary"
+            android:textSize="11sp"
             android:textStyle="bold"
-            android:padding="0dp" />
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp" />
 
         <Button
             android:id="@+id/btn_cat_more"
@@ -144,18 +189,24 @@
             android:layout_weight="1"
             android:background="@drawable/widget_cat_chip_bg"
             android:text="More ▾"
-            android:textColor="#38BDF8"
-            android:textSize="10sp"
+            android:textAllCaps="false"
+            android:maxLines="1"
+            android:textColor="@color/widget_glass_accent_text"
+            android:textSize="11sp"
             android:textStyle="bold"
-            android:padding="0dp" />
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp" />
     </LinearLayout>
 
-    <!-- Interactive Keypad Grid -->
+    <!-- Transparent Keypad Grid with Floating Glassmorphism Keys -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="@android:color/transparent">
 
         <!-- Row 1: 1, 2, 3, +50 -->
         <LinearLayout
@@ -163,19 +214,23 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:orientation="horizontal"
-            android:layout_marginBottom="4dp">
+            android:layout_marginBottom="5dp">
 
             <Button
                 android:id="@+id/btn_key_1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/widget_keypad_btn_bg"
                 android:text="1"
-                android:textColor="#F8FAFC"
-                android:textSize="14sp"
+                android:textColor="@color/widget_glass_text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
 
             <Button
@@ -183,12 +238,16 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/widget_keypad_btn_bg"
                 android:text="2"
-                android:textColor="#F8FAFC"
-                android:textSize="14sp"
+                android:textColor="@color/widget_glass_text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
 
             <Button
@@ -196,24 +255,33 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/widget_keypad_btn_bg"
                 android:text="3"
-                android:textColor="#F8FAFC"
-                android:textSize="14sp"
+                android:textColor="@color/widget_glass_text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
 
             <Button
                 android:id="@+id/btn_key_p50"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1.1"
+                android:layout_weight="1.15"
                 android:background="@drawable/widget_keypad_action_bg"
                 android:text="+50"
-                android:textColor="#38BDF8"
+                android:textAllCaps="false"
+                android:textColor="@color/widget_glass_accent_text"
                 android:textSize="12sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
         </LinearLayout>
 
@@ -223,19 +291,23 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:orientation="horizontal"
-            android:layout_marginBottom="4dp">
+            android:layout_marginBottom="5dp">
 
             <Button
                 android:id="@+id/btn_key_4"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/widget_keypad_btn_bg"
                 android:text="4"
-                android:textColor="#F8FAFC"
-                android:textSize="14sp"
+                android:textColor="@color/widget_glass_text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
 
             <Button
@@ -243,12 +315,16 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/widget_keypad_btn_bg"
                 android:text="5"
-                android:textColor="#F8FAFC"
-                android:textSize="14sp"
+                android:textColor="@color/widget_glass_text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
 
             <Button
@@ -256,24 +332,33 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/widget_keypad_btn_bg"
                 android:text="6"
-                android:textColor="#F8FAFC"
-                android:textSize="14sp"
+                android:textColor="@color/widget_glass_text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
 
             <Button
                 android:id="@+id/btn_key_p100"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1.1"
+                android:layout_weight="1.15"
                 android:background="@drawable/widget_keypad_action_bg"
                 android:text="+100"
-                android:textColor="#38BDF8"
+                android:textAllCaps="false"
+                android:textColor="@color/widget_glass_accent_text"
                 android:textSize="12sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
         </LinearLayout>
 
@@ -283,19 +368,23 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:orientation="horizontal"
-            android:layout_marginBottom="4dp">
+            android:layout_marginBottom="5dp">
 
             <Button
                 android:id="@+id/btn_key_7"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/widget_keypad_btn_bg"
                 android:text="7"
-                android:textColor="#F8FAFC"
-                android:textSize="14sp"
+                android:textColor="@color/widget_glass_text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
 
             <Button
@@ -303,12 +392,16 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/widget_keypad_btn_bg"
                 android:text="8"
-                android:textColor="#F8FAFC"
-                android:textSize="14sp"
+                android:textColor="@color/widget_glass_text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
 
             <Button
@@ -316,24 +409,33 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/widget_keypad_btn_bg"
                 android:text="9"
-                android:textColor="#F8FAFC"
-                android:textSize="14sp"
+                android:textColor="@color/widget_glass_text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
 
             <Button
                 android:id="@+id/btn_key_p500"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1.1"
+                android:layout_weight="1.15"
                 android:background="@drawable/widget_keypad_action_bg"
                 android:text="+500"
-                android:textColor="#38BDF8"
+                android:textAllCaps="false"
+                android:textColor="@color/widget_glass_accent_text"
                 android:textSize="12sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
         </LinearLayout>
 
@@ -349,12 +451,16 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/widget_keypad_action_bg"
                 android:text="C"
-                android:textColor="#F87171"
+                android:textColor="@color/widget_glass_clear_text"
                 android:textSize="14sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
 
             <Button
@@ -362,12 +468,16 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/widget_keypad_btn_bg"
                 android:text="0"
-                android:textColor="#F8FAFC"
-                android:textSize="14sp"
+                android:textColor="@color/widget_glass_text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
 
             <Button
@@ -375,21 +485,26 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/widget_keypad_action_bg"
                 android:text="⌫"
-                android:textColor="#FDBA74"
+                android:textColor="@color/widget_glass_backspace_text"
                 android:textSize="14sp"
                 android:textStyle="bold"
+                android:shadowColor="@color/widget_glass_text_shadow"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="2"
                 android:padding="0dp" />
 
             <Button
                 android:id="@+id/btn_key_save"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1.1"
+                android:layout_weight="1.15"
                 android:background="@drawable/widget_keypad_save_bg"
-                android:text="✓ SAVE"
+                android:text="✓ Save"
+                android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp"
                 android:textStyle="bold"
