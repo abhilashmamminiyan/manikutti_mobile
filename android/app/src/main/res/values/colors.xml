@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#006972</color>
+
+    <!-- Light Mode Frosted Crystal Glassmorphism Widget Colors -->
+    <color name="widget_glass_text_primary">#0F172A</color>
+    <color name="widget_glass_text_secondary">#334155</color>
+    <color name="widget_glass_month_text">#6D28D9</color>
+    <color name="widget_glass_accent_text">#6D28D9</color>
+    <color name="widget_glass_cat_active_text">#FFFFFF</color>
+    <color name="widget_glass_clear_text">#DC2626</color>
+    <color name="widget_glass_backspace_text">#D97706</color>
+    <color name="widget_glass_status_text">#059669</color>
+    <color name="widget_glass_text_shadow">#00000000</color>
 </resources>

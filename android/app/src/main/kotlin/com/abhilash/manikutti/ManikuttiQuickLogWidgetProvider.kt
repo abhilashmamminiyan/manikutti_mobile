@@ -14,6 +14,7 @@ import android.os.Build
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import es.antonborri.home_widget.HomeWidgetProvider
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -360,31 +361,10 @@ class ManikuttiQuickLogWidgetProvider : HomeWidgetProvider() {
         val cat2 = categories.getOrNull(1) ?: "Fuel"
         val cat3 = categories.getOrNull(2) ?: "Shop"
 
-        views.setTextViewText(R.id.btn_cat_1, cat1)
-        views.setTextViewText(R.id.btn_cat_2, cat2)
-        views.setTextViewText(R.id.btn_cat_3, cat3)
-
-        // Category backgrounds based on selection
-        views.setInt(
-            R.id.btn_cat_1,
-            "setBackgroundResource",
-            if (selectedCategory == cat1) R.drawable.widget_cat_chip_active_bg else R.drawable.widget_cat_chip_bg
-        )
-        views.setInt(
-            R.id.btn_cat_2,
-            "setBackgroundResource",
-            if (selectedCategory == cat2) R.drawable.widget_cat_chip_active_bg else R.drawable.widget_cat_chip_bg
-        )
-        views.setInt(
-            R.id.btn_cat_3,
-            "setBackgroundResource",
-            if (selectedCategory == cat3) R.drawable.widget_cat_chip_active_bg else R.drawable.widget_cat_chip_bg
-        )
-
-        // Category click intents
-        views.setOnClickPendingIntent(R.id.btn_cat_1, createCategoryIntent(context, cat1, 201))
-        views.setOnClickPendingIntent(R.id.btn_cat_2, createCategoryIntent(context, cat2, 202))
-        views.setOnClickPendingIntent(R.id.btn_cat_3, createCategoryIntent(context, cat3, 203))
+        // Bind category chips with adaptive glassmorphism background and text color
+        bindCategoryChip(context, views, R.id.btn_cat_1, cat1, selectedCategory == cat1, 201)
+        bindCategoryChip(context, views, R.id.btn_cat_2, cat2, selectedCategory == cat2, 202)
+        bindCategoryChip(context, views, R.id.btn_cat_3, cat3, selectedCategory == cat3, 203)
         views.setOnClickPendingIntent(R.id.btn_cat_more, createBroadcastIntent(context, ACTION_CYCLE_CATEGORY, 204))
 
         // Digit click intents (1-9, 0)
@@ -424,6 +404,30 @@ class ManikuttiQuickLogWidgetProvider : HomeWidgetProvider() {
         views.setOnClickPendingIntent(R.id.quick_log_title, openPending)
 
         return views
+    }
+
+    /** Configures a category selector chip's label, glass background, text contrast, and click intent. */
+    private fun bindCategoryChip(
+        context: Context,
+        views: RemoteViews,
+        viewId: Int,
+        category: String,
+        isSelected: Boolean,
+        requestCode: Int
+    ) {
+        views.setTextViewText(viewId, category)
+        views.setInt(
+            viewId,
+            "setBackgroundResource",
+            if (isSelected) R.drawable.widget_cat_chip_active_bg else R.drawable.widget_cat_chip_bg
+        )
+        val textColorRes = if (isSelected) {
+            R.color.widget_glass_cat_active_text
+        } else {
+            R.color.widget_glass_text_secondary
+        }
+        views.setTextColor(viewId, ContextCompat.getColor(context, textColorRes))
+        views.setOnClickPendingIntent(viewId, createCategoryIntent(context, category, requestCode))
     }
 
     private fun createDigitIntent(context: Context, digit: String, requestCode: Int): PendingIntent {

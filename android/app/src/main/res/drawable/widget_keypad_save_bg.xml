@@ -1,16 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#059669">
+    android:color="#66FFFFFF">
     <item>
-        <shape android:shape="rectangle">
-            <corners android:radius="10dp" />
-            <gradient
-                android:startColor="#10B981"
-                android:endColor="#059669"
-                android:angle="135" />
-            <stroke
-                android:width="1dp"
-                android:color="#34D399" />
-        </shape>
+        <layer-list>
+            <!-- Translucent luminous emerald glass button -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="14dp" />
+                    <gradient
+                        android:startColor="#D910B981"
+                        android:endColor="#EB059669"
+                        android:angle="135" />
+                    <stroke
+                        android:width="1dp"
+                        android:color="#B8FFFFFF" />
+                </shape>
+            </item>
+            <!-- Top specular glass reflection -->
+            <item
+                android:top="1dp"
+                android:left="1dp"
+                android:right="1dp"
+                android:bottom="1dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="13dp" />
+                    <gradient
+                        android:startColor="#52FFFFFF"
+                        android:endColor="#00FFFFFF"
+                        android:angle="270" />
+                </shape>
+            </item>
+        </layer-list>
     </item>
 </ripple>
