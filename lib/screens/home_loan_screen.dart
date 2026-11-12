@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/home_loan_model.dart';
 import '../services/api_service.dart';
+import '../utils/home_loan_calculator.dart';
 import '../widgets/app_drawer.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
@@ -85,48 +86,86 @@ class _HomeLoanScreenState extends State<HomeLoanScreen> {
     return progress.clamp(0.0, 1.0);
   }
 
-  double get _effectiveAnnualRate {
-    if (_history.isEmpty) return 8.5;
-    final lastPayment = _history.last;
-    double prevBalance = lastPayment.balance + lastPayment.principal;
-    if (_history.length > 1) {
-      prevBalance = _history[_history.length - 2].balance;
-    }
-    if (prevBalance <= 0) return 8.5;
-    final monthlyRate = lastPayment.interest / prevBalance;
-    final annualRate = monthlyRate * 12 * 100;
-    if (annualRate <= 0 || annualRate > 30) return 8.5;
-    return double.parse(annualRate.toStringAsFixed(2));
-  }
+  double get _effectiveAnnualRate =>
+      HomeLoanCalculator.estimateAnnualRate(_history);
 
   void _showAddRepaymentDialog() {
     final principalController = TextEditingController();
     final interestController = TextEditingController();
     final totalPaymentController = TextEditingController();
     final balanceController = TextEditingController();
+    final rateController = TextEditingController(
+      text: _effectiveAnnualRate.toStringAsFixed(2),
+    );
     DateTime selectedDate = DateTime.now();
     bool isSubmitting = false;
+    String calculationHint = '';
+    double baseBalanceForManualEdits = _latestBalance;
 
-    final prevBal = _latestBalance;
-    if (prevBal > 0) {
-      // Suggest reasonable defaults based on previous payment
-      if (_history.isNotEmpty) {
-        final last = _history.last;
-        interestController.text = last.interest.toStringAsFixed(0);
-        principalController.text = last.principal.toStringAsFixed(0);
-        totalPaymentController.text = last.totalPayment.toStringAsFixed(0);
-        balanceController.text = (prevBal - last.principal).toStringAsFixed(0);
+    double plannedTotal = _history.isNotEmpty && _history.last.totalPayment > 0
+        ? _history.last.totalPayment
+        : 12000.0;
+
+    void applyDateAndRateCalculation() {
+      final rate =
+          double.tryParse(rateController.text.trim()) ?? _effectiveAnnualRate;
+      if (_history.isEmpty) {
+        totalPaymentController.text = plannedTotal.toStringAsFixed(0);
+        calculationHint = 'First entry • enter principal & interest manually';
+        return;
+      }
+
+      final calc = HomeLoanCalculator.calculateBreakdown(
+        sortedHistory: _history,
+        selectedDate: selectedDate,
+        annualRatePercent: rate,
+        plannedTotalPayment: plannedTotal,
+      );
+      baseBalanceForManualEdits = calc.previousBalance;
+      interestController.text = calc.interest.toStringAsFixed(0);
+      principalController.text = calc.principal.toStringAsFixed(0);
+      totalPaymentController.text = calc.totalPayment.toStringAsFixed(0);
+      balanceController.text = calc.remainingBalance.toStringAsFixed(0);
+
+      if (calc.daysElapsed > 0 && calc.previousDate != null) {
+        calculationHint =
+            '${calc.daysElapsed} days from ${calc.previousDate} @ ${rate.toStringAsFixed(2)}% p.a.';
+      } else {
+        calculationHint =
+            'Select a date after ${calc.previousDate ?? "prior entry"} to accrue interest';
       }
     }
 
-    void recalculateTotals() {
+    void recalculateFromPrincipalOrInterest() {
       final p = double.tryParse(principalController.text.trim()) ?? 0.0;
       final i = double.tryParse(interestController.text.trim()) ?? 0.0;
-      totalPaymentController.text = (p + i).toStringAsFixed(0);
-      if (prevBal > 0) {
-        balanceController.text = (prevBal - p).toStringAsFixed(0);
+      final total = p + i;
+      plannedTotal = total;
+      totalPaymentController.text = total.toStringAsFixed(0);
+      if (baseBalanceForManualEdits > 0) {
+        balanceController.text = (baseBalanceForManualEdits - p)
+            .clamp(0.0, double.infinity)
+            .toStringAsFixed(0);
       }
     }
+
+    void recalculateFromTotalPayment() {
+      final total = double.tryParse(totalPaymentController.text.trim()) ?? 0.0;
+      final i = double.tryParse(interestController.text.trim()) ?? 0.0;
+      plannedTotal = total;
+      final newPrincipal = (total - i).clamp(
+        0.0,
+        baseBalanceForManualEdits > 0 ? baseBalanceForManualEdits : total,
+      );
+      principalController.text = newPrincipal.toStringAsFixed(0);
+      if (baseBalanceForManualEdits > 0) {
+        balanceController.text = (baseBalanceForManualEdits - newPrincipal)
+            .clamp(0.0, double.infinity)
+            .toStringAsFixed(0);
+      }
+    }
+
+    applyDateAndRateCalculation();
 
     showModalBottomSheet(
       context: context,
@@ -180,62 +219,108 @@ class _HomeLoanScreenState extends State<HomeLoanScreen> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: modalCtx,
-                          initialDate: selectedDate,
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2035),
-                        );
-                        if (picked != null) {
-                          setModalState(() => selectedDate = picked);
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 14,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: AppTheme.outlineVariant.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.calendar_today_rounded,
-                                  size: 18,
-                                  color: AppTheme.primary,
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  DateFormat(
-                                    'MMMM dd, yyyy',
-                                  ).format(selectedDate),
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: modalCtx,
+                                initialDate: selectedDate,
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime(2035),
+                              );
+                              if (picked != null) {
+                                setModalState(() {
+                                  selectedDate = picked;
+                                  applyDateAndRateCalculation();
+                                });
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 15,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: AppTheme.outlineVariant.withValues(
+                                    alpha: 0.5,
                                   ),
                                 ),
-                              ],
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Flexible(
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.calendar_today_rounded,
+                                          size: 18,
+                                          color: AppTheme.primary,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Flexible(
+                                          child: Text(
+                                            DateFormat(
+                                              'MMM dd, yyyy',
+                                            ).format(selectedDate),
+                                            overflow: TextOverflow.ellipsis,
+                                            style: theme.textTheme.bodyMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.edit_calendar_rounded,
+                                    size: 18,
+                                    color: AppTheme.outline,
+                                  ),
+                                ],
+                              ),
                             ),
-                            const Icon(
-                              Icons.edit_calendar_rounded,
-                              size: 18,
-                              color: AppTheme.outline,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: TextField(
+                            controller: rateController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
                             ),
-                          ],
+                            decoration: const InputDecoration(
+                              labelText: 'Loan Rate (%)',
+                              prefixIcon: Icon(Icons.percent_rounded, size: 18),
+                            ),
+                            onChanged: (_) {
+                              setModalState(() {
+                                applyDateAndRateCalculation();
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (calculationHint.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        calculationHint,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
+                    ],
                     const SizedBox(height: 14),
                     Row(
                       children: [
@@ -249,7 +334,7 @@ class _HomeLoanScreenState extends State<HomeLoanScreen> {
                             ),
                             onChanged: (_) {
                               setModalState(() {
-                                recalculateTotals();
+                                recalculateFromPrincipalOrInterest();
                               });
                             },
                           ),
@@ -265,7 +350,7 @@ class _HomeLoanScreenState extends State<HomeLoanScreen> {
                             ),
                             onChanged: (_) {
                               setModalState(() {
-                                recalculateTotals();
+                                recalculateFromPrincipalOrInterest();
                               });
                             },
                           ),
@@ -283,6 +368,11 @@ class _HomeLoanScreenState extends State<HomeLoanScreen> {
                               labelText: 'Total Payment (₹)',
                               prefixIcon: Icon(Icons.payment_rounded),
                             ),
+                            onChanged: (_) {
+                              setModalState(() {
+                                recalculateFromTotalPayment();
+                              });
+                            },
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -332,7 +422,7 @@ class _HomeLoanScreenState extends State<HomeLoanScreen> {
                                   double.tryParse(
                                     balanceController.text.trim(),
                                   ) ??
-                                  (prevBal - p);
+                                  (baseBalanceForManualEdits - p);
 
                               if (total <= 0) {
                                 ScaffoldMessenger.of(modalCtx).showSnackBar(
@@ -415,6 +505,7 @@ class _HomeLoanScreenState extends State<HomeLoanScreen> {
     if (confirmed == true) {
       final success = await ApiService.instance.deleteHomeLoanRepayment(
         entry.id!,
+        date: entry.date,
       );
       if (success) {
         _loadHomeLoanData();

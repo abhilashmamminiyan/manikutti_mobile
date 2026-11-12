@@ -937,14 +937,17 @@ class ApiService {
     }
   }
 
-  Future<bool> deleteHomeLoanRepayment(int id) async {
+  Future<bool> deleteHomeLoanRepayment(int id, {String? date}) async {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/api/sheets/home-loan?id=$id'),
-        headers: headers,
+      final uri = Uri.parse('$baseUrl/api/sheets/home-loan').replace(
+        queryParameters: {
+          'id': id.toString(),
+          if (date != null && date.isNotEmpty) 'date': date,
+        },
       );
+      final response = await http.delete(uri, headers: headers);
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
         return body['success'] == true;
