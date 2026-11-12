@@ -121,14 +121,9 @@ class VoiceExpenseService {
       amount = double.tryParse(numMatch.group(1)!) ?? 0;
     }
 
-    // 3. Type Detection
+    // 3. Type Detection (Family ledger is EMI & Home Loan only, so default to Personal Expense)
     String type = 'Expense';
-    if (lower.contains('family') ||
-        lower.contains('കുടുംബം') ||
-        lower.contains('veettil') ||
-        lower.contains('വീട്ടിൽ')) {
-      type = 'Family';
-    } else if (lower.contains('salary') ||
+    if (lower.contains('salary') ||
         lower.contains('income') ||
         lower.contains('kittiyathu') ||
         lower.contains('കിട്ടി') ||

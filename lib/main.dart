@@ -258,6 +258,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (call.method == 'onSharedImage') {
         final path = call.arguments as String?;
         _handleIncomingSharedImage(path);
+      } else if (call.method == 'onDeepLink') {
+        final uriStr = call.arguments as String?;
+        final parsed = uriStr != null ? Uri.tryParse(uriStr) : null;
+        if (parsed != null) _handleDeepLinkUri(parsed);
       }
     });
     try {
@@ -265,6 +269,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         'getInitialSharedImage',
       );
       _handleIncomingSharedImage(initialPath);
+
+      final initialLink = await _shareChannel.invokeMethod<String>(
+        'getInitialDeepLink',
+      );
+      final parsedLink = initialLink != null ? Uri.tryParse(initialLink) : null;
+      if (parsedLink != null) {
+        _handleDeepLinkUri(parsedLink);
+      }
     } catch (e) {
       debugPrint('Share channel init notice: $e');
     }
@@ -325,6 +337,27 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           uri.host == 'add-transaction' ||
           (uri.host == 'manikutti.vercel.app' &&
               uri.path.contains('add-transaction'));
+
+      final isJoin =
+          uri.host == 'join' ||
+          (uri.host == 'manikutti.vercel.app' &&
+              uri.path.contains('join-family'));
+
+      if (isJoin) {
+        final code = uri.queryParameters['code']?.trim() ?? '';
+        if (code.isNotEmpty) {
+          navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => LoginScreen(
+                initialAccessCode: code,
+                autoSubmitAccessCode: true,
+              ),
+            ),
+            (route) => false,
+          );
+          return;
+        }
+      }
 
       if (isVoice) {
         final query = uri.queryParameters['query'];
@@ -491,6 +524,23 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               uri.host == 'voice-dialog' ||
               uri.path.contains('voice-expense') ||
               uri.host == 'voice-expense';
+          final isJoin =
+              uri.host == 'join' ||
+              (uri.host == 'manikutti.vercel.app' &&
+                  uri.path.contains('join-family'));
+
+          if (isJoin) {
+            final code = uri.queryParameters['code']?.trim() ?? '';
+            if (code.isNotEmpty) {
+              return MaterialPageRoute(
+                builder: (_) => LoginScreen(
+                  initialAccessCode: code,
+                  autoSubmitAccessCode: true,
+                ),
+              );
+            }
+          }
+
           if (isVoice) {
             final query = uri.queryParameters['query'];
             return PageRouteBuilder(

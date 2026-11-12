@@ -24,11 +24,15 @@ import '../widgets/ai_advisor_card.dart';
 import '../widgets/voice_logging_sheet.dart';
 import '../widgets/expense_pie_chart.dart';
 import '../widgets/family_loan_emi_card.dart';
+import '../widgets/family_pool_transfers_card.dart';
 import '../widgets/monthly_dues_section.dart';
 import '../widgets/dashboard_budget_progress.dart';
+import 'simple_family_home_screen.dart';
 import '../models/emi_model.dart';
 import '../models/home_loan_model.dart';
 import '../services/widget_data_service.dart';
+import '../services/sms_detection_service.dart';
+import '../services/emi_reminder_service.dart';
 import 'settings_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
@@ -60,9 +64,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> _monthlyExpenses = [];
   List<dynamic> _notifications = [];
   List<dynamic> _familyMembers = [];
+  List<dynamic> _familyTransfers = [];
   List<Loan> _loans = [];
   List<EmiBill> _emiList = [];
   List<HomeLoanEntry> _homeLoanHistory = [];
+  HomeLoanConfig? _homeLoanConfig;
+  List<PendingSmsTransaction> _pendingSmsList = [];
+  List<MandatoryEmiCheckItem> _mandatoryEmiChecks = [];
+  String _memberNickname = '';
   double _constantEmiDues = 0;
   double _familySalaryIncome = 0;
   double _familyBaseSalary = 0;
@@ -107,6 +116,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _isSalaryPromptVisible = true;
         });
       }
+    } else if (payload != null &&
+        (payload.startsWith('sms_pending') ||
+            payload.startsWith('emi_mandatory'))) {
+      _loadData();
     }
   }
 
@@ -251,6 +264,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _recalculateFamilyTotals();
 
       await _fetchFamilyDuesAndNotifications();
+      final pendingSms = await SmsDetectionService.instance.getPendingSms();
+      if (mounted) {
+        setState(() {
+          _pendingSmsList = pendingSms;
+        });
+      }
       WidgetDataService.updateWidgetData();
     } catch (e) {
       print('Error loading data: $e');
@@ -284,12 +303,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
 
         List<Loan> fetchedLoans = [];
+        HomeLoanConfig? fetchedHomeLoanConfig;
+        List<EmiMonthlyTracking> fetchedTracking = [];
         try {
+          final monthKey = EmiReminderService.instance.currentMonthKey();
           final loansData = await ApiService.instance.fetchLoansData(
             _familyCode!,
+            monthKey: monthKey,
           );
           final rawLoans = (loansData['loans'] as List?) ?? [];
           fetchedLoans = rawLoans.map((l) => Loan.fromJson(l)).toList();
+          if (loansData['homeLoanConfig'] is Map) {
+            fetchedHomeLoanConfig = HomeLoanConfig.fromJson(
+              Map<String, dynamic>.from(loansData['homeLoanConfig'] as Map),
+            );
+          }
+          final rawTracking = (loansData['monthlyTracking'] as List?) ?? [];
+          fetchedTracking = rawTracking
+              .whereType<Map>()
+              .map(
+                (t) =>
+                    EmiMonthlyTracking.fromJson(Map<String, dynamic>.from(t)),
+              )
+              .toList();
         } catch (e) {
           debugPrint('Error fetching loans in dashboard: $e');
         }
@@ -324,14 +360,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
           debugPrint('Error fetching home loan history: $e');
         }
 
+        List<dynamic> fetchedTransfers = [];
+        try {
+          fetchedTransfers = await ApiService.instance.fetchFamilyTransfers(
+            _familyCode!,
+          );
+        } catch (e) {
+          debugPrint('Error fetching family transfers: $e');
+        }
+
+        final myNick =
+            await ApiService.instance.getMemberNickname() ??
+            _userEmail?.split('@').first ??
+            '';
+        for (final m in membersList) {
+          if ((m['email'] ?? '').toString().trim().toLowerCase() ==
+              (_userEmail ?? '').trim().toLowerCase()) {
+            final n = (m['nickname'] ?? '').toString().trim();
+            if (n.isNotEmpty) {
+              await ApiService.instance.saveMemberNickname(n);
+            }
+            break;
+          }
+        }
+        final resolvedNick =
+            await ApiService.instance.getMemberNickname() ?? myNick;
+
+        final emiAmounts = <double>[
+          if (fetchedHomeLoanConfig != null &&
+              fetchedHomeLoanConfig.monthlyEMI > 0)
+            fetchedHomeLoanConfig.monthlyEMI,
+          ...fetchedLoans
+              .where(
+                (l) => l.status.toLowerCase() == 'active' && l.monthlyEMI > 0,
+              )
+              .map((l) => l.monthlyEMI),
+          ...fetchedEmis
+              .where((e) => !e.isCompleted && e.monthlyPayment > 0)
+              .map((e) => e.monthlyPayment),
+        ];
+        await SmsDetectionService.instance.syncConfiguredEmiAmounts(emiAmounts);
+        final scannedCount = await SmsDetectionService.instance.scanRecentSms(
+          hours: 48,
+        );
+        if (scannedCount > 0) {
+          final refreshedList = await DbHelper.instance.getAllTransactions();
+          if (mounted) {
+            setState(() => _transactions = refreshedList);
+          }
+        }
+        final pendingSms = await SmsDetectionService.instance.getPendingSms();
+        final mandatoryChecks = await EmiReminderService.instance
+            .evaluateMonthlyChecks(
+              familyCode: _familyCode!,
+              userEmail: _userEmail ?? '',
+              loans: fetchedLoans,
+              homeLoanConfig: fetchedHomeLoanConfig,
+              trackingList: fetchedTracking,
+            );
+
         if (mounted) {
           setState(() {
             _monthlyExpenses = expenses;
             _notifications = notifs;
             _familyMembers = membersList;
+            _familyTransfers = fetchedTransfers;
+            _memberNickname = resolvedNick;
             _loans = fetchedLoans;
             _emiList = fetchedEmis;
             _homeLoanHistory = fetchedHomeLoan;
+            _homeLoanConfig = fetchedHomeLoanConfig;
+            _pendingSmsList = pendingSms;
+            _mandatoryEmiChecks = mandatoryChecks;
           });
         }
         _recalculateFamilyTotals();
@@ -353,8 +453,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final assignedTo = item['assignedTo'] as String?;
       final lastPaidDateStr = item['lastPaidDate'] as String?;
 
+      final assignedLow = (assignedTo ?? '').trim().toLowerCase();
+      final emailLow = (_userEmail ?? '').trim().toLowerCase();
+      final nickLow = _memberNickname.trim().toLowerCase();
       final isAssignedToMe =
-          assignedTo?.toLowerCase() == _userEmail?.toLowerCase();
+          assignedLow == 'family' ||
+          (emailLow.isNotEmpty && assignedLow == emailLow) ||
+          (nickLow.isNotEmpty && assignedLow == nickLow) ||
+          (emailLow.isNotEmpty && assignedLow == emailLow.split('@').first);
 
       bool isPaidThisMonth = false;
       if (lastPaidDateStr != null && lastPaidDateStr.isNotEmpty) {
@@ -368,9 +474,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (isAssignedToMe && !isPaidThisMonth) {
         await NotificationService.instance.scheduleMonthlyReminder(
           id: id,
-          title: 'Payment Due: $title',
+          title: 'Have you paid $title?',
           body:
-              'Your commitment for $title (₹${amount.toStringAsFixed(0)}) is due today.',
+              'Reminder: $title (₹${amount.toStringAsFixed(0)}) is due on Day $dueDay. Tap to mark paid.',
           dueDay: dueDay,
         );
       } else {
@@ -386,12 +492,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final success = await ApiService.instance.markMonthlyExpensePaid(
         id,
         paidDate,
+        logToFamily: true,
       );
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Payment registered successfully!')),
         );
-        await _loadData();
+        await _triggerSync();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to update payment status.')),
@@ -400,8 +507,142 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (e) {
       print('Error marking paid: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _handleDeleteTransfer(int id) async {
+    final ok = await ApiService.instance.deleteFamilyTransfer(id);
+    if (ok) {
+      await _fetchFamilyDuesAndNotifications();
+    }
+  }
+
+  Future<void> _showRecordTransferDialog() async {
+    if (_familyCode == null || _familyCode!.isEmpty) return;
+    final memberNames = _familyMembers
+        .map((m) {
+          final nick = (m['nickname'] ?? '').toString().trim();
+          if (nick.isNotEmpty) return nick;
+          return (m['email'] ?? '').toString().split('@').first;
+        })
+        .where((s) => s.isNotEmpty)
+        .toSet()
+        .toList();
+
+    final defaultFrom = _memberNickname.isNotEmpty
+        ? _memberNickname
+        : (memberNames.isNotEmpty ? memberNames.first : 'Me');
+    if (!memberNames.contains(defaultFrom)) memberNames.insert(0, defaultFrom);
+    if (!memberNames.contains('Nisha')) memberNames.add('Nisha');
+
+    String fromMember = defaultFrom;
+    String toMember = memberNames.firstWhere(
+      (n) => n.toLowerCase() != fromMember.toLowerCase(),
+      orElse: () => 'Nisha',
+    );
+    final amtCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
+    bool submitting = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (modalCtx, setModalState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text('Record Family Pool Transfer'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  initialValue: fromMember,
+                  decoration: const InputDecoration(labelText: 'From Member'),
+                  items: memberNames
+                      .map((n) => DropdownMenuItem(value: n, child: Text(n)))
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setModalState(() => fromMember = v);
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: toMember,
+                  decoration: const InputDecoration(labelText: 'To Member'),
+                  items: memberNames
+                      .map((n) => DropdownMenuItem(value: n, child: Text(n)))
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setModalState(() => toMember = v);
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: amtCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Amount (₹)',
+                    hintText: 'e.g. 3750 or 12500',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: noteCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Note (optional)',
+                    hintText: 'e.g. Home loan pool share',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(modalCtx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: submitting
+                  ? null
+                  : () async {
+                      final amt = double.tryParse(amtCtrl.text.trim()) ?? 0.0;
+                      if (amt <= 0) return;
+                      setModalState(() => submitting = true);
+                      final ok = await ApiService.instance.createFamilyTransfer(
+                        fromMember: fromMember,
+                        toMember: toMember,
+                        amount: amt,
+                        note: noteCtrl.text.trim(),
+                        familyCode: _familyCode!,
+                      );
+                      if (modalCtx.mounted) Navigator.pop(modalCtx);
+                      if (ok) {
+                        await _fetchFamilyDuesAndNotifications();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Logged $fromMember → $toMember (₹${amt.toStringAsFixed(0)})',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Save Transfer'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _handleMarkEmiPaid(EmiBill emi) async {
@@ -2044,6 +2285,358 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Widget _buildSmsPendingBanner(ThemeData theme, bool isDark) {
+    if (_pendingSmsList.isEmpty) return const SizedBox.shrink();
+    final sms = _pendingSmsList.first;
+    final balText = sms.availableBalance != null
+        ? ' • Avl Bal: ₹${sms.availableBalance!.toStringAsFixed(0)}'
+        : '';
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF0C4A6E), const Color(0xFF0F172A)]
+              : [const Color(0xFFE0F2FE), const Color(0xFFF0F9FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFF0EA5E9).withOpacity(0.4),
+          width: 1.5,
+        ),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0EA5E9).withOpacity(0.18),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.sms_rounded,
+                  color: Color(0xFF0EA5E9),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      sms.isEmi
+                          ? 'EMI Transaction Detected — Want to log?'
+                          : 'Transaction Detected — Want to log?',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : const Color(0xFF0C4A6E),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '₹${sms.amount.toStringAsFixed(0)} ${sms.type} • ${sms.merchant} (${sms.bankAccount})$balText',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? Colors.white70
+                            : const Color(0xFF0369A1),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (_pendingSmsList.length > 1)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0EA5E9).withOpacity(0.18),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '+${_pendingSmsList.length - 1} more',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0284C7),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () async {
+                    await SmsDetectionService.instance.dismissPendingSms(
+                      sms.id,
+                    );
+                    final updated = await SmsDetectionService.instance
+                        .getPendingSms();
+                    if (mounted) setState(() => _pendingSmsList = updated);
+                  },
+                  child: const Text('No, Ignore'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 2,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF0284C7),
+                  ),
+                  onPressed: () async {
+                    final logged = await SmsDetectionService.instance
+                        .confirmPendingSms(sms.id);
+                    await _loadData();
+                    if (mounted && logged != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Logged ₹${logged.amount.toStringAsFixed(0)} (${logged.merchant}) to Personal sheet',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.check_rounded, size: 16),
+                  label: const Text('Yes, Log to Personal'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMandatoryEmiBanner(ThemeData theme, bool isDark) {
+    final pendingChecks = _mandatoryEmiChecks
+        .where((c) => !c.isComplete && c.isResponsibleUser)
+        .toList();
+    if (pendingChecks.isEmpty) return const SizedBox.shrink();
+
+    final day = DateTime.now().day;
+    final headerText = day <= 10
+        ? 'Mandatory Before 10th • Monthly EMI Check'
+        : 'Overdue Mandatory EMI & Share Check';
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF78350F), const Color(0xFF0F172A)]
+              : [const Color(0xFFFEF3C7), const Color(0xFFFFFBEB)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withOpacity(0.45),
+          width: 1.5,
+        ),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withOpacity(0.18),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.event_repeat_rounded,
+                  color: Color(0xFFD97706),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      headerText,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : const Color(0xFF92400E),
+                      ),
+                    ),
+                    Text(
+                      'Confirm EMI payment & share settlement (${pendingChecks.length} pending)',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? Colors.white70
+                            : const Color(0xFFB45309),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...pendingChecks.map((item) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.black.withOpacity(0.25)
+                    : Colors.white.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.title,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '₹${item.emiAmount.toStringAsFixed(0)}',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFFD97706),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (!item.paidToPayer)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Have you paid the EMI to ${item.payerName}?',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFF0F766E),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              minimumSize: Size.zero,
+                            ),
+                            onPressed: _familyCode == null
+                                ? null
+                                : () async {
+                                    await EmiReminderService.instance
+                                        .confirmStatus(
+                                          familyCode: _familyCode!,
+                                          item: item,
+                                          paidToPayer: true,
+                                        );
+                                    await _loadData();
+                                  },
+                            child: const Text(
+                              'Yes, Paid',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            size: 15,
+                            color: Color(0xFF10B981),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            item.autoSmsDetected
+                                ? 'EMI to ${item.payerName} auto-logged via SMS'
+                                : 'EMI paid to ${item.payerName}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF10B981),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (!item.sharedWithRecipient)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Have you shared the amount to ${item.shareRecipient}?',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFD97706),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            minimumSize: Size.zero,
+                          ),
+                          onPressed: _familyCode == null
+                              ? null
+                              : () async {
+                                  await EmiReminderService.instance
+                                      .confirmStatus(
+                                        familyCode: _familyCode!,
+                                        item: item,
+                                        sharedWithRecipient: true,
+                                      );
+                                  await _loadData();
+                                },
+                          child: const Text(
+                            'Yes, Shared',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSalaryPromptBanner(ThemeData theme, bool isDark) {
     final now = DateTime.now();
     final isDay5Followup = now.day == 5;
@@ -2950,6 +3543,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
       valueListenable: FeatureFlagService.instance.permissionsNotifier,
       builder: (context, _, _) {
         final flags = FeatureFlagService.instance;
+        if (flags.roleName.trim().toLowerCase() == 'basic') {
+          final display = _memberNickname.isNotEmpty
+              ? _memberNickname
+              : (_userEmail?.split('@').first ?? 'Family');
+          return SimpleFamilyHomeScreen(
+            displayName: display,
+            userEmail: _userEmail ?? '',
+            familyCode: _familyCode,
+            monthlyExpenses: _monthlyExpenses,
+            familyMembers: _familyMembers,
+            familyTransfers: _familyTransfers,
+            homeLoanHistory: _homeLoanHistory,
+            transactions: _transactions,
+            isLoading: _isLoading,
+            onRefresh: _triggerSync,
+            onMarkDuePaid: _markPaid,
+            onRecordTransfer: _showRecordTransferDialog,
+            onDeleteTransfer: _handleDeleteTransfer,
+            onLogout: _handleLogout,
+          );
+        }
+
         final showFamily = flags.isEnabled(FeatureKeys.familyLedger);
         final ledgerCards = <Widget>[
           _buildPersonalCard(theme),
@@ -3076,6 +3691,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 12),
+                  if (_pendingSmsList.isNotEmpty) ...[
+                    _buildSmsPendingBanner(theme, isDark),
+                    const SizedBox(height: 14),
+                  ],
+                  if (_mandatoryEmiChecks.any(
+                    (c) => !c.isComplete && c.isResponsibleUser,
+                  )) ...[
+                    _buildMandatoryEmiBanner(theme, isDark),
+                    const SizedBox(height: 14),
+                  ],
                   if (flags.isEnabled(FeatureKeys.salaryTracking) &&
                       _isSalaryPromptVisible) ...[
                     _buildSalaryPromptBanner(theme, isDark),
@@ -3179,7 +3804,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       emiBills: _emiList,
                       loans: _loans,
                       homeLoanHistory: _homeLoanHistory,
+                      homeLoanConfig: _homeLoanConfig,
                       onPayEmi: _handleMarkEmiPaid,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // 6. Family Pool & Inter-Member Transfers Tracker
+                  if (showFamily) ...[
+                    FamilyPoolTransfersCard(
+                      familyMembers: _familyMembers,
+                      monthlyExpenses: _monthlyExpenses,
+                      transfers: _familyTransfers,
+                      onRecordTransfer: _showRecordTransferDialog,
+                      onDeleteTransfer: _handleDeleteTransfer,
                     ),
                     const SizedBox(height: 24),
                   ],

@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
+    <uses-permission android:name="android.permission.READ_SMS"/>
     <application
         android:allowBackup="false"
         android:fullBackupContent="false"
@@ -34,13 +36,14 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
-            <!-- Deep linking for Main App (Add Transaction & Dashboard) -->
+            <!-- Deep linking for Main App (Add Transaction, Dashboard & Family Invite Join) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="manikutti" android:host="add-transaction" />
                 <data android:scheme="manikutti" android:host="dashboard" />
+                <data android:scheme="manikutti" android:host="join" />
             </intent-filter>
 
             <!-- HTTPS App Links for Next.js Web Domain (MainActivity) -->
@@ -50,6 +53,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="manikutti.vercel.app" android:pathPrefix="/add-transaction" />
                 <data android:scheme="https" android:host="manikutti.vercel.app" android:pathPrefix="/dashboard" />
+                <data android:scheme="https" android:host="manikutti.vercel.app" android:pathPrefix="/join-family" />
             </intent-filter>
 
             <!-- App Shortcuts & Assistant Actions -->
@@ -119,6 +123,26 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/manikutti_widget_info" />
+        </receiver>
+
+        <!-- SMS Transaction Auto-Capture BroadcastReceiver -->
+        <receiver
+            android:name=".SmsTransactionReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Notification & Home Widget Action Receiver for SMS Confirm/Dismiss -->
+        <receiver
+            android:name=".SmsWidgetActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.abhilash.manikutti.ACTION_SMS_CONFIRM_LOG" />
+                <action android:name="com.abhilash.manikutti.ACTION_SMS_DISMISS" />
+            </intent-filter>
         </receiver>
 
         <!-- Interactive Home Screen Keypad Quick-Log Widget Receiver -->

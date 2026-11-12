@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import '../database/db_helper.dart';
 import '../models/transaction_model.dart';
 import '../services/api_service.dart';
-import '../services/feature_flag_service.dart';
 import '../services/widget_data_service.dart';
 import '../theme/app_theme.dart';
 
@@ -230,18 +229,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           const Color(0xFF0284C7),
                         ),
                       ),
-                      if (FeatureFlagService.instance.isEnabled(
-                        FeatureKeys.familyLedger,
-                      ))
-                        Expanded(
-                          child: _buildTypeButton(
-                            'Family',
-                            'Family',
-                            Icons.diversity_3_rounded,
-                            AppTheme.primary,
-                          ),
-                        ),
                     ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, left: 4),
+                  child: Text(
+                    'Family ledger tracks EMI & Home Loan commitments only.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 11,
+                      color: isDark
+                          ? AppTheme.darkOnSurfaceVariant
+                          : AppTheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),

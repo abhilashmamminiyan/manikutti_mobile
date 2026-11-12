@@ -63,6 +63,36 @@ class ManikuttiHomeWidgetProvider : HomeWidgetProvider() {
                     Uri.parse("manikutti://dashboard")
                 )
                 setOnClickPendingIntent(R.id.widget_container, openIntent)
+
+                // Pending SMS Transaction Prompt
+                val pendingSms = SmsParserHelper.getLatestPendingTransaction(context)
+                if (pendingSms != null) {
+                    val fmt = java.text.NumberFormat.getNumberInstance(java.util.Locale("en", "IN"))
+                    val amtText = "₹${fmt.format(pendingSms.amount.toInt())}"
+                    val label = if (pendingSms.isEmi) {
+                        "EMI $amtText detected • Log & mark paid?"
+                    } else {
+                        "Detected $amtText (${pendingSms.merchant}) • Log?"
+                    }
+                    setViewVisibility(R.id.widget_sms_prompt_layout, View.VISIBLE)
+                    setTextViewText(R.id.widget_sms_prompt_text, label)
+
+                    val yesIntent = Intent(context, SmsWidgetActionReceiver::class.java).apply {
+                        action = SmsWidgetActionReceiver.ACTION_CONFIRM_LOG
+                        putExtra(SmsWidgetActionReceiver.EXTRA_SMS_ID, pendingSms.id)
+                    }
+                    val yesPending = PendingIntent.getBroadcast(context, 8101, yesIntent, voiceIntentFlags)
+                    setOnClickPendingIntent(R.id.widget_sms_btn_yes, yesPending)
+
+                    val noIntent = Intent(context, SmsWidgetActionReceiver::class.java).apply {
+                        action = SmsWidgetActionReceiver.ACTION_DISMISS
+                        putExtra(SmsWidgetActionReceiver.EXTRA_SMS_ID, pendingSms.id)
+                    }
+                    val noPending = PendingIntent.getBroadcast(context, 8102, noIntent, voiceIntentFlags)
+                    setOnClickPendingIntent(R.id.widget_sms_btn_no, noPending)
+                } else {
+                    setViewVisibility(R.id.widget_sms_prompt_layout, View.GONE)
+                }
             }
             appWidgetManager.updateAppWidget(widgetId, views)
         }

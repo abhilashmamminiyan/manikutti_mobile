@@ -12,6 +12,7 @@ class FamilyLoanEmiSection extends StatelessWidget {
   final List<EmiBill> emiBills;
   final List<Loan> loans;
   final List<HomeLoanEntry> homeLoanHistory;
+  final HomeLoanConfig? homeLoanConfig;
   final Function(EmiBill emi)? onPayEmi;
   final VoidCallback? onRefresh;
 
@@ -20,6 +21,7 @@ class FamilyLoanEmiSection extends StatelessWidget {
     required this.emiBills,
     required this.loans,
     required this.homeLoanHistory,
+    this.homeLoanConfig,
     this.onPayEmi,
     this.onRefresh,
   });
@@ -31,12 +33,23 @@ class FamilyLoanEmiSection extends StatelessWidget {
   );
 
   double get _homeLoanLatestBalance {
+    if (homeLoanConfig != null && homeLoanConfig!.balanceRemaining > 0) {
+      return homeLoanConfig!.balanceRemaining;
+    }
     if (homeLoanHistory.isEmpty) return 0.0;
     return homeLoanHistory.last.balance;
   }
 
   double get _homeLoanTotalPaidPrincipal {
-    return homeLoanHistory.fold(0.0, (sum, item) => sum + item.principal);
+    if (homeLoanHistory.isNotEmpty) {
+      return homeLoanHistory.fold(0.0, (sum, item) => sum + item.principal);
+    }
+    if (homeLoanConfig != null && homeLoanConfig!.principalAmount > 0) {
+      return (homeLoanConfig!.principalAmount -
+              homeLoanConfig!.balanceRemaining)
+          .clamp(0.0, homeLoanConfig!.principalAmount);
+    }
+    return 0.0;
   }
 
   double get _homeLoanTotalPaidInterest {
@@ -44,11 +57,17 @@ class FamilyLoanEmiSection extends StatelessWidget {
   }
 
   double get _homeLoanInitialPrincipal {
+    if (homeLoanConfig != null && homeLoanConfig!.principalAmount > 0) {
+      return homeLoanConfig!.principalAmount;
+    }
     if (homeLoanHistory.isEmpty) return 0.0;
     return homeLoanHistory.first.balance + homeLoanHistory.first.principal;
   }
 
   double get _homeLoanMonthlyEmi {
+    if (homeLoanConfig != null && homeLoanConfig!.monthlyEMI > 0) {
+      return homeLoanConfig!.monthlyEMI;
+    }
     if (homeLoanHistory.isEmpty) return 12000.0;
     return homeLoanHistory.last.totalPayment > 0
         ? homeLoanHistory.last.totalPayment
@@ -60,7 +79,7 @@ class FamilyLoanEmiSection extends StatelessWidget {
     for (final emi in emiBills.where((e) => !e.isCompleted)) {
       total += emi.monthlyPayment;
     }
-    if (homeLoanHistory.isNotEmpty) {
+    if (homeLoanHistory.isNotEmpty || homeLoanConfig != null) {
       total += _homeLoanMonthlyEmi;
     }
     for (final loan in loans.where((l) => l.status.toLowerCase() == 'active')) {
@@ -86,7 +105,9 @@ class FamilyLoanEmiSection extends StatelessWidget {
         (e) => e.title.toLowerCase().trim() == loan.name.toLowerCase().trim(),
       );
       if (!existsInEmi) {
-        total += loan.amount;
+        total += loan.balanceRemaining > 0
+            ? loan.balanceRemaining
+            : loan.amount;
       }
     }
     return total;
@@ -344,6 +365,42 @@ class FamilyLoanEmiSection extends StatelessWidget {
               ),
             ],
           ),
+          if (homeLoanConfig != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF1F2627)
+                    : AppTheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 4,
+                children: [
+                  if (homeLoanConfig!.interestRate > 0)
+                    Text(
+                      'Rate: ${homeLoanConfig!.interestRate.toStringAsFixed(2)}%',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  if (homeLoanConfig!.startDate.isNotEmpty)
+                    Text(
+                      'Started: ${homeLoanConfig!.startDate}',
+                      style: theme.textTheme.labelSmall,
+                    ),
+                  Text(
+                    'Due: ${homeLoanConfig!.dueDay}th • Payer: ${homeLoanConfig!.payerName} • Share: ${homeLoanConfig!.shareRecipient}',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
 
           // Tap to see full amortization schedule
@@ -640,8 +697,22 @@ class FamilyLoanEmiSection extends StatelessWidget {
       FeatureKeys.loansEmiLedger,
     );
 
-    final hasHomeLoan = showHomeLoan && homeLoanHistory.isNotEmpty;
-    final hasEmis = showLoansEmi && emiBills.isNotEmpty;
+    final activeConfiguredLoans = loans
+        .where(
+          (l) =>
+              l.status.toLowerCase() == 'active' &&
+              !emiBills.any(
+                (e) =>
+                    e.title.toLowerCase().trim() == l.name.toLowerCase().trim(),
+              ),
+        )
+        .toList();
+
+    final hasHomeLoan =
+        showHomeLoan && (homeLoanHistory.isNotEmpty || homeLoanConfig != null);
+    final hasEmis =
+        showLoansEmi &&
+        (emiBills.isNotEmpty || activeConfiguredLoans.isNotEmpty);
 
     if (!hasHomeLoan && !hasEmis) {
       return const SizedBox.shrink();
@@ -713,7 +784,152 @@ class FamilyLoanEmiSection extends StatelessWidget {
         ...emiBills
             .where((e) => !e.isCompleted)
             .map((emi) => _buildEmiCard(context, emi)),
+
+        // 3. Configured Family Loans (not duplicated in EMI Bills)
+        ...activeConfiguredLoans.map(
+          (loan) => _buildConfiguredLoanCard(context, loan),
+        ),
       ],
+    );
+  }
+
+  Widget _buildConfiguredLoanCard(BuildContext context, Loan loan) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final progress = loan.tenureMonths > 0
+        ? (loan.paidMonths / loan.tenureMonths).clamp(0.0, 1.0)
+        : (loan.amount > 0 && loan.balanceRemaining > 0
+              ? ((loan.amount - loan.balanceRemaining) / loan.amount).clamp(
+                  0.0,
+                  1.0,
+                )
+              : 0.0);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppTheme.darkSurfaceContainerLowest
+            : AppTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: AppTheme.ambientCardShadow,
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF2C3233)
+              : AppTheme.outlineVariant.withValues(alpha: 0.18),
+        ),
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      loan.name,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${loan.interestRate > 0 ? "${loan.interestRate.toStringAsFixed(2)}% p.a. • " : ""}${loan.startDate.isNotEmpty ? "Started ${loan.startDate} • " : ""}${loan.payerName} -> ${loan.shareRecipient}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: isDark
+                            ? AppTheme.darkOnSurfaceVariant
+                            : AppTheme.outline,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _currencyFormat.format(loan.monthlyEMI),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                  Text(
+                    'Monthly EMI',
+                    style: theme.textTheme.labelSmall?.copyWith(fontSize: 10),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          if (loan.tenureMonths > 0) ...[
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Installment: ${loan.paidMonths}/${loan.tenureMonths} months',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  '${(progress * 100).toInt()}% Done',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 7,
+                backgroundColor: isDark
+                    ? const Color(0xFF2C3233)
+                    : AppTheme.surfaceContainerHigh,
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricTile(
+                  context: context,
+                  label: 'Loan Amount',
+                  value: _currencyFormat.format(loan.amount),
+                  color: isDark ? AppTheme.darkOnSurface : AppTheme.onSurface,
+                  icon: Icons.account_balance_rounded,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildMetricTile(
+                  context: context,
+                  label: 'Balance Left',
+                  value: _currencyFormat.format(
+                    loan.balanceRemaining > 0
+                        ? loan.balanceRemaining
+                        : loan.amount,
+                  ),
+                  color: AppTheme.error,
+                  icon: Icons.hourglass_bottom_rounded,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

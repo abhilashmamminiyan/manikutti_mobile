@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'api_service.dart';
 import 'feature_flag_service.dart';
+import 'screenshot_payee_rule_service.dart';
 
 class ExtractedReceiptData {
   final double amount;
@@ -15,6 +16,11 @@ class ExtractedReceiptData {
   final double confidence;
   final String source; // 'gemini_text', 'gemini_vision', 'local_offline', etc.
   final String rawOcrText;
+  final String? matchedRuleId;
+  final String? matchedRuleLabel;
+  final ScreenshotLedgerTarget suggestedTarget;
+  final String? linkedDueTitle;
+  final String? transferToMember;
 
   ExtractedReceiptData({
     required this.amount,
@@ -27,7 +33,48 @@ class ExtractedReceiptData {
     required this.confidence,
     required this.source,
     required this.rawOcrText,
+    this.matchedRuleId,
+    this.matchedRuleLabel,
+    this.suggestedTarget = ScreenshotLedgerTarget.personal,
+    this.linkedDueTitle,
+    this.transferToMember,
   });
+
+  ExtractedReceiptData copyWith({
+    double? amount,
+    String? category,
+    String? merchant,
+    String? note,
+    String? type,
+    String? bankAccount,
+    DateTime? date,
+    double? confidence,
+    String? source,
+    String? rawOcrText,
+    String? matchedRuleId,
+    String? matchedRuleLabel,
+    ScreenshotLedgerTarget? suggestedTarget,
+    String? linkedDueTitle,
+    String? transferToMember,
+  }) {
+    return ExtractedReceiptData(
+      amount: amount ?? this.amount,
+      category: category ?? this.category,
+      merchant: merchant ?? this.merchant,
+      note: note ?? this.note,
+      type: type ?? this.type,
+      bankAccount: bankAccount ?? this.bankAccount,
+      date: date ?? this.date,
+      confidence: confidence ?? this.confidence,
+      source: source ?? this.source,
+      rawOcrText: rawOcrText ?? this.rawOcrText,
+      matchedRuleId: matchedRuleId ?? this.matchedRuleId,
+      matchedRuleLabel: matchedRuleLabel ?? this.matchedRuleLabel,
+      suggestedTarget: suggestedTarget ?? this.suggestedTarget,
+      linkedDueTitle: linkedDueTitle ?? this.linkedDueTitle,
+      transferToMember: transferToMember ?? this.transferToMember,
+    );
+  }
 
   factory ExtractedReceiptData.fromMap(
     Map<String, dynamic> map, {
@@ -148,7 +195,8 @@ class ScreenshotExtractorService {
       await textRecognizer.close();
     }
 
-    final localResult = extractLocally(ocrText);
+    final rules = await ScreenshotPayeeRuleService.instance.getRules();
+    final localResult = applyPayeeRuleSync(extractLocally(ocrText), rules);
 
     // Check if Admin enabled Gemini AI extraction for this user's role
     final aiEnabledForUser = FeatureFlagService.instance.isEnabled(
@@ -189,7 +237,7 @@ class ScreenshotExtractorService {
           rawOcrText: ocrText,
         );
         if (parsed.amount > 0) {
-          return parsed;
+          return applyPayeeRuleSync(parsed, rules);
         }
       }
     } catch (_) {
@@ -197,6 +245,40 @@ class ScreenshotExtractorService {
     }
 
     return localResult;
+  }
+
+  /// Applies saved Payee / Phone Number / UPI rules at highest priority.
+  ExtractedReceiptData applyPayeeRuleSync(
+    ExtractedReceiptData extracted,
+    List<ScreenshotPayeeRule> rules,
+  ) {
+    final matched = ScreenshotPayeeRuleService.matchFirstRule(
+      rules,
+      rawOcrText: extracted.rawOcrText,
+      merchant: extracted.merchant,
+      note: extracted.note,
+    );
+    if (matched == null) return extracted;
+
+    final customNote = matched.customNote?.trim();
+    final resolvedNote = (customNote != null && customNote.isNotEmpty)
+        ? customNote
+        : (extracted.merchant.isNotEmpty
+              ? '${matched.label} (${extracted.merchant})'
+              : '${matched.label} (Rule)');
+
+    return extracted.copyWith(
+      category: matched.category,
+      type: matched.transactionType,
+      note: resolvedNote,
+      confidence: extracted.amount > 0 ? 0.96 : extracted.confidence,
+      source: 'payee_rule',
+      matchedRuleId: matched.id,
+      matchedRuleLabel: matched.label,
+      suggestedTarget: matched.target,
+      linkedDueTitle: matched.linkedDueTitle,
+      transferToMember: matched.transferToMember,
+    );
   }
 
   /// Pure offline deterministic parser for Indian UPI/Bank payment screenshots.

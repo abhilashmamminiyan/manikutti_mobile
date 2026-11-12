@@ -121,6 +121,30 @@ class NotificationService {
             playSound: true,
           ),
         );
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'sms_expense_channel',
+            'SMS Transaction Alerts',
+            description:
+                'Detects bank & UPI SMS expenses with 1-tap Yes/No logging',
+            importance: Importance.max,
+            enableVibration: true,
+            playSound: true,
+            showBadge: true,
+          ),
+        );
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'emi_mandatory_channel',
+            'Monthly EMI & Share Check',
+            description:
+                'Mandatory before-10th monthly EMI and share reminders',
+            importance: Importance.max,
+            enableVibration: true,
+            playSound: true,
+            showBadge: true,
+          ),
+        );
       } catch (e) {
         debugPrint('[NotificationService] Channel creation notice: $e');
       }
@@ -379,18 +403,21 @@ class NotificationService {
     required String title,
     required String body,
     required int dueDay,
+    String channelId = 'dues_channel',
+    String channelName = 'Due Reminders',
+    String payload = 'due_reminder',
   }) async {
     final scheduledDate = _nextInstanceOfDay(dueDay);
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: AndroidNotificationDetails(
-        'dues_channel',
-        'Due Reminders',
-        channelDescription: 'Reminders for regular family dues',
+        channelId,
+        channelName,
+        channelDescription: 'Reminders for regular family dues and EMIs',
         importance: Importance.max,
         priority: Priority.high,
       ),
-      iOS: DarwinNotificationDetails(),
+      iOS: const DarwinNotificationDetails(),
     );
 
     await _safeZonedSchedule(
@@ -402,6 +429,7 @@ class NotificationService {
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
+      payload: payload,
     );
     print(
       '[NotificationService] Scheduled monthly notification #$id for day $dueDay at 9:00 AM (Next run: $scheduledDate)',

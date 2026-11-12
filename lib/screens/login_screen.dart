@@ -7,7 +7,14 @@ import 'app_lock_screen.dart';
 import '../theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final String? initialAccessCode;
+  final bool autoSubmitAccessCode;
+
+  const LoginScreen({
+    super.key,
+    this.initialAccessCode,
+    this.autoSubmitAccessCode = false,
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -16,11 +23,13 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _otpController = TextEditingController();
+  final _accessCodeController = TextEditingController();
   final _urlController = TextEditingController();
   final _pinController = TextEditingController();
   final _confirmPinController = TextEditingController();
 
   bool _isLoading = false;
+  bool _useFamilyCodeMode = true;
   String _errorMessage = '';
   String _successMessage = '';
   String? _verificationToken;
@@ -33,6 +42,16 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     _loadBaseUrl();
     _checkSavedCredentials();
+    final initialCode = widget.initialAccessCode?.trim();
+    if (initialCode != null && initialCode.isNotEmpty) {
+      _useFamilyCodeMode = true;
+      _accessCodeController.text = initialCode.toUpperCase();
+      if (widget.autoSubmitAccessCode) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _handleFamilyCodeLogin();
+        });
+      }
+    }
   }
 
   Future<void> _checkSavedCredentials() async {
@@ -59,6 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _otpController.dispose();
+    _accessCodeController.dispose();
     _urlController.dispose();
     _pinController.dispose();
     _confirmPinController.dispose();
@@ -112,6 +132,50 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _handleFamilyCodeLogin() async {
+    final code = _accessCodeController.text.trim().toUpperCase();
+    if (code.length < 4) {
+      setState(() => _errorMessage = 'Please enter your family access code.');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+      _successMessage = '';
+    });
+
+    try {
+      final result = await ApiService.instance.loginWithFamilyCode(code);
+      SyncService.instance.syncData();
+      final hasSavedPin = await ApiService.instance.hasPin();
+      final name = (result['nickname']?.toString().trim().isNotEmpty ?? false)
+          ? result['nickname'].toString().trim()
+          : 'Welcome';
+
+      if (mounted) {
+        if (hasSavedPin) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          );
+        } else {
+          setState(() {
+            _isPinStep = true;
+            _successMessage =
+                'Hi $name! Set a 4-digit PIN to protect your section.';
+          });
+        }
+      }
+    } catch (e) {
+      setState(
+        () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _handleSendOTP() async {
@@ -501,46 +565,128 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ] else if (!_isOtpStep) ...[
-                      TextField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          labelText: 'Email Address',
-                          hintText: 'name@family.com',
-                          prefixIcon: Icon(Icons.alternate_email_rounded),
-                        ),
+                      SegmentedButton<bool>(
+                        segments: const [
+                          ButtonSegment(
+                            value: true,
+                            label: Text('Family Code'),
+                            icon: Icon(Icons.vpn_key_outlined, size: 16),
+                          ),
+                          ButtonSegment(
+                            value: false,
+                            label: Text('Email OTP'),
+                            icon: Icon(Icons.alternate_email_rounded, size: 16),
+                          ),
+                        ],
+                        selected: {_useFamilyCodeMode},
+                        onSelectionChanged: (s) {
+                          setState(() {
+                            _useFamilyCodeMode = s.first;
+                            _errorMessage = '';
+                            _successMessage = '';
+                          });
+                        },
                       ),
                       const SizedBox(height: 20),
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: AppTheme.primaryGradient,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primary.withOpacity(0.3),
-                              blurRadius: 16,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _handleSendOTP,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
+                      if (_useFamilyCodeMode) ...[
+                        TextField(
+                          controller: _accessCodeController,
+                          textCapitalization: TextCapitalization.characters,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 4,
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2.5,
-                                  ),
-                                )
-                              : const Text('Continue with Email'),
+                          decoration: const InputDecoration(
+                            labelText: 'Family Access Code',
+                            hintText: 'e.g. M7K9P2',
+                            prefixIcon: Icon(Icons.qr_code_rounded),
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Enter the code shared by your family Admin (or tap your WhatsApp invite link). No email verification needed.',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: AppTheme.primaryGradient,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primary.withOpacity(0.3),
+                                blurRadius: 16,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: _isLoading
+                                ? null
+                                : _handleFamilyCodeLogin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  )
+                                : const Text('Join Family Dashboard'),
+                          ),
+                        ),
+                      ] else ...[
+                        TextField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: const InputDecoration(
+                            labelText: 'Email Address',
+                            hintText: 'name@family.com',
+                            prefixIcon: Icon(Icons.alternate_email_rounded),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: AppTheme.primaryGradient,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primary.withOpacity(0.3),
+                                blurRadius: 16,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _handleSendOTP,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.5,
+                                    ),
+                                  )
+                                : const Text('Continue with Email'),
+                          ),
+                        ),
+                      ],
                       if (_hasSavedPin) ...[
                         const SizedBox(height: 16),
                         OutlinedButton.icon(

@@ -47,6 +47,24 @@ class BankBalanceService {
           DateTime(2026, 10, 15),
         );
       }
+
+      // Absorb any newer balance detected from native bank SMS confirmations
+      for (final bank in TransactionModel.supportedBanks) {
+        final smsBalStr = prefs.getString('sms_latest_balance_$bank');
+        final smsDateStr = prefs.getString('sms_latest_balance_date_$bank');
+        if (smsBalStr != null && smsDateStr != null) {
+          final smsBal = double.tryParse(smsBalStr);
+          final smsDate = DateTime.tryParse(smsDateStr)?.toLocal();
+          if (smsBal != null && smsDate != null) {
+            final currentDate = _cachedDates[bank];
+            if (currentDate == null || smsDate.isAfter(currentDate)) {
+              await setVerifiedBalance(bank, smsBal, smsDate);
+            }
+            await prefs.remove('sms_latest_balance_$bank');
+            await prefs.remove('sms_latest_balance_date_$bank');
+          }
+        }
+      }
       _initialized = true;
     } catch (e) {
       debugPrint('[BankBalanceService] Error in init: $e');

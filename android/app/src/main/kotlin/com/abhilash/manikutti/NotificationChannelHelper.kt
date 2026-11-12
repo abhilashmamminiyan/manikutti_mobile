@@ -11,6 +11,8 @@ object NotificationChannelHelper {
     const val SALARY_CHANNEL_ID = "salary_channel"
     const val DUES_CHANNEL_ID = "dues_channel"
     const val RECHARGE_CHANNEL_ID = "recharge_channel"
+    const val SMS_EXPENSE_CHANNEL_ID = "sms_expense_channel"
+    const val EMI_MANDATORY_CHANNEL_ID = "emi_mandatory_channel"
 
     fun createChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -62,13 +64,33 @@ object NotificationChannelHelper {
                 enableVibration(true)
             }
 
+            val smsChannel = NotificationChannel(
+                SMS_EXPENSE_CHANNEL_ID,
+                "SMS Transaction Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Detects bank & UPI SMS expenses with 1-tap Yes/No logging"
+                enableVibration(true)
+                setShowBadge(true)
+            }
+
+            val emiMandatoryChannel = NotificationChannel(
+                EMI_MANDATORY_CHANNEL_ID,
+                "Monthly EMI & Share Check",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Mandatory before-10th monthly EMI and share reminders"
+                enableVibration(true)
+                setShowBadge(true)
+            }
+
             // Clean up legacy v1 channel if present
             try {
                 manager.deleteNotificationChannel("voice_expense_channel")
             } catch (_: Exception) {}
 
             manager.createNotificationChannels(
-                listOf(voiceChannel, paymentChannel, salaryChannel, duesChannel, rechargeChannel)
+                listOf(voiceChannel, paymentChannel, salaryChannel, duesChannel, rechargeChannel, smsChannel, emiMandatoryChannel)
             )
         }
     }
