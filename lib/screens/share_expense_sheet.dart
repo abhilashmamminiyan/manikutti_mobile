@@ -622,11 +622,6 @@ class _ShareExpenseSheetState extends State<ShareExpenseSheet> {
                     icon: Icon(Icons.person_outline, size: 16),
                   ),
                   ButtonSegment(
-                    value: ScreenshotLedgerTarget.family,
-                    label: Text('Family', style: TextStyle(fontSize: 12)),
-                    icon: Icon(Icons.groups_outlined, size: 16),
-                  ),
-                  ButtonSegment(
                     value: ScreenshotLedgerTarget.homeLoan,
                     label: Text('Home Loan', style: TextStyle(fontSize: 12)),
                     icon: Icon(Icons.home_work_outlined, size: 16),

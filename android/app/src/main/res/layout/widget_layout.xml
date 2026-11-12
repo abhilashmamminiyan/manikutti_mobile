@@ -106,4 +106,61 @@
             android:maxLines="1"
             android:ellipsize="end" />
     </LinearLayout>
+
+    <!-- Pending SMS Transaction Detection Prompt -->
+    <LinearLayout
+        android:id="@+id/widget_sms_prompt_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/widget_alert_bg"
+        android:paddingStart="10dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/widget_sms_prompt_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Detected ₹0 • Want to log?"
+            android:textColor="#F8FAFC"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <Button
+            android:id="@+id/widget_sms_btn_yes"
+            android:layout_width="wrap_content"
+            android:layout_height="28dp"
+            android:minWidth="46dp"
+            android:layout_marginStart="6dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:backgroundTint="#10B981"
+            android:text="Yes"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/widget_sms_btn_no"
+            android:layout_width="wrap_content"
+            android:layout_height="28dp"
+            android:minWidth="42dp"
+            android:layout_marginStart="4dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:backgroundTint="#475569"
+            android:text="No"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:textAllCaps="false" />
+    </LinearLayout>
 </LinearLayout>

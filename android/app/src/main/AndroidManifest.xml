@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
+    <uses-permission android:name="android.permission.READ_SMS"/>
     <application
         android:allowBackup="false"
         android:fullBackupContent="false"
@@ -121,6 +123,26 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/manikutti_widget_info" />
+        </receiver>
+
+        <!-- SMS Transaction Auto-Capture BroadcastReceiver -->
+        <receiver
+            android:name=".SmsTransactionReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Notification & Home Widget Action Receiver for SMS Confirm/Dismiss -->
+        <receiver
+            android:name=".SmsWidgetActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.abhilash.manikutti.ACTION_SMS_CONFIRM_LOG" />
+                <action android:name="com.abhilash.manikutti.ACTION_SMS_DISMISS" />
+            </intent-filter>
         </receiver>
 
         <!-- Interactive Home Screen Keypad Quick-Log Widget Receiver -->

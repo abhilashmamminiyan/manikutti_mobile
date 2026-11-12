@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/notification_service.dart';
+import '../services/sms_detection_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/voice_logging_sheet.dart';
 
@@ -23,6 +24,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   bool _salaryRemindersEnabled = true;
   bool _billRemindersEnabled = true;
   bool _familyAlertsEnabled = true;
+  bool _smsAutoDetectEnabled = true;
+  bool _smsPermissionGranted = false;
+  bool _isScanningSms = false;
 
   @override
   void initState() {
@@ -49,6 +53,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     final prefs = await SharedPreferences.getInstance();
     final systemEnabled = await NotificationService.instance
         .areNotificationsEnabled();
+    final smsEnabled = await SmsDetectionService.instance.isEnabled();
+    final smsPerm = await SmsDetectionService.instance.hasPermission();
 
     if (mounted) {
       setState(() {
@@ -61,6 +67,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             prefs.getBool('key_bill_due_notifications_enabled') ?? true;
         _familyAlertsEnabled =
             prefs.getBool('key_payment_notifications_enabled') ?? true;
+        _smsAutoDetectEnabled = smsEnabled;
+        _smsPermissionGranted = smsPerm;
         _isLoading = false;
       });
     }
@@ -69,9 +77,11 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   Future<void> _checkSystemPermission() async {
     final systemEnabled = await NotificationService.instance
         .areNotificationsEnabled();
+    final smsPerm = await SmsDetectionService.instance.hasPermission();
     if (mounted) {
       setState(() {
         _systemNotificationsEnabled = systemEnabled;
+        _smsPermissionGranted = smsPerm;
       });
     }
   }
@@ -369,6 +379,167 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                             val,
                           );
                         },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // 3b. SMS Auto-Detection Card
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppTheme.darkSurfaceContainerLowest
+                        : AppTheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: AppTheme.ambientCardShadow,
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF2C3233)
+                          : AppTheme.outlineVariant.withOpacity(0.18),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        secondary: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0EA5E9).withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.sms_outlined,
+                            color: Color(0xFF0EA5E9),
+                            size: 20,
+                          ),
+                        ),
+                        title: Text(
+                          'Bank SMS Expense Detection',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        subtitle: Text(
+                          'Detect bank debit & UPI SMS to log to Personal sheet & sync balance (${_smsPermissionGranted ? "Permission Granted" : "Permission Required"})',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: isDark
+                                ? AppTheme.darkOnSurfaceVariant
+                                : AppTheme.onSurfaceVariant.withOpacity(0.7),
+                          ),
+                        ),
+                        value: _smsAutoDetectEnabled,
+                        activeColor: const Color(0xFF0F766E),
+                        onChanged: (val) async {
+                          if (val && !_smsPermissionGranted) {
+                            final granted = await SmsDetectionService.instance
+                                .requestPermission();
+                            if (mounted) {
+                              setState(() => _smsPermissionGranted = granted);
+                            }
+                          }
+                          await SmsDetectionService.instance.setEnabled(val);
+                          if (mounted) {
+                            setState(() => _smsAutoDetectEnabled = val);
+                          }
+                        },
+                      ),
+                      Divider(
+                        height: 1,
+                        indent: 68,
+                        color: isDark
+                            ? const Color(0xFF2C3233)
+                            : AppTheme.outlineVariant.withOpacity(0.2),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          children: [
+                            if (!_smsPermissionGranted) ...[
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () async {
+                                    final granted = await SmsDetectionService
+                                        .instance
+                                        .requestPermission();
+                                    if (mounted) {
+                                      setState(
+                                        () => _smsPermissionGranted = granted,
+                                      );
+                                    }
+                                  },
+                                  icon: const Icon(
+                                    Icons.security_rounded,
+                                    size: 16,
+                                  ),
+                                  label: const Text('Grant SMS Permission'),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                            ],
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: _isScanningSms
+                                    ? null
+                                    : () async {
+                                        setState(() => _isScanningSms = true);
+                                        if (!_smsPermissionGranted) {
+                                          final granted =
+                                              await SmsDetectionService.instance
+                                                  .requestPermission();
+                                          if (mounted) {
+                                            setState(
+                                              () => _smsPermissionGranted =
+                                                  granted,
+                                            );
+                                          }
+                                        }
+                                        final count = await SmsDetectionService
+                                            .instance
+                                            .scanRecentSms(hours: 72);
+                                        if (mounted) {
+                                          setState(
+                                            () => _isScanningSms = false,
+                                          );
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                count > 0
+                                                    ? 'Detected $count recent bank transaction SMS'
+                                                    : 'No new bank transaction SMS found in last 72h',
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                icon: _isScanningSms
+                                    ? const SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Icon(Icons.radar_rounded, size: 16),
+                                label: Text(
+                                  _isScanningSms
+                                      ? 'Scanning...'
+                                      : 'Scan Recent Bank SMS',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

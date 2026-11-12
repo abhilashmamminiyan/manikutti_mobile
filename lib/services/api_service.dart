@@ -943,12 +943,13 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> fetchLoansData(String familyCode) async {
+  Future<Map<String, dynamic>> fetchLoansData(String familyCode, {String? monthKey}) async {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
+      final queryMonth = monthKey != null ? '&monthKey=$monthKey' : '';
       final response = await _http.get(
-        Uri.parse('$baseUrl/api/sheets/loans?familyCode=$familyCode'),
+        Uri.parse('$baseUrl/api/sheets/loans?familyCode=$familyCode$queryMonth'),
         headers: headers,
       );
       if (response.statusCode == 200) {
@@ -959,6 +960,41 @@ class ApiService {
       }
     } catch (e) {
       rethrow;
+    }
+  }
+
+  Future<bool> confirmEmiMonthlyTracking({
+    required String familyCode,
+    required String monthKey,
+    required String loanKey,
+    bool? paidToPayer,
+    bool? sharedWithRecipient,
+    bool? autoSmsDetected,
+    double? logAmount,
+    String? note,
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await _http.post(
+        Uri.parse('$baseUrl/api/sheets/loans'),
+        headers: headers,
+        body: jsonEncode({
+          'action': 'confirmMonthlyTracking',
+          'familyCode': familyCode,
+          'monthKey': monthKey,
+          'loanKey': loanKey,
+          if (paidToPayer != null) 'paidToPayer': paidToPayer,
+          if (sharedWithRecipient != null) 'sharedWithRecipient': sharedWithRecipient,
+          if (autoSmsDetected != null) 'autoSmsDetected': autoSmsDetected,
+          if (logAmount != null) 'logAmount': logAmount,
+          if (note != null) 'note': note,
+        }),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('[ApiService] confirmEmiMonthlyTracking error: $e');
+      return false;
     }
   }
 
