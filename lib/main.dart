@@ -10,6 +10,7 @@ import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/add_transaction_screen.dart';
 import 'services/api_service.dart';
+import 'services/crash_reporting_service.dart';
 import 'services/notification_service.dart';
 import 'services/widget_data_service.dart';
 import 'widgets/voice_logging_sheet.dart';
@@ -102,6 +103,9 @@ void main() async {
       print('Firebase initialize notice: $e');
     }
 
+    // Initialize Firebase Crashlytics + AI-first error telemetry (safe when Firebase absent)
+    await CrashReportingService.instance.initialize();
+
     // Initialize role feature flags cache offline-first
     try {
       await FeatureFlagService.instance.init();
@@ -151,6 +155,9 @@ void main() async {
 
     isLoggedIn =
         (email != null && email.isNotEmpty) && (token != null || hasPin);
+    if (email != null && email.isNotEmpty) {
+      unawaited(CrashReportingService.instance.setUserContext(email: email));
+    }
 
     bool startLocked = false;
     final defaultRoute =
@@ -467,6 +474,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
+      navigatorObservers: [CrashReportingService.instance.routeObserver],
       title: 'Manikutti Finance',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,

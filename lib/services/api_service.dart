@@ -1,14 +1,63 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/foundation.dart';
+import 'crash_reporting_service.dart';
 import 'feature_flag_service.dart';
+
+/// Intercepts all outgoing ApiService HTTP requests to log 4xx/5xx responses and
+/// network exceptions automatically to Crashlytics + Error Telemetry.
+class _TelemetryHttpClient extends http.BaseClient {
+  final http.Client _inner = http.Client();
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    try {
+      final streamed = await _inner.send(request);
+      if (streamed.statusCode >= 400) {
+        final bytes = await streamed.stream.toBytes();
+        final snippet = utf8.decode(bytes, allowMalformed: true);
+        unawaited(
+          CrashReportingService.instance.recordApiFailure(
+            method: request.method,
+            endpoint: request.url.path,
+            statusCode: streamed.statusCode,
+            responseSnippet: snippet,
+          ),
+        );
+        return http.StreamedResponse(
+          Stream.value(bytes),
+          streamed.statusCode,
+          contentLength: bytes.length,
+          request: streamed.request,
+          headers: streamed.headers,
+          isRedirect: streamed.isRedirect,
+          persistentConnection: streamed.persistentConnection,
+          reasonPhrase: streamed.reasonPhrase,
+        );
+      }
+      return streamed;
+    } catch (e, stack) {
+      unawaited(
+        CrashReportingService.instance.recordApiFailure(
+          method: request.method,
+          endpoint: request.url.path,
+          error: e,
+          stack: stack,
+        ),
+      );
+      rethrow;
+    }
+  }
+}
 
 class ApiService {
   static final ApiService instance = ApiService._init();
   final _secureStorage = const FlutterSecureStorage();
+  final _TelemetryHttpClient _http = _TelemetryHttpClient();
 
   static const String _defaultBaseUrl =
       'https://manikutti.vercel.app'; // Default to Vercel production deployment.
@@ -70,6 +119,7 @@ class ApiService {
     } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_email', email);
+    unawaited(CrashReportingService.instance.setUserContext(email: email));
   }
 
   Future<String?> getUserEmail() async {
@@ -156,7 +206,7 @@ class ApiService {
   Future<String?> sendOTP(String email) async {
     final baseUrl = await getBaseUrl();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/auth/otp/send'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'clientType': 'mobile'}),
@@ -180,7 +230,7 @@ class ApiService {
   ) async {
     final baseUrl = await getBaseUrl();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/auth/otp/verify'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -208,7 +258,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.get(
+      final response = await _http.get(
         Uri.parse('$baseUrl/api/sheets/family'),
         headers: headers,
       );
@@ -218,6 +268,11 @@ class ApiService {
         if (body['familyCode'] != null) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('family_code', body['familyCode']);
+          unawaited(
+            CrashReportingService.instance.setUserContext(
+              familyCode: body['familyCode'].toString(),
+            ),
+          );
         }
         if (body is Map<String, dynamic> && body['role'] != null) {
           await FeatureFlagService.instance.updateFromServer(
@@ -248,7 +303,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.get(
+      final response = await _http.get(
         Uri.parse('$baseUrl/api/sheets/expense?sheetName=$sheetName'),
         headers: headers,
       );
@@ -272,7 +327,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/sheets/expense'),
         headers: headers,
         body: jsonEncode({
@@ -300,7 +355,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/sheets/expense'),
         headers: headers,
         body: jsonEncode({
@@ -328,7 +383,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.delete(
+      final response = await _http.delete(
         Uri.parse('$baseUrl/api/sheets/expense?id=$id&sheetName=$sheetName'),
         headers: headers,
       );
@@ -350,7 +405,7 @@ class ApiService {
     final headers = await _getHeaders();
     try {
       final encodedDate = Uri.encodeComponent(date);
-      final response = await http.delete(
+      final response = await _http.delete(
         Uri.parse(
           '$baseUrl/api/sheets/expense?date=$encodedDate&sheetName=$sheetName',
         ),
@@ -373,7 +428,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.delete(
+      final response = await _http.delete(
         Uri.parse(
           '$baseUrl/api/sheets/expense?action=delete_last&count=$count&sheetName=$sheetName',
         ),
@@ -411,7 +466,7 @@ class ApiService {
       if (textContent != null && textContent.trim().isNotEmpty) {
         payload['textContent'] = textContent;
       }
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/statement/parse'),
         headers: headers,
         body: jsonEncode(payload),
@@ -440,7 +495,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/sheets/family'),
         headers: headers,
         body: jsonEncode({'action': 'accept', 'token': token}),
@@ -466,7 +521,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/sheets/family'),
         headers: headers,
         body: jsonEncode({
@@ -493,7 +548,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.get(
+      final response = await _http.get(
         Uri.parse('$baseUrl/api/sheets/monthly?familyCode=$familyCode'),
         headers: headers,
       );
@@ -515,7 +570,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.patch(
+      final response = await _http.patch(
         Uri.parse('$baseUrl/api/sheets/monthly'),
         headers: headers,
         body: jsonEncode({'id': id, 'paidDate': paidDate}),
@@ -541,7 +596,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/sheets/monthly'),
         headers: headers,
         body: jsonEncode({
@@ -573,7 +628,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.put(
+      final response = await _http.put(
         Uri.parse('$baseUrl/api/sheets/monthly'),
         headers: headers,
         body: jsonEncode({
@@ -599,7 +654,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.delete(
+      final response = await _http.delete(
         Uri.parse('$baseUrl/api/sheets/monthly?id=$id'),
         headers: headers,
       );
@@ -617,7 +672,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.get(
+      final response = await _http.get(
         Uri.parse('$baseUrl/api/sheets/notifications?familyCode=$familyCode'),
         headers: headers,
       );
@@ -640,7 +695,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.get(
+      final response = await _http.get(
         Uri.parse('$baseUrl/api/sheets/utilities'),
         headers: headers,
       );
@@ -660,7 +715,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/sheets/utilities'),
         headers: headers,
         body: jsonEncode(utility),
@@ -680,7 +735,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.patch(
+      final response = await _http.patch(
         Uri.parse('$baseUrl/api/sheets/utilities'),
         headers: headers,
         body: jsonEncode({
@@ -705,7 +760,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.get(
+      final response = await _http.get(
         Uri.parse('$baseUrl/api/sheets/emi?familyCode=$familyCode'),
         headers: headers,
       );
@@ -724,7 +779,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/sheets/emi'),
         headers: headers,
         body: jsonEncode(data),
@@ -748,7 +803,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.patch(
+      final response = await _http.patch(
         Uri.parse('$baseUrl/api/sheets/emi'),
         headers: headers,
         body: jsonEncode({
@@ -772,7 +827,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.get(
+      final response = await _http.get(
         Uri.parse('$baseUrl/api/sheets/loans?familyCode=$familyCode'),
         headers: headers,
       );
@@ -797,7 +852,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/sheets/loans'),
         headers: headers,
         body: jsonEncode({
@@ -827,7 +882,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/sheets/loans'),
         headers: headers,
         body: jsonEncode({
@@ -852,7 +907,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.get(
+      final response = await _http.get(
         Uri.parse('$baseUrl/api/sheets/home-loan?familyCode=$familyCode'),
         headers: headers,
       );
@@ -880,7 +935,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/sheets/home-loan'),
         headers: headers,
         body: jsonEncode({
@@ -914,7 +969,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.put(
+      final response = await _http.put(
         Uri.parse('$baseUrl/api/sheets/home-loan'),
         headers: headers,
         body: jsonEncode({
@@ -947,7 +1002,7 @@ class ApiService {
           if (date != null && date.isNotEmpty) 'date': date,
         },
       );
-      final response = await http.delete(uri, headers: headers);
+      final response = await _http.delete(uri, headers: headers);
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
         return body['success'] == true;
@@ -964,7 +1019,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.get(
+      final response = await _http.get(
         Uri.parse('$baseUrl/api/sheets/mobile-recharges'),
         headers: headers,
       );
@@ -982,7 +1037,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/sheets/mobile-recharges'),
         headers: headers,
         body: jsonEncode(recharge),
@@ -1001,7 +1056,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.put(
+      final response = await _http.put(
         Uri.parse('$baseUrl/api/sheets/mobile-recharges'),
         headers: headers,
         body: jsonEncode(recharge),
@@ -1020,7 +1075,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.delete(
+      final response = await _http.delete(
         Uri.parse('$baseUrl/api/sheets/mobile-recharges?id=$id'),
         headers: headers,
       );
@@ -1041,7 +1096,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.get(
+      final response = await _http.get(
         Uri.parse('$baseUrl/api/ai/expense-advisor?sheetName=$sheetName'),
         headers: headers,
       );
@@ -1072,7 +1127,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/ai/voice-expense'),
         headers: headers,
         body: jsonEncode({'query': query, 'defaultBank': defaultBank}),
@@ -1096,7 +1151,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/notifications/register-token'),
         headers: headers,
         body: jsonEncode({'fcmToken': fcmToken.trim()}),
@@ -1121,7 +1176,7 @@ class ApiService {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
-      final response = await http.post(
+      final response = await _http.post(
         Uri.parse('$baseUrl/api/ai/extract-screenshot'),
         headers: headers,
         body: jsonEncode({
