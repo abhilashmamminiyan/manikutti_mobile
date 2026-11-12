@@ -125,8 +125,8 @@ class HomeLoanConfig {
           : 'Ajesh',
       shareRecipient:
           (json['shareRecipient']?.toString().trim().isNotEmpty == true)
-              ? json['shareRecipient'].toString().trim()
-              : 'Nisha',
+          ? json['shareRecipient'].toString().trim()
+          : 'Nisha',
     );
   }
 }

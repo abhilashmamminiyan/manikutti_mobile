@@ -70,7 +70,9 @@ class _ShareExpenseSheetState extends State<ShareExpenseSheet> {
   String? _matchedRuleLabel;
   String? _linkedDueTitle;
   DateTime _selectedDate = DateTime.now().toUtc();
-  List<String> _categories = List<String>.from(CategoryService.defaultCategories);
+  List<String> _categories = List<String>.from(
+    CategoryService.defaultCategories,
+  );
   String _rawOcr = '';
 
   @override
@@ -90,9 +92,9 @@ class _ShareExpenseSheetState extends State<ShareExpenseSheet> {
   }
 
   String _guessPatternFromOcr(String ocrText, String merchant) {
-    final phoneMatch = RegExp(r'(?:\+?91[\s\-]?)?([6-9]\d{9})').firstMatch(
-      ocrText.replaceAll(RegExp(r'\s+'), ''),
-    );
+    final phoneMatch = RegExp(
+      r'(?:\+?91[\s\-]?)?([6-9]\d{9})',
+    ).firstMatch(ocrText.replaceAll(RegExp(r'\s+'), ''));
     if (phoneMatch != null && phoneMatch.group(1) != null) {
       final phone = phoneMatch.group(1)!;
       return merchant.isNotEmpty ? '$phone, $merchant' : phone;
@@ -149,7 +151,9 @@ class _ShareExpenseSheetState extends State<ShareExpenseSheet> {
         } else if (extracted.type == 'Income') {
           _category = 'Salary';
         } else {
-          _category = _categories.contains('Other') ? 'Other' : _categories.first;
+          _category = _categories.contains('Other')
+              ? 'Other'
+              : _categories.first;
         }
 
         _bankAccount = extracted.bankAccount.toUpperCase().contains('CANARA')
@@ -219,7 +223,8 @@ class _ShareExpenseSheetState extends State<ShareExpenseSheet> {
 
     final rate = HomeLoanCalculator.estimateAnnualRate(history);
     // If user sends ₹12,500 to Mom to pay ₹12,000 EMI, keep EMI payment aligned with prior EMI if > 0 & <= amount
-    final emiAmount = history.isNotEmpty &&
+    final emiAmount =
+        history.isNotEmpty &&
             history.last.totalPayment > 0 &&
             amount > history.last.totalPayment &&
             amount - history.last.totalPayment <= 1000
@@ -256,10 +261,13 @@ class _ShareExpenseSheetState extends State<ShareExpenseSheet> {
       );
       if (monthlyItems.isEmpty) return;
 
-      final targetHint = (_linkedDueTitle ??
-              (_target == ScreenshotLedgerTarget.homeLoan ? 'home loan' : ''))
-          .trim()
-          .toLowerCase();
+      final targetHint =
+          (_linkedDueTitle ??
+                  (_target == ScreenshotLedgerTarget.homeLoan
+                      ? 'home loan'
+                      : ''))
+              .trim()
+              .toLowerCase();
 
       dynamic match;
       if (targetHint.isNotEmpty) {
@@ -348,7 +356,8 @@ class _ShareExpenseSheetState extends State<ShareExpenseSheet> {
       if (_target == ScreenshotLedgerTarget.family ||
           _target == ScreenshotLedgerTarget.homeLoan) {
         // 1. If Home Loan mode, also log repayment to HomeLoan_Ledger
-        if (_target == ScreenshotLedgerTarget.homeLoan && familyCode.isNotEmpty) {
+        if (_target == ScreenshotLedgerTarget.homeLoan &&
+            familyCode.isNotEmpty) {
           try {
             await _recordHomeLoanRepayment(
               familyCode: familyCode,
@@ -361,8 +370,8 @@ class _ShareExpenseSheetState extends State<ShareExpenseSheet> {
         }
 
         // 2. Log into Family_Expenses (visible to all family members in History & Family Card)
-        final effectiveCategory = _target == ScreenshotLedgerTarget.homeLoan &&
-                _category == 'Other'
+        final effectiveCategory =
+            _target == ScreenshotLedgerTarget.homeLoan && _category == 'Other'
             ? 'Home Loan'
             : _category;
         final ok = await ApiService.instance.createTransaction(
@@ -484,7 +493,9 @@ class _ShareExpenseSheetState extends State<ShareExpenseSheet> {
         : _categories;
 
     if (!categoryItems.contains(_category)) {
-      _category = categoryItems.contains('Other') ? 'Other' : categoryItems.first;
+      _category = categoryItems.contains('Other')
+          ? 'Other'
+          : categoryItems.first;
     }
 
     return Padding(
@@ -671,14 +682,16 @@ class _ShareExpenseSheetState extends State<ShareExpenseSheet> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      items: const [
-                            TransactionModel.bankSbi,
-                            TransactionModel.bankCanara,
-                          ]
-                          .map(
-                            (b) => DropdownMenuItem(value: b, child: Text(b)),
-                          )
-                          .toList(),
+                      items:
+                          const [
+                                TransactionModel.bankSbi,
+                                TransactionModel.bankCanara,
+                              ]
+                              .map(
+                                (b) =>
+                                    DropdownMenuItem(value: b, child: Text(b)),
+                              )
+                              .toList(),
                       onChanged: (v) {
                         if (v != null) setState(() => _bankAccount = v);
                       },

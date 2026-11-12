@@ -79,7 +79,8 @@ class FamilyPoolTransfersCard extends StatelessWidget {
       final to = (tr['toMember'] ?? '').toString().trim().toLowerCase();
       final amt = (tr['amount'] as num?)?.toDouble() ?? 0.0;
       if (from.isNotEmpty) {
-        sentTransfersByMember[from] = (sentTransfersByMember[from] ?? 0.0) + amt;
+        sentTransfersByMember[from] =
+            (sentTransfersByMember[from] ?? 0.0) + amt;
       }
       if (to.isNotEmpty) {
         receivedTransfersByMember[to] =
@@ -294,7 +295,9 @@ class FamilyPoolTransfersCard extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 16,
-                        backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
+                        backgroundColor: AppTheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
                         child: const Icon(
                           Icons.arrow_forward_rounded,
                           size: 16,

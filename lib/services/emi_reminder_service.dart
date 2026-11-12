@@ -58,9 +58,13 @@ class EmiReminderService {
 
     // Sync any native SMS EMI confirmation that occurred while app was closed
     final pendingSyncMonth = prefs.getString('pending_emi_sms_sync_month');
-    final localSmsConfirmed = prefs.getBool('emi_sms_confirmed_$monthKey') ?? false;
-    final smsSyncAmount = double.tryParse(prefs.getString('pending_emi_sms_sync_amount') ?? '') ?? 0.0;
-    final smsSyncNote = prefs.getString('pending_emi_sms_sync_note') ?? 'Confirmed via EMI SMS';
+    final localSmsConfirmed =
+        prefs.getBool('emi_sms_confirmed_$monthKey') ?? false;
+    final smsSyncAmount =
+        double.tryParse(prefs.getString('pending_emi_sms_sync_amount') ?? '') ??
+        0.0;
+    final smsSyncNote =
+        prefs.getString('pending_emi_sms_sync_note') ?? 'Confirmed via EMI SMS';
 
     final items = <MandatoryEmiCheckItem>[];
 
@@ -72,9 +76,18 @@ class EmiReminderService {
       final sharedLocal = prefs.getBool('emi_shared_${monthKey}_$key') ?? false;
 
       bool paid = (tracked?.paidToPayer ?? false) || paidLocal;
-      if (!paid && (localSmsConfirmed || pendingSyncMonth == monthKey) && (smsSyncAmount == 0 || (smsSyncAmount - homeLoanConfig.monthlyEMI).abs() <= 5)) {
+      if (!paid &&
+          (localSmsConfirmed || pendingSyncMonth == monthKey) &&
+          (smsSyncAmount == 0 ||
+              (smsSyncAmount - homeLoanConfig.monthlyEMI).abs() <= 5)) {
         paid = true;
-        await _pushAutoSmsTracking(familyCode, monthKey, key, homeLoanConfig.monthlyEMI, smsSyncNote);
+        await _pushAutoSmsTracking(
+          familyCode,
+          monthKey,
+          key,
+          homeLoanConfig.monthlyEMI,
+          smsSyncNote,
+        );
       }
 
       items.add(
@@ -86,7 +99,8 @@ class EmiReminderService {
           shareRecipient: homeLoanConfig.shareRecipient,
           dueDay: homeLoanConfig.dueDay,
           paidToPayer: paid,
-          sharedWithRecipient: (tracked?.sharedWithRecipient ?? false) || sharedLocal,
+          sharedWithRecipient:
+              (tracked?.sharedWithRecipient ?? false) || sharedLocal,
           autoSmsDetected: tracked?.autoSmsDetected ?? localSmsConfirmed,
           isResponsibleUser: true,
         ),
@@ -94,21 +108,33 @@ class EmiReminderService {
     }
 
     // 2. Active Loans from Loans tab
-    for (final loan in loans.where((l) => l.status.toLowerCase() == 'active' && l.monthlyEMI > 0)) {
+    for (final loan in loans.where(
+      (l) => l.status.toLowerCase() == 'active' && l.monthlyEMI > 0,
+    )) {
       final key = loan.name.trim();
       final tracked = _findTracking(trackingList, key);
       final paidLocal = prefs.getBool('emi_paid_${monthKey}_$key') ?? false;
       final sharedLocal = prefs.getBool('emi_shared_${monthKey}_$key') ?? false;
 
       bool paid = (tracked?.paidToPayer ?? false) || paidLocal;
-      if (!paid && (localSmsConfirmed || pendingSyncMonth == monthKey) && (smsSyncAmount == 0 || (smsSyncAmount - loan.monthlyEMI).abs() <= 5)) {
+      if (!paid &&
+          (localSmsConfirmed || pendingSyncMonth == monthKey) &&
+          (smsSyncAmount == 0 ||
+              (smsSyncAmount - loan.monthlyEMI).abs() <= 5)) {
         paid = true;
-        await _pushAutoSmsTracking(familyCode, monthKey, key, loan.monthlyEMI, smsSyncNote);
+        await _pushAutoSmsTracking(
+          familyCode,
+          monthKey,
+          key,
+          loan.monthlyEMI,
+          smsSyncNote,
+        );
       }
 
       final assignedLower = loan.assignedTo.trim().toLowerCase();
       final emailLower = userEmail.trim().toLowerCase();
-      final isResponsible = assignedLower.isEmpty ||
+      final isResponsible =
+          assignedLower.isEmpty ||
           assignedLower == 'family' ||
           assignedLower == emailLower ||
           emailLower.contains(loan.payerName.toLowerCase()) ||
@@ -123,7 +149,8 @@ class EmiReminderService {
           shareRecipient: loan.shareRecipient,
           dueDay: 10,
           paidToPayer: paid,
-          sharedWithRecipient: (tracked?.sharedWithRecipient ?? false) || sharedLocal,
+          sharedWithRecipient:
+              (tracked?.sharedWithRecipient ?? false) || sharedLocal,
           autoSmsDetected: tracked?.autoSmsDetected ?? localSmsConfirmed,
           isResponsibleUser: isResponsible,
         ),
@@ -191,7 +218,10 @@ class EmiReminderService {
     }
   }
 
-  EmiMonthlyTracking? _findTracking(List<EmiMonthlyTracking> list, String loanKey) {
+  EmiMonthlyTracking? _findTracking(
+    List<EmiMonthlyTracking> list,
+    String loanKey,
+  ) {
     final target = loanKey.trim().toLowerCase();
     for (final item in list) {
       if (item.loanKey.trim().toLowerCase() == target) return item;
@@ -199,9 +229,13 @@ class EmiReminderService {
     return null;
   }
 
-  Future<void> _syncMonthlyNotifications(List<MandatoryEmiCheckItem> items) async {
+  Future<void> _syncMonthlyNotifications(
+    List<MandatoryEmiCheckItem> items,
+  ) async {
     final now = DateTime.now();
-    final pending = items.where((i) => i.isResponsibleUser && !i.isComplete).toList();
+    final pending = items
+        .where((i) => i.isResponsibleUser && !i.isComplete)
+        .toList();
     if (pending.isEmpty) {
       for (int i = 0; i < 4; i++) {
         await NotificationService.instance.cancelNotification(_notifBaseId + i);

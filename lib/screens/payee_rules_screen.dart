@@ -111,7 +111,8 @@ class _PayeeRulesScreenState extends State<PayeeRulesScreen> {
                     TextField(
                       controller: patternsCtrl,
                       decoration: InputDecoration(
-                        labelText: 'Phone Number / UPI ID / Name (comma-separated)',
+                        labelText:
+                            'Phone Number / UPI ID / Name (comma-separated)',
                         hintText: 'e.g. 9876543210, athulya@okaxis, Athulya',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -128,7 +129,9 @@ class _PayeeRulesScreenState extends State<PayeeRulesScreen> {
                         ),
                       ),
                       items: _categories
-                          .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                          .map(
+                            (c) => DropdownMenuItem(value: c, child: Text(c)),
+                          )
                           .toList(),
                       onChanged: (v) {
                         if (v != null) setModalState(() => category = v);
@@ -159,8 +162,7 @@ class _PayeeRulesScreenState extends State<PayeeRulesScreen> {
                     TextField(
                       controller: dueCtrl,
                       decoration: InputDecoration(
-                        labelText:
-                            'Auto-mark Monthly Due as Paid (optional)',
+                        labelText: 'Auto-mark Monthly Due as Paid (optional)',
                         hintText: 'e.g. Home loan, Bajaj Personal Loan',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -171,9 +173,9 @@ class _PayeeRulesScreenState extends State<PayeeRulesScreen> {
                     TextField(
                       controller: transferToCtrl,
                       decoration: InputDecoration(
-                        labelText:
-                            'Record Family Transfer To (optional)',
-                        hintText: 'e.g. Nisha (records inter-member pool transfer)',
+                        labelText: 'Record Family Transfer To (optional)',
+                        hintText:
+                            'e.g. Nisha (records inter-member pool transfer)',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -211,7 +213,8 @@ class _PayeeRulesScreenState extends State<PayeeRulesScreen> {
                         }
 
                         final rule = ScreenshotPayeeRule(
-                          id: existing?.id ??
+                          id:
+                              existing?.id ??
                               DateTime.now().millisecondsSinceEpoch.toString(),
                           label: label,
                           matchPatterns: patterns,
@@ -228,7 +231,9 @@ class _PayeeRulesScreenState extends State<PayeeRulesScreen> {
                               : noteCtrl.text.trim(),
                         );
 
-                        await ScreenshotPayeeRuleService.instance.saveRule(rule);
+                        await ScreenshotPayeeRuleService.instance.saveRule(
+                          rule,
+                        );
                         await CategoryService.instance.addCategory(category);
                         if (modalCtx.mounted) Navigator.pop(modalCtx);
                         await _loadData();
@@ -259,9 +264,7 @@ class _PayeeRulesScreenState extends State<PayeeRulesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Payee & Screenshot Rules'),
-      ),
+      appBar: AppBar(title: const Text('Payee & Screenshot Rules')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showRuleDialog(),
         backgroundColor: AppTheme.primary,

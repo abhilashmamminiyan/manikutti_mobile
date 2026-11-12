@@ -39,8 +39,9 @@ class Loan {
         : double.tryParse(json['amount']?.toString() ?? '') ?? 0.0);
     final bal = json['balanceRemaining'] != null
         ? (json['balanceRemaining'] is num
-            ? (json['balanceRemaining'] as num).toDouble()
-            : double.tryParse(json['balanceRemaining']?.toString() ?? '') ?? amt)
+              ? (json['balanceRemaining'] as num).toDouble()
+              : double.tryParse(json['balanceRemaining']?.toString() ?? '') ??
+                    amt)
         : amt;
     return Loan(
       id: json['id'] is int
@@ -71,8 +72,8 @@ class Loan {
           : 'Ajesh',
       shareRecipient:
           (json['shareRecipient']?.toString().trim().isNotEmpty == true)
-              ? json['shareRecipient'].toString().trim()
-              : 'Nisha',
+          ? json['shareRecipient'].toString().trim()
+          : 'Nisha',
     );
   }
 

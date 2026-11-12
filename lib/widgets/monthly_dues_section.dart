@@ -321,7 +321,8 @@ class MonthlyDuesSection extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          if (totalMonths > 0 || (isPaid && lastPaidBy.isNotEmpty))
+                          if (totalMonths > 0 ||
+                              (isPaid && lastPaidBy.isNotEmpty))
                             Text(
                               [
                                 if (totalMonths > 0)

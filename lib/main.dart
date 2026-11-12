@@ -525,23 +525,23 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               uri.path.contains('voice-expense') ||
               uri.host == 'voice-expense';
           final isJoin =
-          uri.host == 'join' ||
-          (uri.host == 'manikutti.vercel.app' &&
-              uri.path.contains('join-family'));
+              uri.host == 'join' ||
+              (uri.host == 'manikutti.vercel.app' &&
+                  uri.path.contains('join-family'));
 
-      if (isJoin) {
-        final code = uri.queryParameters['code']?.trim() ?? '';
-        if (code.isNotEmpty) {
-          return MaterialPageRoute(
-            builder: (_) => LoginScreen(
-              initialAccessCode: code,
-              autoSubmitAccessCode: true,
-            ),
-          );
-        }
-      }
+          if (isJoin) {
+            final code = uri.queryParameters['code']?.trim() ?? '';
+            if (code.isNotEmpty) {
+              return MaterialPageRoute(
+                builder: (_) => LoginScreen(
+                  initialAccessCode: code,
+                  autoSubmitAccessCode: true,
+                ),
+              );
+            }
+          }
 
-      if (isVoice) {
+          if (isVoice) {
             final query = uri.queryParameters['query'];
             return PageRouteBuilder(
               opaque: false,

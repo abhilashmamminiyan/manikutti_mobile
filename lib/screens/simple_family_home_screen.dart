@@ -58,7 +58,10 @@ class SimpleFamilyHomeScreen extends StatelessWidget {
   }
 
   bool _isAssignedToMe(dynamic item) {
-    final assigned = (item['assignedTo'] ?? 'Family').toString().trim().toLowerCase();
+    final assigned = (item['assignedTo'] ?? 'Family')
+        .toString()
+        .trim()
+        .toLowerCase();
     if (assigned == 'family' || assigned.isEmpty) return true;
     final emailLow = userEmail.trim().toLowerCase();
     final nameLow = displayName.trim().toLowerCase();
@@ -74,7 +77,9 @@ class SimpleFamilyHomeScreen extends StatelessWidget {
     final todayDay = DateTime.now().day;
 
     final myDues = monthlyExpenses.where(_isAssignedToMe).toList();
-    final otherDues = monthlyExpenses.where((d) => !_isAssignedToMe(d)).toList();
+    final otherDues = monthlyExpenses
+        .where((d) => !_isAssignedToMe(d))
+        .toList();
 
     final dueReminders = myDues.where((item) {
       if (_isPaidThisMonth(item)) return false;
@@ -82,13 +87,12 @@ class SimpleFamilyHomeScreen extends StatelessWidget {
       return dueDay <= todayDay + 3;
     }).toList();
 
-    final familyHistory = transactions
-        .where((t) => t.type == 'Family')
-        .toList()
+    final familyHistory = transactions.where((t) => t.type == 'Family').toList()
       ..sort((a, b) => b.date.compareTo(a.date));
 
-    final latestHomeLoanBal =
-        homeLoanHistory.isNotEmpty ? homeLoanHistory.last.balance : 0.0;
+    final latestHomeLoanBal = homeLoanHistory.isNotEmpty
+        ? homeLoanHistory.last.balance
+        : 0.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -233,7 +237,9 @@ class SimpleFamilyHomeScreen extends StatelessWidget {
                               ),
                             ),
                             ElevatedButton(
-                              onPressed: isLoading ? null : () => onMarkDuePaid(id),
+                              onPressed: isLoading
+                                  ? null
+                                  : () => onMarkDuePaid(id),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF10B981),
                                 foregroundColor: Colors.white,
@@ -373,15 +379,17 @@ class SimpleFamilyHomeScreen extends StatelessWidget {
                   else
                     ...familyHistory.take(15).map((tx) {
                       final dt = DateTime.tryParse(tx.date)?.toLocal();
-                      final dateText =
-                          dt != null ? DateFormat('MMM d, y').format(dt) : '';
+                      final dateText = dt != null
+                          ? DateFormat('MMM d, y').format(dt)
+                          : '';
                       final by = (tx.addedBy ?? '').split('@').first;
                       return ListTile(
                         contentPadding: EdgeInsets.zero,
                         dense: true,
                         leading: CircleAvatar(
-                          backgroundColor:
-                              AppTheme.primary.withValues(alpha: 0.12),
+                          backgroundColor: AppTheme.primary.withValues(
+                            alpha: 0.12,
+                          ),
                           child: const Icon(
                             Icons.receipt_outlined,
                             size: 18,
@@ -513,7 +521,9 @@ class SimpleFamilyHomeScreen extends StatelessWidget {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withValues(alpha: 0.14),
+                          color: const Color(
+                            0xFF10B981,
+                          ).withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Text(
@@ -553,7 +563,9 @@ class SimpleFamilyHomeScreen extends StatelessWidget {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE65100).withValues(alpha: 0.14),
+                          color: const Color(
+                            0xFFE65100,
+                          ).withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Text(

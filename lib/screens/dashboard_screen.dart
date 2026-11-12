@@ -322,9 +322,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           fetchedTracking = rawTracking
               .whereType<Map>()
               .map(
-                (t) => EmiMonthlyTracking.fromJson(
-                  Map<String, dynamic>.from(t),
-                ),
+                (t) =>
+                    EmiMonthlyTracking.fromJson(Map<String, dynamic>.from(t)),
               )
               .toList();
         } catch (e) {
@@ -388,17 +387,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
             await ApiService.instance.getMemberNickname() ?? myNick;
 
         final emiAmounts = <double>[
-          if (fetchedHomeLoanConfig != null && fetchedHomeLoanConfig.monthlyEMI > 0)
+          if (fetchedHomeLoanConfig != null &&
+              fetchedHomeLoanConfig.monthlyEMI > 0)
             fetchedHomeLoanConfig.monthlyEMI,
           ...fetchedLoans
-              .where((l) => l.status.toLowerCase() == 'active' && l.monthlyEMI > 0)
+              .where(
+                (l) => l.status.toLowerCase() == 'active' && l.monthlyEMI > 0,
+              )
               .map((l) => l.monthlyEMI),
           ...fetchedEmis
               .where((e) => !e.isCompleted && e.monthlyPayment > 0)
               .map((e) => e.monthlyPayment),
         ];
         await SmsDetectionService.instance.syncConfiguredEmiAmounts(emiAmounts);
-        final scannedCount = await SmsDetectionService.instance.scanRecentSms(hours: 48);
+        final scannedCount = await SmsDetectionService.instance.scanRecentSms(
+          hours: 48,
+        );
         if (scannedCount > 0) {
           final refreshedList = await DbHelper.instance.getAllTransactions();
           if (mounted) {
@@ -2340,7 +2344,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       '₹${sms.amount.toStringAsFixed(0)} ${sms.type} • ${sms.merchant} (${sms.bankAccount})$balText',
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white70 : const Color(0xFF0369A1),
+                        color: isDark
+                            ? Colors.white70
+                            : const Color(0xFF0369A1),
                       ),
                     ),
                   ],
@@ -2348,7 +2354,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               if (_pendingSmsList.length > 1)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0EA5E9).withOpacity(0.18),
                     borderRadius: BorderRadius.circular(10),
@@ -2370,8 +2379,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () async {
-                    await SmsDetectionService.instance.dismissPendingSms(sms.id);
-                    final updated = await SmsDetectionService.instance.getPendingSms();
+                    await SmsDetectionService.instance.dismissPendingSms(
+                      sms.id,
+                    );
+                    final updated = await SmsDetectionService.instance
+                        .getPendingSms();
                     if (mounted) setState(() => _pendingSmsList = updated);
                   },
                   child: const Text('No, Ignore'),
@@ -2385,7 +2397,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     backgroundColor: const Color(0xFF0284C7),
                   ),
                   onPressed: () async {
-                    final logged = await SmsDetectionService.instance.confirmPendingSms(sms.id);
+                    final logged = await SmsDetectionService.instance
+                        .confirmPendingSms(sms.id);
                     await _loadData();
                     if (mounted && logged != null) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -2467,7 +2480,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Text(
                       'Confirm EMI payment & share settlement (${pendingChecks.length} pending)',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: isDark ? Colors.white70 : const Color(0xFFB45309),
+                        color: isDark
+                            ? Colors.white70
+                            : const Color(0xFFB45309),
                         fontSize: 11,
                       ),
                     ),
@@ -2527,20 +2542,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           FilledButton(
                             style: FilledButton.styleFrom(
                               backgroundColor: const Color(0xFF0F766E),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
                               minimumSize: Size.zero,
                             ),
                             onPressed: _familyCode == null
                                 ? null
                                 : () async {
-                                    await EmiReminderService.instance.confirmStatus(
-                                      familyCode: _familyCode!,
-                                      item: item,
-                                      paidToPayer: true,
-                                    );
+                                    await EmiReminderService.instance
+                                        .confirmStatus(
+                                          familyCode: _familyCode!,
+                                          item: item,
+                                          paidToPayer: true,
+                                        );
                                     await _loadData();
                                   },
-                            child: const Text('Yes, Paid', style: TextStyle(fontSize: 12)),
+                            child: const Text(
+                              'Yes, Paid',
+                              style: TextStyle(fontSize: 12),
+                            ),
                           ),
                         ],
                       ),
@@ -2550,7 +2572,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: const EdgeInsets.only(bottom: 6),
                       child: Row(
                         children: [
-                          const Icon(Icons.check_circle, size: 15, color: Color(0xFF10B981)),
+                          const Icon(
+                            Icons.check_circle,
+                            size: 15,
+                            color: Color(0xFF10B981),
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             item.autoSmsDetected
@@ -2578,20 +2604,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         FilledButton(
                           style: FilledButton.styleFrom(
                             backgroundColor: const Color(0xFFD97706),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             minimumSize: Size.zero,
                           ),
                           onPressed: _familyCode == null
                               ? null
                               : () async {
-                                  await EmiReminderService.instance.confirmStatus(
-                                    familyCode: _familyCode!,
-                                    item: item,
-                                    sharedWithRecipient: true,
-                                  );
+                                  await EmiReminderService.instance
+                                      .confirmStatus(
+                                        familyCode: _familyCode!,
+                                        item: item,
+                                        sharedWithRecipient: true,
+                                      );
                                   await _loadData();
                                 },
-                          child: const Text('Yes, Shared', style: TextStyle(fontSize: 12)),
+                          child: const Text(
+                            'Yes, Shared',
+                            style: TextStyle(fontSize: 12),
+                          ),
                         ),
                       ],
                     ),
@@ -3662,7 +3695,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _buildSmsPendingBanner(theme, isDark),
                     const SizedBox(height: 14),
                   ],
-                  if (_mandatoryEmiChecks.any((c) => !c.isComplete && c.isResponsibleUser)) ...[
+                  if (_mandatoryEmiChecks.any(
+                    (c) => !c.isComplete && c.isResponsibleUser,
+                  )) ...[
                     _buildMandatoryEmiBanner(theme, isDark),
                     const SizedBox(height: 14),
                   ],

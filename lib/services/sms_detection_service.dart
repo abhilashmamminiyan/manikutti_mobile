@@ -53,7 +53,9 @@ class SmsDetectionService {
   static final SmsDetectionService instance = SmsDetectionService._internal();
   SmsDetectionService._internal();
 
-  static const MethodChannel _channel = MethodChannel('com.abhilash.manikutti/sms');
+  static const MethodChannel _channel = MethodChannel(
+    'com.abhilash.manikutti/sms',
+  );
   static const String keySmsEnabled = 'sms_detection_enabled';
   static const String keyConfiguredEmiAmounts = 'configured_emi_amounts';
 
@@ -68,7 +70,11 @@ class SmsDetectionService {
   }
 
   Future<void> syncConfiguredEmiAmounts(List<double> amounts) async {
-    final clean = amounts.where((a) => a > 0).map((a) => a.toStringAsFixed(0)).toSet().toList();
+    final clean = amounts
+        .where((a) => a > 0)
+        .map((a) => a.toStringAsFixed(0))
+        .toSet()
+        .toList();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(keyConfiguredEmiAmounts, clean.join(','));
   }
@@ -97,7 +103,9 @@ class SmsDetectionService {
     if (!await isEnabled()) return 0;
     if (!await hasPermission()) return 0;
     try {
-      final count = await _channel.invokeMethod<int>('scanRecentSms', {'hours': hours});
+      final count = await _channel.invokeMethod<int>('scanRecentSms', {
+        'hours': hours,
+      });
       return count ?? 0;
     } catch (e) {
       debugPrint('[SmsDetectionService] scanRecentSms error: $e');
@@ -123,12 +131,16 @@ class SmsDetectionService {
 
   Future<PendingSmsTransaction?> confirmPendingSms(String id) async {
     try {
-      final raw = await _channel.invokeMethod<String>('confirmPendingSms', {'id': id});
+      final raw = await _channel.invokeMethod<String>('confirmPendingSms', {
+        'id': id,
+      });
       await BankBalanceService.instance.init();
       await WidgetDataService.updateWidgetData();
       unawaited(SyncService.instance.syncData());
       if (raw != null && raw.isNotEmpty) {
-        return PendingSmsTransaction.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+        return PendingSmsTransaction.fromJson(
+          jsonDecode(raw) as Map<String, dynamic>,
+        );
       }
       return null;
     } catch (e) {

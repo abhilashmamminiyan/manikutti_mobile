@@ -65,20 +65,27 @@ class ScreenshotPayeeRule {
   factory ScreenshotPayeeRule.fromJson(Map<String, dynamic> json) {
     final rawPatterns = json['matchPatterns'];
     final patterns = rawPatterns is List
-        ? rawPatterns.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList()
+        ? rawPatterns
+              .map((e) => e.toString().trim())
+              .where((e) => e.isNotEmpty)
+              .toList()
         : (json['matchPattern']?.toString() ?? '')
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
 
     return ScreenshotPayeeRule(
-      id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id:
+          json['id']?.toString() ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       label: json['label']?.toString().trim() ?? 'Saved Payee',
       matchPatterns: patterns,
       category: json['category']?.toString().trim() ?? 'Other',
       target: ScreenshotLedgerTargetExt.fromKey(json['target']?.toString()),
-      transactionType: json['transactionType']?.toString() == 'Income' ? 'Income' : 'Expense',
+      transactionType: json['transactionType']?.toString() == 'Income'
+          ? 'Income'
+          : 'Expense',
       linkedDueTitle: _cleanOptional(json['linkedDueTitle']),
       transferToMember: _cleanOptional(json['transferToMember']),
       customNote: _cleanOptional(json['customNote']),
@@ -104,7 +111,11 @@ class ScreenshotPayeeRule {
     };
   }
 
-  bool matchesText(String rawOcrText, {String merchant = '', String note = ''}) {
+  bool matchesText(
+    String rawOcrText, {
+    String merchant = '',
+    String note = '',
+  }) {
     final combined = '$rawOcrText\n$merchant\n$note'.toLowerCase();
     final combinedDigits = combined.replaceAll(RegExp(r'[^0-9]'), '');
 
@@ -132,7 +143,8 @@ class ScreenshotPayeeRule {
 
 class ScreenshotPayeeRuleService {
   ScreenshotPayeeRuleService._();
-  static final ScreenshotPayeeRuleService instance = ScreenshotPayeeRuleService._();
+  static final ScreenshotPayeeRuleService instance =
+      ScreenshotPayeeRuleService._();
 
   static const String _prefsKey = 'screenshot_payee_rules_v1';
 
@@ -151,7 +163,9 @@ class ScreenshotPayeeRuleService {
       if (decoded is! List) return const [];
       final rules = decoded
           .whereType<Map>()
-          .map((m) => ScreenshotPayeeRule.fromJson(Map<String, dynamic>.from(m)))
+          .map(
+            (m) => ScreenshotPayeeRule.fromJson(Map<String, dynamic>.from(m)),
+          )
           .toList();
       rulesNotifier.value = rules;
       return rules;

@@ -45,7 +45,8 @@ class FamilyLoanEmiSection extends StatelessWidget {
       return homeLoanHistory.fold(0.0, (sum, item) => sum + item.principal);
     }
     if (homeLoanConfig != null && homeLoanConfig!.principalAmount > 0) {
-      return (homeLoanConfig!.principalAmount - homeLoanConfig!.balanceRemaining)
+      return (homeLoanConfig!.principalAmount -
+              homeLoanConfig!.balanceRemaining)
           .clamp(0.0, homeLoanConfig!.principalAmount);
     }
     return 0.0;
@@ -104,7 +105,9 @@ class FamilyLoanEmiSection extends StatelessWidget {
         (e) => e.title.toLowerCase().trim() == loan.name.toLowerCase().trim(),
       );
       if (!existsInEmi) {
-        total += loan.balanceRemaining > 0 ? loan.balanceRemaining : loan.amount;
+        total += loan.balanceRemaining > 0
+            ? loan.balanceRemaining
+            : loan.amount;
       }
     }
     return total;
@@ -379,7 +382,9 @@ class FamilyLoanEmiSection extends StatelessWidget {
                   if (homeLoanConfig!.interestRate > 0)
                     Text(
                       'Rate: ${homeLoanConfig!.interestRate.toStringAsFixed(2)}%',
-                      style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   if (homeLoanConfig!.startDate.isNotEmpty)
                     Text(
@@ -388,7 +393,9 @@ class FamilyLoanEmiSection extends StatelessWidget {
                     ),
                   Text(
                     'Due: ${homeLoanConfig!.dueDay}th • Payer: ${homeLoanConfig!.payerName} • Share: ${homeLoanConfig!.shareRecipient}',
-                    style: theme.textTheme.labelSmall?.copyWith(color: AppTheme.primary),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppTheme.primary,
+                    ),
                   ),
                 ],
               ),
@@ -703,7 +710,9 @@ class FamilyLoanEmiSection extends StatelessWidget {
 
     final hasHomeLoan =
         showHomeLoan && (homeLoanHistory.isNotEmpty || homeLoanConfig != null);
-    final hasEmis = showLoansEmi && (emiBills.isNotEmpty || activeConfiguredLoans.isNotEmpty);
+    final hasEmis =
+        showLoansEmi &&
+        (emiBills.isNotEmpty || activeConfiguredLoans.isNotEmpty);
 
     if (!hasHomeLoan && !hasEmis) {
       return const SizedBox.shrink();
@@ -777,7 +786,9 @@ class FamilyLoanEmiSection extends StatelessWidget {
             .map((emi) => _buildEmiCard(context, emi)),
 
         // 3. Configured Family Loans (not duplicated in EMI Bills)
-        ...activeConfiguredLoans.map((loan) => _buildConfiguredLoanCard(context, loan)),
+        ...activeConfiguredLoans.map(
+          (loan) => _buildConfiguredLoanCard(context, loan),
+        ),
       ],
     );
   }
@@ -788,8 +799,11 @@ class FamilyLoanEmiSection extends StatelessWidget {
     final progress = loan.tenureMonths > 0
         ? (loan.paidMonths / loan.tenureMonths).clamp(0.0, 1.0)
         : (loan.amount > 0 && loan.balanceRemaining > 0
-            ? ((loan.amount - loan.balanceRemaining) / loan.amount).clamp(0.0, 1.0)
-            : 0.0);
+              ? ((loan.amount - loan.balanceRemaining) / loan.amount).clamp(
+                  0.0,
+                  1.0,
+                )
+              : 0.0);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
