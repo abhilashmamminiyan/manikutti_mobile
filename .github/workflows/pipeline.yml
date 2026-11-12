@@ -102,13 +102,19 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           BUILD_NUM=$(git rev-list --count HEAD)
-          flutter build apk --release --build-number=$BUILD_NUM
+          flutter build apk --release \
+            --split-per-abi \
+            --target-platform android-arm64,android-arm \
+            --obfuscate \
+            --split-debug-info=build/app/outputs/symbols \
+            --build-number=$BUILD_NUM
+          ls -lh build/app/outputs/flutter-apk/*.apk
 
       - name: Upload Production APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-*-release.apk
           retention-days: 7
 
   # ── 3. Auto-merge PR (Only on Pull Request) ─────────────────────────────────
@@ -214,5 +220,5 @@ jobs:
           appId: 1:945226005596:android:a8d62b7b8f49beb4cdba99
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           groups: family
-          file: build/app/outputs/flutter-apk/app-release.apk
+          file: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
           releaseNotesFile: release_notes.txt
