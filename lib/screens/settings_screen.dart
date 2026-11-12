@@ -8,6 +8,7 @@ import 'about_app_screen.dart';
 import 'whats_new_screen.dart';
 import 'notification_settings_screen.dart';
 import 'category_preferences_screen.dart';
+import 'payee_rules_screen.dart';
 import '../services/whats_new_service.dart';
 import '../theme/app_theme.dart';
 
@@ -378,6 +379,52 @@ class SettingsScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const CategoryPreferencesScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1, indent: 70),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withOpacity(0.14),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.rule_folder_rounded,
+                      color: AppTheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'Payee & Screenshot Rules',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Map phone numbers or names to fixed categories & Home Loan',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isDark
+                          ? AppTheme.darkOnSurfaceVariant
+                          : AppTheme.onSurfaceVariant.withOpacity(0.7),
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                    color: AppTheme.outlineVariant,
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PayeeRulesScreen(),
                       ),
                     );
                   },

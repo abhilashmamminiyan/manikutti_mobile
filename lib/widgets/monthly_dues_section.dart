@@ -293,6 +293,9 @@ class MonthlyDuesSection extends StatelessWidget {
               final amount = (item['amount'] as num).toDouble();
               final dueDay = item['dueDay'] as int;
               final isPaid = _isItemPaidThisMonth(item);
+              final totalMonths = (item['totalMonths'] as num?)?.toInt() ?? 0;
+              final paidMonths = (item['paidMonths'] as num?)?.toInt() ?? 0;
+              final lastPaidBy = (item['lastPaidBy'] ?? '').toString().trim();
 
               return Padding(
                 padding: const EdgeInsets.symmetric(
@@ -301,19 +304,41 @@ class MonthlyDuesSection extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    // 1. Bill Title
+                    // 1. Bill Title (+ tenure & paidBy subtitle when available)
                     Expanded(
                       flex: 5,
-                      child: Text(
-                        title,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: isDark
-                              ? AppTheme.darkOnSurface
-                              : AppTheme.onSurface,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: isDark
+                                  ? AppTheme.darkOnSurface
+                                  : AppTheme.onSurface,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (totalMonths > 0 || (isPaid && lastPaidBy.isNotEmpty))
+                            Text(
+                              [
+                                if (totalMonths > 0)
+                                  '$paidMonths/$totalMonths mos',
+                                if (isPaid && lastPaidBy.isNotEmpty)
+                                  'By $lastPaidBy',
+                              ].join(' • '),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontSize: 10,
+                                color: isDark
+                                    ? AppTheme.darkOnSurfaceVariant
+                                    : AppTheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
                       ),
                     ),
 

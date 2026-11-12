@@ -18,6 +18,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     private var shareChannel: MethodChannel? = null
     private var pendingSharedImagePath: String? = null
+    private var pendingDeepLinkUri: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +35,15 @@ class MainActivity : FlutterFragmentActivity() {
         if (intent == null) return
         val action = intent.action
         val type = intent.type
+        if (Intent.ACTION_VIEW == action && intent.data != null) {
+            val uriStr = intent.data.toString()
+            if (notifyLiveChannel && shareChannel != null) {
+                shareChannel?.invokeMethod("onDeepLink", uriStr)
+            } else {
+                pendingDeepLinkUri = uriStr
+            }
+            return
+        }
         if (Intent.ACTION_SEND == action && type != null && type.startsWith("image/")) {
             val imageUri: Uri? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
@@ -158,6 +168,11 @@ class MainActivity : FlutterFragmentActivity() {
                         val path = pendingSharedImagePath
                         pendingSharedImagePath = null
                         result.success(path)
+                    }
+                    "getInitialDeepLink" -> {
+                        val uriStr = pendingDeepLinkUri
+                        pendingDeepLinkUri = null
+                        result.success(uriStr)
                     }
                     "shareImage" -> {
                         val path = call.argument<String>("path")

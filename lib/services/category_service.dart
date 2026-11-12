@@ -15,6 +15,12 @@ class CategoryService {
     'Health',
     'Leisure',
     'Investment',
+    'Savings',
+    'Emergency Fund',
+    'Loan/EMI',
+    'Home Loan',
+    'Bills',
+    'Family Transfer',
     'Other',
   ];
 

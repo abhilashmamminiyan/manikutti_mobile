@@ -135,6 +135,22 @@ class ApiService {
     }
   }
 
+  Future<void> saveMemberNickname(String nickname) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('member_nickname', nickname.trim());
+  }
+
+  Future<String?> getMemberNickname() async {
+    final prefs = await SharedPreferences.getInstance();
+    final nick = prefs.getString('member_nickname');
+    if (nick != null && nick.isNotEmpty) return nick;
+    final email = await getUserEmail();
+    if (email != null && email.isNotEmpty) {
+      return email.split('@').first;
+    }
+    return null;
+  }
+
   Future<void> savePin(String pin) async {
     try {
       await _secureStorage.write(key: 'app_lock_pin', value: pin);
@@ -250,6 +266,36 @@ class ApiService {
       }
     } catch (e) {
       rethrow;
+    }
+  }
+
+  /// Quick sign-in using an Admin-generated Family Access Code (no Email OTP).
+  Future<Map<String, dynamic>> loginWithFamilyCode(String accessCode) async {
+    final baseUrl = await getBaseUrl();
+    final response = await _http.post(
+      Uri.parse('$baseUrl/api/auth/member-code'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'accessCode': accessCode.trim()}),
+    );
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode == 200 && body['success'] == true) {
+      final token = body['sessionToken']?.toString() ?? '';
+      final email = body['email']?.toString() ?? '';
+      final nickname = body['nickname']?.toString() ?? '';
+      final familyCode = body['familyCode']?.toString() ?? '';
+
+      await saveSessionToken(token);
+      if (email.isNotEmpty) await saveUserEmail(email);
+      if (nickname.isNotEmpty) await saveMemberNickname(nickname);
+      if (familyCode.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('cached_family_code', familyCode);
+      }
+      // Hydrate permissions immediately so Basic/Member UI switches cleanly
+      await getFamilyInfo();
+      return body;
+    } else {
+      throw Exception(body['error'] ?? 'Invalid family access code');
     }
   }
 
@@ -566,14 +612,22 @@ class ApiService {
     }
   }
 
-  Future<bool> markMonthlyExpensePaid(int id, String paidDate) async {
+  Future<bool> markMonthlyExpensePaid(
+    int id,
+    String paidDate, {
+    bool logToFamily = false,
+  }) async {
     final baseUrl = await getBaseUrl();
     final headers = await _getHeaders();
     try {
       final response = await _http.patch(
         Uri.parse('$baseUrl/api/sheets/monthly'),
         headers: headers,
-        body: jsonEncode({'id': id, 'paidDate': paidDate}),
+        body: jsonEncode({
+          'id': id,
+          'paidDate': paidDate,
+          'logToFamily': logToFamily,
+        }),
       );
 
       if (response.statusCode == 200) {
@@ -582,6 +636,72 @@ class ApiService {
       }
       return false;
     } catch (e) {
+      return false;
+    }
+  }
+
+  // --- Family Inter-Member Pool Transfers ---
+  Future<List<dynamic>> fetchFamilyTransfers(String familyCode) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await _http.get(
+        Uri.parse('$baseUrl/api/sheets/transfers?familyCode=$familyCode'),
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['items'] ?? [];
+      }
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<bool> createFamilyTransfer({
+    required String fromMember,
+    required String toMember,
+    required double amount,
+    String note = '',
+    required String familyCode,
+    String? date,
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await _http.post(
+        Uri.parse('$baseUrl/api/sheets/transfers'),
+        headers: headers,
+        body: jsonEncode({
+          'date': date ?? DateTime.now().toUtc().toIso8601String(),
+          'fromMember': fromMember,
+          'toMember': toMember,
+          'amount': amount,
+          'note': note,
+          'familyCode': familyCode,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteFamilyTransfer(int id) async {
+    final baseUrl = await getBaseUrl();
+    final headers = await _getHeaders();
+    try {
+      final response = await _http.delete(
+        Uri.parse('$baseUrl/api/sheets/transfers?id=$id'),
+        headers: headers,
+      );
+      return response.statusCode == 200;
+    } catch (_) {
       return false;
     }
   }

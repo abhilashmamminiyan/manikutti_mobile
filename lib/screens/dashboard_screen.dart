@@ -24,8 +24,10 @@ import '../widgets/ai_advisor_card.dart';
 import '../widgets/voice_logging_sheet.dart';
 import '../widgets/expense_pie_chart.dart';
 import '../widgets/family_loan_emi_card.dart';
+import '../widgets/family_pool_transfers_card.dart';
 import '../widgets/monthly_dues_section.dart';
 import '../widgets/dashboard_budget_progress.dart';
+import 'simple_family_home_screen.dart';
 import '../models/emi_model.dart';
 import '../models/home_loan_model.dart';
 import '../services/widget_data_service.dart';
@@ -60,9 +62,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> _monthlyExpenses = [];
   List<dynamic> _notifications = [];
   List<dynamic> _familyMembers = [];
+  List<dynamic> _familyTransfers = [];
   List<Loan> _loans = [];
   List<EmiBill> _emiList = [];
   List<HomeLoanEntry> _homeLoanHistory = [];
+  String _memberNickname = '';
   double _constantEmiDues = 0;
   double _familySalaryIncome = 0;
   double _familyBaseSalary = 0;
@@ -324,11 +328,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
           debugPrint('Error fetching home loan history: $e');
         }
 
+        List<dynamic> fetchedTransfers = [];
+        try {
+          fetchedTransfers = await ApiService.instance.fetchFamilyTransfers(
+            _familyCode!,
+          );
+        } catch (e) {
+          debugPrint('Error fetching family transfers: $e');
+        }
+
+        final myNick =
+            await ApiService.instance.getMemberNickname() ??
+            _userEmail?.split('@').first ??
+            '';
+        for (final m in membersList) {
+          if ((m['email'] ?? '').toString().trim().toLowerCase() ==
+              (_userEmail ?? '').trim().toLowerCase()) {
+            final n = (m['nickname'] ?? '').toString().trim();
+            if (n.isNotEmpty) {
+              await ApiService.instance.saveMemberNickname(n);
+            }
+            break;
+          }
+        }
+        final resolvedNick =
+            await ApiService.instance.getMemberNickname() ?? myNick;
+
         if (mounted) {
           setState(() {
             _monthlyExpenses = expenses;
             _notifications = notifs;
             _familyMembers = membersList;
+            _familyTransfers = fetchedTransfers;
+            _memberNickname = resolvedNick;
             _loans = fetchedLoans;
             _emiList = fetchedEmis;
             _homeLoanHistory = fetchedHomeLoan;
@@ -353,8 +385,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final assignedTo = item['assignedTo'] as String?;
       final lastPaidDateStr = item['lastPaidDate'] as String?;
 
+      final assignedLow = (assignedTo ?? '').trim().toLowerCase();
+      final emailLow = (_userEmail ?? '').trim().toLowerCase();
+      final nickLow = _memberNickname.trim().toLowerCase();
       final isAssignedToMe =
-          assignedTo?.toLowerCase() == _userEmail?.toLowerCase();
+          assignedLow == 'family' ||
+          (emailLow.isNotEmpty && assignedLow == emailLow) ||
+          (nickLow.isNotEmpty && assignedLow == nickLow) ||
+          (emailLow.isNotEmpty && assignedLow == emailLow.split('@').first);
 
       bool isPaidThisMonth = false;
       if (lastPaidDateStr != null && lastPaidDateStr.isNotEmpty) {
@@ -368,9 +406,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (isAssignedToMe && !isPaidThisMonth) {
         await NotificationService.instance.scheduleMonthlyReminder(
           id: id,
-          title: 'Payment Due: $title',
+          title: 'Have you paid $title?',
           body:
-              'Your commitment for $title (₹${amount.toStringAsFixed(0)}) is due today.',
+              'Reminder: $title (₹${amount.toStringAsFixed(0)}) is due on Day $dueDay. Tap to mark paid.',
           dueDay: dueDay,
         );
       } else {
@@ -386,12 +424,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final success = await ApiService.instance.markMonthlyExpensePaid(
         id,
         paidDate,
+        logToFamily: true,
       );
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Payment registered successfully!')),
         );
-        await _loadData();
+        await _triggerSync();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to update payment status.')),
@@ -400,8 +439,142 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (e) {
       print('Error marking paid: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _handleDeleteTransfer(int id) async {
+    final ok = await ApiService.instance.deleteFamilyTransfer(id);
+    if (ok) {
+      await _fetchFamilyDuesAndNotifications();
+    }
+  }
+
+  Future<void> _showRecordTransferDialog() async {
+    if (_familyCode == null || _familyCode!.isEmpty) return;
+    final memberNames = _familyMembers
+        .map((m) {
+          final nick = (m['nickname'] ?? '').toString().trim();
+          if (nick.isNotEmpty) return nick;
+          return (m['email'] ?? '').toString().split('@').first;
+        })
+        .where((s) => s.isNotEmpty)
+        .toSet()
+        .toList();
+
+    final defaultFrom = _memberNickname.isNotEmpty
+        ? _memberNickname
+        : (memberNames.isNotEmpty ? memberNames.first : 'Me');
+    if (!memberNames.contains(defaultFrom)) memberNames.insert(0, defaultFrom);
+    if (!memberNames.contains('Nisha')) memberNames.add('Nisha');
+
+    String fromMember = defaultFrom;
+    String toMember = memberNames.firstWhere(
+      (n) => n.toLowerCase() != fromMember.toLowerCase(),
+      orElse: () => 'Nisha',
+    );
+    final amtCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
+    bool submitting = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (modalCtx, setModalState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text('Record Family Pool Transfer'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  initialValue: fromMember,
+                  decoration: const InputDecoration(labelText: 'From Member'),
+                  items: memberNames
+                      .map((n) => DropdownMenuItem(value: n, child: Text(n)))
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setModalState(() => fromMember = v);
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: toMember,
+                  decoration: const InputDecoration(labelText: 'To Member'),
+                  items: memberNames
+                      .map((n) => DropdownMenuItem(value: n, child: Text(n)))
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setModalState(() => toMember = v);
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: amtCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Amount (₹)',
+                    hintText: 'e.g. 3750 or 12500',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: noteCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Note (optional)',
+                    hintText: 'e.g. Home loan pool share',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(modalCtx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: submitting
+                  ? null
+                  : () async {
+                      final amt = double.tryParse(amtCtrl.text.trim()) ?? 0.0;
+                      if (amt <= 0) return;
+                      setModalState(() => submitting = true);
+                      final ok = await ApiService.instance.createFamilyTransfer(
+                        fromMember: fromMember,
+                        toMember: toMember,
+                        amount: amt,
+                        note: noteCtrl.text.trim(),
+                        familyCode: _familyCode!,
+                      );
+                      if (modalCtx.mounted) Navigator.pop(modalCtx);
+                      if (ok) {
+                        await _fetchFamilyDuesAndNotifications();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Logged $fromMember → $toMember (₹${amt.toStringAsFixed(0)})',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Save Transfer'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _handleMarkEmiPaid(EmiBill emi) async {
@@ -2950,6 +3123,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
       valueListenable: FeatureFlagService.instance.permissionsNotifier,
       builder: (context, _, _) {
         final flags = FeatureFlagService.instance;
+        if (flags.roleName.trim().toLowerCase() == 'basic') {
+          final display = _memberNickname.isNotEmpty
+              ? _memberNickname
+              : (_userEmail?.split('@').first ?? 'Family');
+          return SimpleFamilyHomeScreen(
+            displayName: display,
+            userEmail: _userEmail ?? '',
+            familyCode: _familyCode,
+            monthlyExpenses: _monthlyExpenses,
+            familyMembers: _familyMembers,
+            familyTransfers: _familyTransfers,
+            homeLoanHistory: _homeLoanHistory,
+            transactions: _transactions,
+            isLoading: _isLoading,
+            onRefresh: _triggerSync,
+            onMarkDuePaid: _markPaid,
+            onRecordTransfer: _showRecordTransferDialog,
+            onDeleteTransfer: _handleDeleteTransfer,
+            onLogout: _handleLogout,
+          );
+        }
+
         final showFamily = flags.isEnabled(FeatureKeys.familyLedger);
         final ledgerCards = <Widget>[
           _buildPersonalCard(theme),
@@ -3180,6 +3375,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       loans: _loans,
                       homeLoanHistory: _homeLoanHistory,
                       onPayEmi: _handleMarkEmiPaid,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // 6. Family Pool & Inter-Member Transfers Tracker
+                  if (showFamily) ...[
+                    FamilyPoolTransfersCard(
+                      familyMembers: _familyMembers,
+                      monthlyExpenses: _monthlyExpenses,
+                      transfers: _familyTransfers,
+                      onRecordTransfer: _showRecordTransferDialog,
+                      onDeleteTransfer: _handleDeleteTransfer,
                     ),
                     const SizedBox(height: 24),
                   ],
