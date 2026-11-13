@@ -223,6 +223,16 @@ class MyApp extends StatefulWidget {
     state?.setThemeStyle(style);
   }
 
+  static void setPrimaryColor(BuildContext context, Color color) {
+    _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    state?.setPrimaryColor(color);
+  }
+
+  static Color getPrimaryColor(BuildContext context) {
+    _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    return state?._primaryColor ?? AppTheme.primary;
+  }
+
   static void restartApp(BuildContext context) {
     _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
     state?.restartApp();
@@ -236,6 +246,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Locale? _locale;
   ThemeMode _themeMode = ThemeMode.system;
   ThemeStyle _themeStyle = ThemeStyle.modern;
+  Color _primaryColor = AppTheme.customPrimaryColor;
   late bool _isLocked = widget.initialLocked;
   int? _lastPausedEpochMs;
   static const int lockGracePeriodMs = 2 * 60 * 1000; // 2 minutes grace period
@@ -256,6 +267,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     AppTheme.currentStyle = themeStyle;
     setState(() {
       _themeStyle = themeStyle;
+    });
+  }
+
+  void setPrimaryColor(Color color) {
+    AppTheme.setPrimaryColor(color);
+    setState(() {
+      _primaryColor = color;
     });
   }
 
@@ -410,6 +428,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Future<void> _loadThemeMode() async {
     final prefs = await SharedPreferences.getInstance();
     final themeStr = prefs.getString('themeMode') ?? 'system';
+    final colorVal = prefs.getInt('theme_primary_color');
+    if (colorVal != null) {
+      final loadedColor = Color(colorVal);
+      AppTheme.setPrimaryColor(loadedColor);
+      _primaryColor = loadedColor;
+    }
     setState(() {
       if (themeStr == 'light') {
         _themeMode = ThemeMode.light;
@@ -558,8 +582,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       navigatorObservers: [CrashReportingService.instance.routeObserver],
       title: 'Manikutti Finance',
       debugShowCheckedModeBanner: false,
-      theme: isPaper ? AppTheme.paperLightTheme : AppTheme.lightTheme,
-      darkTheme: isPaper ? AppTheme.paperDarkTheme : AppTheme.darkTheme,
+      theme: isPaper
+          ? AppTheme.paperLightTheme
+          : AppTheme.buildLightTheme(_primaryColor),
+      darkTheme: isPaper
+          ? AppTheme.paperDarkTheme
+          : AppTheme.buildDarkTheme(_primaryColor),
       themeMode: _themeMode,
       locale: _locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,

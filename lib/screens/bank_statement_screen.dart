@@ -1475,7 +1475,7 @@ class _BankStatementScreenState extends State<BankStatementScreen> {
             const SizedBox(height: 20),
 
             if (_isPicking || _isParsing) ...[
-              const CircularProgressIndicator(color: AppTheme.primary),
+              CircularProgressIndicator(color: AppTheme.primary),
               const SizedBox(height: 16),
               Text(
                 _isParsing

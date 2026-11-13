@@ -55,16 +55,20 @@ class FeatureFlagService {
   static const String _prefsPermissionsKey = 'feature_permissions_v1';
   static const String _prefsRoleKey = 'feature_role_name_v1';
   static const String _prefsAiEnabledKey = 'feature_master_ai_enabled_v1';
+  static const String _prefsLocalOverrideKey =
+      'feature_role_local_override_active_v1';
 
   final ValueNotifier<Map<String, bool>> permissionsNotifier =
       ValueNotifier<Map<String, bool>>(_buildDefaultOpenMap());
 
   String _roleName = 'Member';
   bool _masterAiEnabled = true;
+  bool _isLocalOverrideActive = false;
   bool _initialized = false;
 
   String get roleName => _roleName;
   bool get masterAiEnabled => _masterAiEnabled;
+  bool get isLocalOverrideActive => _isLocalOverrideActive;
   bool get isDemoRole => _roleName.trim().toLowerCase() == 'demo';
   bool get isBasicRole => _roleName.trim().toLowerCase() == 'basic';
 
@@ -86,6 +90,7 @@ class FeatureFlagService {
     _initialized = true;
     try {
       final prefs = await SharedPreferences.getInstance();
+      _isLocalOverrideActive = prefs.getBool(_prefsLocalOverrideKey) ?? false;
       _roleName = prefs.getString(_prefsRoleKey) ?? 'Member';
       _masterAiEnabled = prefs.getBool(_prefsAiEnabledKey) ?? true;
       final raw = prefs.getString(_prefsPermissionsKey);
@@ -118,6 +123,11 @@ class FeatureFlagService {
     required Map<String, dynamic>? permissions,
     bool? aiEnabled,
   }) async {
+    if (_isLocalOverrideActive) {
+      // Respect active local testing override (Admin/Member/Basic/Demo); do not overwrite
+      return;
+    }
+
     _roleName = roleName.trim().isNotEmpty ? roleName.trim() : _roleName;
     if (aiEnabled != null) {
       _masterAiEnabled = aiEnabled;
@@ -147,15 +157,86 @@ class FeatureFlagService {
     } catch (_) {}
   }
 
+  /// Sets a local role override for testing capability views (Admin, Member, Basic, Demo).
+  Future<void> setLocalRoleOverride(String newRole) async {
+    _isLocalOverrideActive = true;
+    _roleName = newRole.trim();
+    final lower = _roleName.toLowerCase();
+
+    final map = _buildDefaultOpenMap();
+
+    if (lower == 'basic') {
+      for (final k in FeatureKeys.allKeys) {
+        map[k] = false;
+      }
+      map[FeatureKeys.homeLoan] = true;
+      map[FeatureKeys.loansEmiLedger] = true;
+      map[FeatureKeys.repaymentSchedules] = true;
+      map[FeatureKeys.smsAutoTracking] = true;
+      map[FeatureKeys.monthlyDues] = true;
+      map[FeatureKeys.screenshots] = true;
+      map[FeatureKeys.smartScan] = true;
+      map[FeatureKeys.aiScreenshotExtraction] = true;
+      map[FeatureKeys.familyLedger] = true;
+    } else if (lower == 'demo') {
+      for (final k in FeatureKeys.allKeys) {
+        map[k] = false;
+      }
+      map[FeatureKeys.homeLoan] = true;
+      map[FeatureKeys.loansEmiLedger] = true;
+      map[FeatureKeys.repaymentSchedules] = true;
+      map[FeatureKeys.smsAutoTracking] = true;
+      map[FeatureKeys.familyLedger] = true;
+    } else if (lower == 'member') {
+      for (final k in FeatureKeys.allKeys) {
+        map[k] = true;
+      }
+      map[FeatureKeys.homeLoan] = false;
+      map[FeatureKeys.loansEmiLedger] = false;
+      map[FeatureKeys.mobileRecharges] = false;
+      map[FeatureKeys.bankStatement] = false;
+      map[FeatureKeys.aiAdvisor] = false;
+    } else {
+      // Admin: all true
+      for (final k in FeatureKeys.allKeys) {
+        map[k] = true;
+      }
+    }
+
+    if (!_masterAiEnabled) {
+      map[FeatureKeys.aiScreenshotExtraction] = false;
+      map[FeatureKeys.aiAdvisor] = false;
+    }
+
+    permissionsNotifier.value = map;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefsRoleKey, _roleName);
+      await prefs.setBool(_prefsLocalOverrideKey, true);
+      await prefs.setString(_prefsPermissionsKey, jsonEncode(map));
+    } catch (_) {}
+  }
+
+  Future<void> clearLocalOverride() async {
+    _isLocalOverrideActive = false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_prefsLocalOverrideKey);
+    } catch (_) {}
+  }
+
   Future<void> clear() async {
     _roleName = 'Member';
     _masterAiEnabled = true;
+    _isLocalOverrideActive = false;
     permissionsNotifier.value = _buildDefaultOpenMap();
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_prefsRoleKey);
       await prefs.remove(_prefsAiEnabledKey);
       await prefs.remove(_prefsPermissionsKey);
+      await prefs.remove(_prefsLocalOverrideKey);
     } catch (_) {}
   }
 }

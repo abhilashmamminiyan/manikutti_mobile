@@ -3669,7 +3669,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               if (flags.isEnabled(FeatureKeys.voiceLogging))
                 IconButton(
-                  icon: const Icon(Icons.mic_rounded, color: AppTheme.primary),
+                  icon: Icon(Icons.mic_rounded, color: AppTheme.primary),
                   onPressed: () {
                     VoiceLoggingSheet.show(
                       context,

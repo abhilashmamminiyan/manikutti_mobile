@@ -727,7 +727,7 @@ class _MobileRechargesScreenState extends State<MobileRechargesScreen> {
                   onPressed: () => _showQuickRechargeDialog(recharge),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.primary,
-                    side: const BorderSide(color: AppTheme.primary),
+                    side: BorderSide(color: AppTheme.primary),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
