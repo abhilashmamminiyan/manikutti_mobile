@@ -567,6 +567,8 @@ class AppTheme {
   // --- Paper Diary Light Theme ---
   // ==========================================
   static ThemeData get paperLightTheme {
+    final lightBase = ThemeData(brightness: Brightness.light).textTheme;
+    final baseKalam = GoogleFonts.kalamTextTheme(lightBase);
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -767,6 +769,8 @@ class AppTheme {
   // --- Paper Diary Dark Theme (Midnight Notebook) ---
   // ==========================================
   static ThemeData get paperDarkTheme {
+    final darkBase = ThemeData(brightness: Brightness.dark).textTheme;
+    final baseKalam = GoogleFonts.kalamTextTheme(darkBase);
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
