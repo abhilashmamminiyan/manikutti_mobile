@@ -699,8 +699,9 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
             title: s.loanName,
             emiAmount: s.monthlyEmi,
             payerName: s.payer.isNotEmpty ? s.payer : 'Ajesh',
-            shareRecipient:
-                s.shareRecipient.isNotEmpty ? s.shareRecipient : 'Abhilash',
+            shareRecipient: s.shareRecipient.isNotEmpty
+                ? s.shareRecipient
+                : 'Abhilash',
             dueDay: 5,
             paidToPayer: false,
             sharedWithRecipient: false,
