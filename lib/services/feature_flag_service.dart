@@ -65,6 +65,8 @@ class FeatureFlagService {
 
   String get roleName => _roleName;
   bool get masterAiEnabled => _masterAiEnabled;
+  bool get isDemoRole => _roleName.trim().toLowerCase() == 'demo';
+  bool get isBasicRole => _roleName.trim().toLowerCase() == 'basic';
 
   /// Pure capability flag check: Returns false if all personal finance ledger
   /// modules (balances, budget gauge, expense charts, personal salary tracking)
