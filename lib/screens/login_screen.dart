@@ -329,12 +329,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 96,
                   decoration: BoxDecoration(
                     color: isPaper
-                        ? (isDark
-                            ? AppTheme.paperDarkCard
-                            : AppTheme.paperCard)
+                        ? (isDark ? AppTheme.paperDarkCard : AppTheme.paperCard)
                         : (isDark
-                            ? AppTheme.darkSurfaceContainerLowest
-                            : AppTheme.surfaceContainerLowest),
+                              ? AppTheme.darkSurfaceContainerLowest
+                              : AppTheme.surfaceContainerLowest),
                     shape: isPaper ? BoxShape.rectangle : BoxShape.circle,
                     borderRadius: isPaper ? BorderRadius.circular(20) : null,
                     boxShadow: isPaper
@@ -370,7 +368,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 end: Alignment.bottomRight,
                               ),
                         shape: isPaper ? BoxShape.rectangle : BoxShape.circle,
-                        borderRadius: isPaper ? BorderRadius.circular(14) : null,
+                        borderRadius: isPaper
+                            ? BorderRadius.circular(14)
+                            : null,
                       ),
                       child: Center(
                         child: Icon(
@@ -378,7 +378,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               ? Icons.menu_book_rounded
                               : Icons.account_balance_wallet_rounded,
                           size: 36,
-                          color: isPaper ? AppTheme.paperInkNavy : AppTheme.primary,
+                          color: isPaper
+                              ? AppTheme.paperInkNavy
+                              : AppTheme.primary,
                         ),
                       ),
                     ),
@@ -404,7 +406,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         : null,
                   ),
                   child: Text(
-                    isPaper ? 'EXECUTIVE CASHBOOK & DIARY' : 'HERITAGE SANCTUARY',
+                    isPaper
+                        ? 'EXECUTIVE CASHBOOK & DIARY'
+                        : 'HERITAGE SANCTUARY',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: isPaper
                           ? const Color(0xFF15365A)
@@ -428,13 +432,13 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 _isPinStep
                     ? (isPaper
-                        ? 'Lock your personal diary with a 4-digit PIN'
-                        : 'Secure your financial sanctuary with a 4-digit PIN')
+                          ? 'Lock your personal diary with a 4-digit PIN'
+                          : 'Secure your financial sanctuary with a 4-digit PIN')
                     : _isOtpStep
                     ? 'Enter the 6-digit verification code sent to your email'
                     : (isPaper
-                        ? 'Every rupee written in pen on your daily ledger.'
-                        : 'Personal & family wealth ledger, thoughtfully unified.'),
+                          ? 'Every rupee written in pen on your daily ledger.'
+                          : 'Personal & family wealth ledger, thoughtfully unified.'),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
               ),
@@ -447,8 +451,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: isPaper
                       ? (isDark ? AppTheme.paperDarkCard : AppTheme.paperCard)
                       : (isDark
-                          ? AppTheme.darkSurfaceContainerLowest
-                          : AppTheme.surfaceContainerLowest),
+                            ? AppTheme.darkSurfaceContainerLowest
+                            : AppTheme.surfaceContainerLowest),
                   borderRadius: BorderRadius.circular(isPaper ? 14 : 24),
                   boxShadow: isPaper
                       ? AppTheme.paperCardShadow
@@ -457,8 +461,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: isPaper
                         ? const Color(0xFFE2DDD5)
                         : (isDark
-                            ? const Color(0xFF2C3233)
-                            : AppTheme.outlineVariant.withOpacity(0.2)),
+                              ? const Color(0xFF2C3233)
+                              : AppTheme.outlineVariant.withOpacity(0.2)),
                     width: isPaper ? 1.5 : 1,
                   ),
                 ),

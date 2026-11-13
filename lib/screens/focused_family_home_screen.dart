@@ -38,7 +38,8 @@ class FocusedFamilyHomeScreen extends StatefulWidget {
   });
 
   @override
-  State<FocusedFamilyHomeScreen> createState() => _FocusedFamilyHomeScreenState();
+  State<FocusedFamilyHomeScreen> createState() =>
+      _FocusedFamilyHomeScreenState();
 }
 
 class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
@@ -56,7 +57,9 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
   Future<void> _handleFallbackMarkPaid(MandatoryEmiCheckItem item) async {
     if (widget.familyCode == null || widget.familyCode!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Family Code missing. Please sync first.')),
+        const SnackBar(
+          content: Text('Family Code missing. Please sync first.'),
+        ),
       );
       return;
     }
@@ -116,7 +119,9 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Failed to confirm payment. Please check network connection.'),
+              content: Text(
+                'Failed to confirm payment. Please check network connection.',
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -264,8 +269,8 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
                           ),
                           color: isPaid
                               ? (isDark
-                                  ? Colors.green.withValues(alpha: 0.1)
-                                  : Colors.green.shade50)
+                                    ? Colors.green.withValues(alpha: 0.1)
+                                    : Colors.green.shade50)
                               : Colors.transparent,
                           child: Row(
                             children: [
@@ -273,13 +278,19 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
                                 radius: 14,
                                 backgroundColor: isPaid
                                     ? Colors.green.shade700
-                                    : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                                    : (isDark
+                                          ? Colors.grey.shade800
+                                          : Colors.grey.shade200),
                                 child: Text(
                                   '#${inst.instNo}',
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
-                                    color: isPaid ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                                    color: isPaid
+                                        ? Colors.white
+                                        : (isDark
+                                              ? Colors.white70
+                                              : Colors.black87),
                                   ),
                                 ),
                               ),
@@ -300,7 +311,9 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
                                       'Bal: ${_currencyFormat.format(inst.closingPrincipal)}',
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: isDark ? Colors.white60 : Colors.grey.shade700,
+                                        color: isDark
+                                            ? Colors.white60
+                                            : Colors.grey.shade700,
                                       ),
                                     ),
                                   ],
@@ -312,7 +325,9 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(
-                                      _currencyFormat.format(inst.installmentAmount),
+                                      _currencyFormat.format(
+                                        inst.installmentAmount,
+                                      ),
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 12,
@@ -322,7 +337,9 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
                                       'P: ${_currencyFormat.format(inst.principal)} • I: ${_currencyFormat.format(inst.interest)}',
                                       style: TextStyle(
                                         fontSize: 10,
-                                        color: isDark ? Colors.white54 : Colors.grey.shade600,
+                                        color: isDark
+                                            ? Colors.white54
+                                            : Colors.grey.shade600,
                                       ),
                                     ),
                                   ],
@@ -358,10 +375,7 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
   }) {
     return Column(
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 10, color: Colors.grey),
-        ),
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
         const SizedBox(height: 2),
         Text(
           value,
@@ -482,10 +496,7 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
               const Expanded(
                 child: Text(
                   'SMS Auto-Pay Active',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
               ),
               Container(
@@ -573,15 +584,16 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.account_balance_wallet_outlined, color: AppTheme.primary, size: 20),
+              Icon(
+                Icons.account_balance_wallet_outlined,
+                color: AppTheme.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
                   'Assigned Loans & Fallback Payment',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
               Text(
@@ -620,7 +632,8 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
 
   List<MandatoryEmiCheckItem> _buildFallbackChecks() {
     final list = <MandatoryEmiCheckItem>[];
-    if (widget.homeLoanConfig != null && widget.homeLoanConfig!.monthlyEMI > 0) {
+    if (widget.homeLoanConfig != null &&
+        widget.homeLoanConfig!.monthlyEMI > 0) {
       list.add(
         MandatoryEmiCheckItem(
           loanKey: 'Home Loan',
@@ -636,7 +649,9 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
         ),
       );
     }
-    for (final loan in widget.loans.where((l) => l.status.toLowerCase() == 'active')) {
+    for (final loan in widget.loans.where(
+      (l) => l.status.toLowerCase() == 'active',
+    )) {
       list.add(
         MandatoryEmiCheckItem(
           loanKey: loan.name,
@@ -663,8 +678,12 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isPaid
-            ? (isDark ? Colors.green.withValues(alpha: 0.12) : Colors.green.shade50)
-            : (isDark ? AppTheme.darkSurfaceContainer : AppTheme.surfaceContainerLow),
+            ? (isDark
+                  ? Colors.green.withValues(alpha: 0.12)
+                  : Colors.green.shade50)
+            : (isDark
+                  ? AppTheme.darkSurfaceContainer
+                  : AppTheme.surfaceContainerLow),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isPaid
@@ -770,7 +789,9 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
                       ? null
                       : () => _handleFallbackMarkPaid(item),
                   icon: const Icon(Icons.check_rounded, size: 16),
-                  label: Text('Mark Paid (₹${item.emiAmount.toStringAsFixed(0)})'),
+                  label: Text(
+                    'Mark Paid (₹${item.emiAmount.toStringAsFixed(0)})',
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
@@ -810,15 +831,16 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_month_rounded, color: AppTheme.primary, size: 20),
+              Icon(
+                Icons.calendar_month_rounded,
+                color: AppTheme.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
                   'Repayment Schedules (PDF Linked)',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
             ],
@@ -833,7 +855,8 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
           ),
           const SizedBox(height: 14),
           ...schedules.map((s) => _buildScheduleCard(s, isDark)),
-          if (widget.homeLoanHistory.isNotEmpty || widget.homeLoanConfig != null)
+          if (widget.homeLoanHistory.isNotEmpty ||
+              widget.homeLoanConfig != null)
             _buildHomeLoanScheduleCard(isDark),
         ],
       ),
@@ -842,9 +865,10 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
 
   Widget _buildScheduleCard(LoanRepaymentSchedule schedule, bool isDark) {
     final matchedLoan = widget.loans.cast<Loan?>().firstWhere(
-      (l) => l != null &&
+      (l) =>
+          l != null &&
           (l.name.toLowerCase().contains(schedule.agreementNo.toLowerCase()) ||
-           schedule.loanName.toLowerCase().contains(l.name.toLowerCase())),
+              schedule.loanName.toLowerCase().contains(l.name.toLowerCase())),
       orElse: () => null,
     );
 
@@ -950,7 +974,10 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
             children: [
               Text(
                 'Installments: $paidMonths / ${schedule.tenureMonths} Months',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               Text(
                 '${(progress * 100).toInt()}% Paid',
@@ -968,7 +995,9 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+              backgroundColor: isDark
+                  ? Colors.grey.shade800
+                  : Colors.grey.shade300,
               valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
             ),
           ),
@@ -980,7 +1009,10 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
               icon: const Icon(Icons.table_chart_outlined, size: 16),
               label: const Text('View Repayment Schedule'),
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -995,8 +1027,12 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
     final cfg = widget.homeLoanConfig;
     final history = widget.homeLoanHistory;
 
-    final principal = cfg?.principalAmount ?? (history.isNotEmpty ? history.first.balance : 0.0);
-    final balance = cfg?.balanceRemaining ?? (history.isNotEmpty ? history.last.balance : 0.0);
+    final principal =
+        cfg?.principalAmount ??
+        (history.isNotEmpty ? history.first.balance : 0.0);
+    final balance =
+        cfg?.balanceRemaining ??
+        (history.isNotEmpty ? history.last.balance : 0.0);
     final emi = cfg?.monthlyEMI ?? 12000.0;
     final rate = cfg?.interestRate ?? 8.5;
 
@@ -1026,10 +1062,7 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
                 children: [
                   const Text(
                     'Family Home Loan',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   Text(
                     'Rate: $rate% p.a. • Reducing Balance',
@@ -1101,9 +1134,7 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppTheme.darkSurfaceContainerLowest
-            : Colors.white,
+        color: isDark ? AppTheme.darkSurfaceContainerLowest : Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
