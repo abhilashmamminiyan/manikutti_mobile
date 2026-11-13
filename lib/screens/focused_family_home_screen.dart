@@ -4,13 +4,12 @@ import '../data/repayment_schedules_data.dart';
 import '../models/emi_model.dart';
 import '../models/home_loan_model.dart';
 import '../models/loan_model.dart';
-import '../services/api_service.dart';
 import '../services/emi_reminder_service.dart';
-import '../services/sms_detection_service.dart';
+import '../services/feature_flag_service.dart';
 import '../theme/app_theme.dart';
 import 'settings_screen.dart';
 
-class DemoRoleHomeScreen extends StatefulWidget {
+class FocusedFamilyHomeScreen extends StatefulWidget {
   final String displayName;
   final String userEmail;
   final String? familyCode;
@@ -19,12 +18,11 @@ class DemoRoleHomeScreen extends StatefulWidget {
   final HomeLoanConfig? homeLoanConfig;
   final List<HomeLoanEntry> homeLoanHistory;
   final List<MandatoryEmiCheckItem> mandatoryEmiChecks;
-  final List<PendingSmsTransaction> pendingSmsList;
   final bool isLoading;
   final Future<void> Function() onRefresh;
   final VoidCallback onLogout;
 
-  const DemoRoleHomeScreen({
+  const FocusedFamilyHomeScreen({
     super.key,
     required this.displayName,
     required this.userEmail,
@@ -34,17 +32,17 @@ class DemoRoleHomeScreen extends StatefulWidget {
     this.homeLoanConfig,
     required this.homeLoanHistory,
     required this.mandatoryEmiChecks,
-    required this.pendingSmsList,
     required this.isLoading,
     required this.onRefresh,
     required this.onLogout,
   });
 
   @override
-  State<DemoRoleHomeScreen> createState() => _DemoRoleHomeScreenState();
+  State<FocusedFamilyHomeScreen> createState() =>
+      _FocusedFamilyHomeScreenState();
 }
 
-class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
+class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
   final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹',
@@ -56,7 +54,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
 
   String get _currentMonthKey => DateFormat('yyyy-MM').format(DateTime.now());
 
-  Future<void> _handleMarkLoanPaid(MandatoryEmiCheckItem item) async {
+  Future<void> _handleFallbackMarkPaid(MandatoryEmiCheckItem item) async {
     if (widget.familyCode == null || widget.familyCode!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -69,10 +67,11 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Mark EMI as Paid?'),
+        title: const Text('Mark EMI as Paid?'),
         content: Text(
           'Mark "${item.title}" (₹${_currencyFormat.format(item.emiAmount)}) as paid for this month?\n\n'
-          'This will update the ledger and notify Mom and Abhilash.',
+          'Use this fallback if the bank debit SMS was not received or delayed. '
+          'Confirming will update the ledger and notify Mom and Abhilash.',
         ),
         actions: [
           TextButton(
@@ -120,7 +119,9 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Failed to confirm payment. Please check network.'),
+              content: Text(
+                'Failed to confirm payment. Please check network connection.',
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -134,41 +135,6 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
       }
     } finally {
       if (mounted) setState(() => _isProcessingAction = false);
-    }
-  }
-
-  Future<void> _handleConfirmSms(PendingSmsTransaction sms) async {
-    setState(() => _isProcessingAction = true);
-    try {
-      await SmsDetectionService.instance.confirmPendingSms(sms.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Logged SMS expense of ₹${sms.amount.toStringAsFixed(0)} successfully.',
-            ),
-            backgroundColor: Colors.green.shade700,
-          ),
-        );
-      }
-      await widget.onRefresh();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error confirming SMS: $e')));
-      }
-    } finally {
-      if (mounted) setState(() => _isProcessingAction = false);
-    }
-  }
-
-  Future<void> _handleDismissSms(PendingSmsTransaction sms) async {
-    try {
-      await SmsDetectionService.instance.dismissPendingSms(sms.id);
-      await widget.onRefresh();
-    } catch (e) {
-      debugPrint('Error dismissing SMS: $e');
     }
   }
 
@@ -427,6 +393,12 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final flags = FeatureFlagService.instance;
+
+    final showSmsAuto = flags.isEnabled(FeatureKeys.smsAutoTracking);
+    final showLoans = flags.isEnabled(FeatureKeys.loansEmiLedger);
+    final showSchedules = flags.isEnabled(FeatureKeys.repaymentSchedules);
+    final showHomeLoan = flags.isEnabled(FeatureKeys.homeLoan);
 
     return Scaffold(
       appBar: AppBar(
@@ -434,13 +406,13 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Manikutti • Demo Access',
+              'Manikutti Family Hub',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             Text(
-              '${widget.displayName} (SMS Tracking & Loans)',
+              widget.displayName,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: isDark
                     ? AppTheme.darkOnSurfaceVariant
@@ -475,21 +447,23 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. Role Info & Auto-SMS Banner
-              _buildRoleInfoBanner(context, isDark),
-              const SizedBox(height: 16),
+              // 1. Live SMS Zero-Confirmation Status (if sms_auto_tracking enabled)
+              if (showSmsAuto) ...[
+                _buildZeroConfirmationSmsCard(context, isDark),
+                const SizedBox(height: 18),
+              ],
 
-              // 2. SMS Expense Tracking Section
-              _buildSmsTrackingSection(context, isDark),
-              const SizedBox(height: 20),
+              // 2. Mark Assigned Loan as Paid Section with Fallback 1-Tap (if loans_emi_ledger enabled)
+              if (showLoans || showHomeLoan) ...[
+                _buildLoansPaymentSection(context, isDark),
+                const SizedBox(height: 20),
+              ],
 
-              // 3. Mark Assigned Loan as Paid Section
-              _buildMarkAssignedLoanSection(context, isDark),
-              const SizedBox(height: 20),
-
-              // 4. Tracking the Repayment Schedule Section
-              _buildRepaymentScheduleSection(context, isDark),
-              const SizedBox(height: 30),
+              // 3. Repayment Schedule Breakdown (if repayment_schedules enabled)
+              if (showSchedules) ...[
+                _buildRepaymentScheduleSection(context, isDark),
+                const SizedBox(height: 24),
+              ],
             ],
           ),
         ),
@@ -497,74 +471,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
     );
   }
 
-  Widget _buildRoleInfoBanner(BuildContext context, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark
-            ? AppTheme.darkSurfaceContainerLowest
-            : AppTheme.primaryContainer.withValues(alpha: 0.25),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.shield_outlined, color: AppTheme.primary, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      'Demo Role Mode',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Text(
-                        'DEMO',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Streamlined access: SMS expense tracking, 1-tap fallback marking for assigned loans, and full Bajaj & Home Loan repayment schedules.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white70 : Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSmsTrackingSection(BuildContext context, bool isDark) {
-    final pending = widget.pendingSmsList;
-
+  Widget _buildZeroConfirmationSmsCard(BuildContext context, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -584,12 +491,12 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.sms_outlined, color: AppTheme.primary, size: 20),
+              Icon(Icons.flash_on_rounded, color: AppTheme.primary, size: 22),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
-                  'SMS Expense Tracking',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  'SMS Auto-Pay Active',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
               ),
               Container(
@@ -605,7 +512,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
                     Icon(Icons.circle, size: 8, color: Colors.green.shade700),
                     const SizedBox(width: 4),
                     Text(
-                      'Live Auto-Detect',
+                      'Zero User Action Needed',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -617,137 +524,43 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'When Ajesh receives an EMI debit SMS, the app marks the EMI as paid automatically without confirmation, visible to Abhilash and dispatching push notifications to Mom & Abhilash.',
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white60 : Colors.black54,
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppTheme.darkSurfaceContainer
+                  : AppTheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(12),
             ),
-          ),
-          const SizedBox(height: 12),
-          if (pending.isEmpty) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppTheme.darkSurfaceContainer
-                    : AppTheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.check_circle_outline,
-                    color: Colors.green.shade700,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: Text(
-                      'No pending SMS. Ready for incoming bank messages.',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ] else ...[
-            Text(
-              'Pending SMS Transactions (${pending.length}):',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-            const SizedBox(height: 8),
-            ...pending.map((sms) => _buildPendingSmsCard(sms, isDark)),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPendingSmsCard(PendingSmsTransaction sms, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark
-            ? AppTheme.darkSurfaceContainer
-            : AppTheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: sms.isEmi ? Colors.orange.shade300 : Colors.transparent,
-        ),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: sms.isEmi
-                ? Colors.orange.shade100
-                : AppTheme.primaryContainer,
-            child: Icon(
-              sms.isEmi ? Icons.account_balance : Icons.receipt_long,
-              color: sms.isEmi ? Colors.orange.shade800 : AppTheme.primary,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${sms.merchant} (${sms.bankAccount})',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Icon(
+                  Icons.mark_email_read_outlined,
+                  size: 20,
+                  color: Colors.green.shade700,
                 ),
-                Text(
-                  '₹${sms.amount.toStringAsFixed(0)} • ${sms.category}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white70 : Colors.black87,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'When an incoming bank SMS matches a configured EMI payment amount, the app auto-marks the EMI as paid immediately in the background without any confirmation prompts or user acceptance. Push notifications are automatically dispatched to Mom and Abhilash.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.4,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.close, color: Colors.grey, size: 20),
-                tooltip: 'Dismiss',
-                onPressed: _isProcessingAction
-                    ? null
-                    : () => _handleDismissSms(sms),
-              ),
-              ElevatedButton(
-                onPressed: _isProcessingAction
-                    ? null
-                    : () => _handleConfirmSms(sms),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  minimumSize: Size.zero,
-                ),
-                child: const Text('Log', style: TextStyle(fontSize: 11)),
-              ),
-            ],
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildMarkAssignedLoanSection(BuildContext context, bool isDark) {
-    // Generate check items from mandatoryEmiChecks or fallback to loans + Home Loan
+  Widget _buildLoansPaymentSection(BuildContext context, bool isDark) {
     final checks = widget.mandatoryEmiChecks.isNotEmpty
         ? widget.mandatoryEmiChecks
         : _buildFallbackChecks();
@@ -771,16 +584,20 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.payment_rounded, color: AppTheme.primary, size: 20),
+              Icon(
+                Icons.account_balance_wallet_outlined,
+                color: AppTheme.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
-                  'Mark Assigned Loan as Paid',
+                  'Assigned Loans & Fallback Payment',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
               Text(
-                '$_currentMonthKey',
+                _currentMonthKey,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -791,7 +608,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'If the bank SMS is failed or delayed, tap below to mark this month\'s installment as paid manually.',
+            'If the bank SMS failed or was delayed, use the 1-tap button below to mark the installment paid manually.',
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.white60 : Colors.black54,
@@ -802,11 +619,11 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
             const Center(
               child: Padding(
                 padding: EdgeInsets.all(16),
-                child: Text('No active assigned loans found for this month.'),
+                child: Text('No active assigned loans for this month.'),
               ),
             ),
           ] else ...[
-            ...checks.map((item) => _buildLoanEmiCheckCard(item, isDark)),
+            ...checks.map((item) => _buildLoanCard(item, isDark)),
           ],
         ],
       ),
@@ -853,7 +670,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
     return list;
   }
 
-  Widget _buildLoanEmiCheckCard(MandatoryEmiCheckItem item, bool isDark) {
+  Widget _buildLoanCard(MandatoryEmiCheckItem item, bool isDark) {
     final isPaid = item.paidToPayer || _locallyPaidKeys.contains(item.loanKey);
 
     return Container(
@@ -960,7 +777,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
                 ),
               ] else ...[
                 Text(
-                  'Due on: ${item.dueDay}th of this month',
+                  'Due: ${item.dueDay}th of month',
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.orange.shade800,
@@ -970,7 +787,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
                 ElevatedButton.icon(
                   onPressed: _isProcessingAction
                       ? null
-                      : () => _handleMarkLoanPaid(item),
+                      : () => _handleFallbackMarkPaid(item),
                   icon: const Icon(Icons.check_rounded, size: 16),
                   label: Text(
                     'Mark Paid (₹${item.emiAmount.toStringAsFixed(0)})',
@@ -1030,7 +847,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Track remaining principal, paid principal, remaining interest, and interest rates for all active loans.',
+            'Track remaining principal, paid principal, remaining interest, and contractual interest rates.',
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.white60 : Colors.black54,
@@ -1047,7 +864,6 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
   }
 
   Widget _buildScheduleCard(LoanRepaymentSchedule schedule, bool isDark) {
-    // Find matching loan in widget.loans to see current paidMonths
     final matchedLoan = widget.loans.cast<Loan?>().firstWhere(
       (l) =>
           l != null &&

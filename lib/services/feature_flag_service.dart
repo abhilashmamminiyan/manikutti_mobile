@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class FeatureKeys {
   static const String homeLoan = 'home_loan';
   static const String loansEmiLedger = 'loans_emi_ledger';
+  static const String repaymentSchedules = 'repayment_schedules';
   static const String monthlyDues = 'monthly_dues';
   static const String billsUtilities = 'bills_utilities';
   static const String mobileRecharges = 'mobile_recharges';
@@ -12,6 +13,7 @@ class FeatureKeys {
   static const String screenshots = 'screenshots';
   static const String bankStatement = 'bank_statement';
   static const String voiceLogging = 'voice_logging';
+  static const String smsAutoTracking = 'sms_auto_tracking';
   static const String aiScreenshotExtraction = 'ai_screenshot_extraction';
   static const String aiAdvisor = 'ai_advisor';
   static const String budgetProgress = 'budget_progress';
@@ -25,6 +27,7 @@ class FeatureKeys {
   static const List<String> allKeys = [
     homeLoan,
     loansEmiLedger,
+    repaymentSchedules,
     monthlyDues,
     billsUtilities,
     mobileRecharges,
@@ -32,6 +35,7 @@ class FeatureKeys {
     screenshots,
     bankStatement,
     voiceLogging,
+    smsAutoTracking,
     aiScreenshotExtraction,
     aiAdvisor,
     budgetProgress,
@@ -63,6 +67,15 @@ class FeatureFlagService {
   bool get masterAiEnabled => _masterAiEnabled;
   bool get isDemoRole => _roleName.trim().toLowerCase() == 'demo';
   bool get isBasicRole => _roleName.trim().toLowerCase() == 'basic';
+
+  /// Pure capability flag check: Returns false if all personal finance ledger
+  /// modules (balances, budget gauge, expense charts, personal salary tracking)
+  /// are disabled, signaling a focused family/shared view.
+  bool get hasPersonalLedger =>
+      isEnabled(FeatureKeys.bankBalances) ||
+      isEnabled(FeatureKeys.budgetProgress) ||
+      isEnabled(FeatureKeys.expenseChart) ||
+      isEnabled(FeatureKeys.salaryTracking);
 
   static Map<String, bool> _buildDefaultOpenMap() {
     return {for (final k in FeatureKeys.allKeys) k: true};

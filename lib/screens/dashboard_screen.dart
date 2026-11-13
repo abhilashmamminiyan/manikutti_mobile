@@ -28,7 +28,7 @@ import '../widgets/family_pool_transfers_card.dart';
 import '../widgets/monthly_dues_section.dart';
 import '../widgets/dashboard_budget_progress.dart';
 import 'simple_family_home_screen.dart';
-import 'demo_role_home_screen.dart';
+import 'focused_family_home_screen.dart';
 import '../models/emi_model.dart';
 import '../models/home_loan_model.dart';
 import '../services/widget_data_service.dart';
@@ -3590,11 +3590,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       valueListenable: FeatureFlagService.instance.permissionsNotifier,
       builder: (context, _, _) {
         final flags = FeatureFlagService.instance;
-        if (flags.isDemoRole) {
+        // Pure capability-driven routing: If personal finance ledger modules (balances,
+        // budget meter, charts, salary editor) are disabled for this member's role capabilities,
+        // route directly to the focused family experience without any hardcoded role name checks.
+        if (!flags.hasPersonalLedger) {
           final display = _memberNickname.isNotEmpty
               ? _memberNickname
               : (_userEmail?.split('@').first ?? 'Family');
-          return DemoRoleHomeScreen(
+          return FocusedFamilyHomeScreen(
             displayName: display,
             userEmail: _userEmail ?? '',
             familyCode: _familyCode,
@@ -3603,31 +3606,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             homeLoanConfig: _homeLoanConfig,
             homeLoanHistory: _homeLoanHistory,
             mandatoryEmiChecks: _mandatoryEmiChecks,
-            pendingSmsList: _pendingSmsList,
             isLoading: _isLoading,
             onRefresh: _triggerSync,
-            onLogout: _handleLogout,
-          );
-        }
-
-        if (flags.roleName.trim().toLowerCase() == 'basic') {
-          final display = _memberNickname.isNotEmpty
-              ? _memberNickname
-              : (_userEmail?.split('@').first ?? 'Family');
-          return SimpleFamilyHomeScreen(
-            displayName: display,
-            userEmail: _userEmail ?? '',
-            familyCode: _familyCode,
-            monthlyExpenses: _monthlyExpenses,
-            familyMembers: _familyMembers,
-            familyTransfers: _familyTransfers,
-            homeLoanHistory: _homeLoanHistory,
-            transactions: _transactions,
-            isLoading: _isLoading,
-            onRefresh: _triggerSync,
-            onMarkDuePaid: _markPaid,
-            onRecordTransfer: _showRecordTransferDialog,
-            onDeleteTransfer: _handleDeleteTransfer,
             onLogout: _handleLogout,
           );
         }
