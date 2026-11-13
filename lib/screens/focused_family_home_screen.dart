@@ -697,9 +697,10 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
           MandatoryEmiCheckItem(
             loanKey: s.loanName,
             title: s.loanName,
-            emiAmount: s.emiAmount,
-            payerName: 'Ajesh',
-            shareRecipient: 'Abhilash',
+            emiAmount: s.monthlyEmi,
+            payerName: s.payer.isNotEmpty ? s.payer : 'Ajesh',
+            shareRecipient:
+                s.shareRecipient.isNotEmpty ? s.shareRecipient : 'Abhilash',
             dueDay: 5,
             paidToPayer: false,
             sharedWithRecipient: false,

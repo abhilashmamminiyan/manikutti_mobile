@@ -44,6 +44,8 @@ class LoanRepaymentSchedule {
     required this.installments,
   });
 
+  double get emiAmount => monthlyEmi;
+
   double get totalInterest =>
       installments.fold(0.0, (sum, i) => sum + i.interest);
   double get totalRepayable =>
