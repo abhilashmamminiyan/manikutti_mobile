@@ -289,7 +289,10 @@ class SettingsScreen extends StatelessWidget {
                             value: ThemeStyle.modern,
                             child: Row(
                               children: [
-                                const Icon(Icons.auto_awesome_rounded, size: 16),
+                                const Icon(
+                                  Icons.auto_awesome_rounded,
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Modern',

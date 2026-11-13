@@ -1175,7 +1175,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: 1.5,
               )
             : null,
-        boxShadow: isPaper ? AppTheme.paperCardShadow : AppTheme.editorialShadow,
+        boxShadow: isPaper
+            ? AppTheme.paperCardShadow
+            : AppTheme.editorialShadow,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 22.0),
       child: Column(
@@ -1193,8 +1195,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 decoration: BoxDecoration(
                   color: isPaper
                       ? (isDark
-                          ? Colors.black.withOpacity(0.3)
-                          : const Color(0xFFD4AF37).withOpacity(0.25))
+                            ? Colors.black.withOpacity(0.3)
+                            : const Color(0xFFD4AF37).withOpacity(0.25))
                       : Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -1398,16 +1400,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         color: isPaper
             ? (isDark ? AppTheme.paperDarkCard : AppTheme.paperCard)
             : (isDark
-                ? AppTheme.darkSurfaceContainerLowest
-                : AppTheme.surfaceContainerLowest),
+                  ? AppTheme.darkSurfaceContainerLowest
+                  : AppTheme.surfaceContainerLowest),
         borderRadius: BorderRadius.circular(isPaper ? 14 : 20),
-        boxShadow: isPaper ? AppTheme.paperCardShadow : AppTheme.ambientCardShadow,
+        boxShadow: isPaper
+            ? AppTheme.paperCardShadow
+            : AppTheme.ambientCardShadow,
         border: Border.all(
           color: isPaper
               ? (isDark ? const Color(0xFF383A40) : const Color(0xFFE2DDD5))
               : (isDark
-                  ? const Color(0xFF2C3233)
-                  : AppTheme.outlineVariant.withOpacity(0.18)),
+                    ? const Color(0xFF2C3233)
+                    : AppTheme.outlineVariant.withOpacity(0.18)),
           width: isPaper ? 1.2 : 1.0,
         ),
       ),
@@ -2943,7 +2947,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 end: Alignment.bottomRight,
               ),
         borderRadius: BorderRadius.circular(isPaper ? 16 : 24),
-        boxShadow: isPaper ? AppTheme.paperCardShadow : AppTheme.editorialShadow,
+        boxShadow: isPaper
+            ? AppTheme.paperCardShadow
+            : AppTheme.editorialShadow,
         border: Border.all(
           color: isPaper
               ? const Color(0xFFD4AF37).withOpacity(0.35)
@@ -3892,14 +3898,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     decoration: BoxDecoration(
                       color: isPaper
                           ? (isDark
-                              ? AppTheme.paperDarkCard
-                              : const Color(0xFFF0EBE1))
+                                ? AppTheme.paperDarkCard
+                                : const Color(0xFFF0EBE1))
                           : (isDark
-                              ? AppTheme.darkSurfaceContainer
-                              : AppTheme.surfaceContainerLow),
+                                ? AppTheme.darkSurfaceContainer
+                                : AppTheme.surfaceContainerLow),
                       borderRadius: BorderRadius.circular(isPaper ? 10 : 16),
                       border: isPaper
-                          ? Border.all(color: const Color(0xFFE2DDD5), width: 1.2)
+                          ? Border.all(
+                              color: const Color(0xFFE2DDD5),
+                              width: 1.2,
+                            )
                           : null,
                     ),
                     child: Row(
@@ -3908,8 +3917,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         final paperTabColor = name == 'All'
                             ? AppTheme.paperTabBlue
                             : (name == 'Personal'
-                                ? AppTheme.paperTabGreen
-                                : AppTheme.paperTabPeach);
+                                  ? AppTheme.paperTabGreen
+                                  : AppTheme.paperTabPeach);
                         return Expanded(
                           child: GestureDetector(
                             onTap: () => setState(() => _filter = name),
@@ -3920,16 +3929,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? (isPaper
-                                        ? paperTabColor
-                                        : (isDark
-                                              ? AppTheme.primaryContainer
-                                              : AppTheme.primary))
+                                          ? paperTabColor
+                                          : (isDark
+                                                ? AppTheme.primaryContainer
+                                                : AppTheme.primary))
                                     : Colors.transparent,
-                                borderRadius: BorderRadius.circular(isPaper ? 8 : 12),
+                                borderRadius: BorderRadius.circular(
+                                  isPaper ? 8 : 12,
+                                ),
                                 boxShadow: isSelected
                                     ? (isPaper
-                                        ? AppTheme.paperCardShadow
-                                        : AppTheme.subtleFloatShadow)
+                                          ? AppTheme.paperCardShadow
+                                          : AppTheme.subtleFloatShadow)
                                     : null,
                               ),
                               child: Center(
@@ -3938,10 +3949,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   style: theme.textTheme.labelMedium?.copyWith(
                                     color: isSelected
                                         ? (isPaper
-                                            ? AppTheme.paperInkNavy
-                                            : (isDark
-                                                  ? AppTheme.onPrimaryContainer
-                                                  : Colors.white))
+                                              ? AppTheme.paperInkNavy
+                                              : (isDark
+                                                    ? AppTheme
+                                                          .onPrimaryContainer
+                                                    : Colors.white))
                                         : (isDark
                                               ? AppTheme.darkOnSurfaceVariant
                                               : AppTheme.onSurfaceVariant),
@@ -4034,16 +4046,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       return FadeTransition(
                         opacity: animation,
                         child: ScaleTransition(
-                          scale: Tween<double>(begin: 0.96, end: 1.0).animate(animation),
+                          scale: Tween<double>(
+                            begin: 0.96,
+                            end: 1.0,
+                          ).animate(animation),
                           child: child,
                         ),
                       );
                     },
                     child: _dashboardTransactions.isEmpty
                         ? KeyedSubtree(
-                            key: ValueKey<String>('tx_empty_${effectiveFilter}'),
+                            key: ValueKey<String>(
+                              'tx_empty_${effectiveFilter}',
+                            ),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 40.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 40.0,
+                              ),
                               child: Column(
                                 children: [
                                   Container(
@@ -4051,24 +4070,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     decoration: BoxDecoration(
                                       color: isPaper
                                           ? (isDark
-                                              ? AppTheme.paperDarkCard
-                                              : AppTheme.paperContainerLow)
+                                                ? AppTheme.paperDarkCard
+                                                : AppTheme.paperContainerLow)
                                           : (isDark
-                                              ? AppTheme.darkSurfaceContainer
-                                              : AppTheme.surfaceContainerLow),
+                                                ? AppTheme.darkSurfaceContainer
+                                                : AppTheme.surfaceContainerLow),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
-                                      isPaper ? Icons.history_edu_rounded : Icons.receipt_long_rounded,
+                                      isPaper
+                                          ? Icons.history_edu_rounded
+                                          : Icons.receipt_long_rounded,
                                       size: 40,
-                                      color: isPaper ? AppTheme.paperInkMuted : AppTheme.outline,
+                                      color: isPaper
+                                          ? AppTheme.paperInkMuted
+                                          : AppTheme.outline,
                                     ),
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
                                     'No transactions recorded for ${DateFormat('MMMM').format(DateTime.now())} yet.',
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: isPaper ? AppTheme.paperInkMuted : AppTheme.outline,
+                                      color: isPaper
+                                          ? AppTheme.paperInkMuted
+                                          : AppTheme.outline,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -4079,7 +4104,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       side: BorderSide(
-                                        color: (isPaper ? AppTheme.paperInkNavy : AppTheme.primary).withOpacity(0.3),
+                                        color:
+                                            (isPaper
+                                                    ? AppTheme.paperInkNavy
+                                                    : AppTheme.primary)
+                                                .withOpacity(0.3),
                                       ),
                                     ),
                                     onPressed: () async {
@@ -4107,7 +4136,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           )
                         : KeyedSubtree(
-                            key: ValueKey<String>('tx_list_${effectiveFilter}_${_dashboardTransactions.length}'),
+                            key: ValueKey<String>(
+                              'tx_list_${effectiveFilter}_${_dashboardTransactions.length}',
+                            ),
                             child: ListView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
@@ -4122,24 +4153,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   margin: const EdgeInsets.only(bottom: 12),
                                   decoration: BoxDecoration(
                                     color: isPaper
-                                        ? (isDark ? AppTheme.paperDarkCard : AppTheme.paperCard)
+                                        ? (isDark
+                                              ? AppTheme.paperDarkCard
+                                              : AppTheme.paperCard)
                                         : (isDark
-                                            ? AppTheme.darkSurfaceContainerLowest
-                                            : AppTheme.surfaceContainerLowest),
-                                    borderRadius: BorderRadius.circular(isPaper ? 14 : 20),
+                                              ? AppTheme
+                                                    .darkSurfaceContainerLowest
+                                              : AppTheme
+                                                    .surfaceContainerLowest),
+                                    borderRadius: BorderRadius.circular(
+                                      isPaper ? 14 : 20,
+                                    ),
                                     boxShadow: isPaper
                                         ? AppTheme.paperCardShadow
                                         : AppTheme.ambientCardShadow,
                                     border: Border.all(
                                       color: isPaper
                                           ? (isDark
-                                              ? const Color(0xFF383A40)
-                                              : const Color(0xFFE2DDD5))
+                                                ? const Color(0xFF383A40)
+                                                : const Color(0xFFE2DDD5))
                                           : (isDark
-                                              ? const Color(0xFF2C3233)
-                                              : AppTheme.outlineVariant.withOpacity(
-                                                  0.18,
-                                                )),
+                                                ? const Color(0xFF2C3233)
+                                                : AppTheme.outlineVariant
+                                                      .withOpacity(0.18)),
                                       width: isPaper ? 1.2 : 1.0,
                                     ),
                                   ),
@@ -4151,8 +4187,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         decoration: BoxDecoration(
                                           color: isPaper
                                               ? (isDark
-                                                  ? const Color(0xFF1E2024)
-                                                  : AppTheme.paperContainerLow)
+                                                    ? const Color(0xFF1E2024)
+                                                    : AppTheme
+                                                          .paperContainerLow)
                                               : _getCategoryColor(
                                                   t.type,
                                                 ).withOpacity(0.12),
@@ -4169,8 +4206,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           _getCategoryIcon(t.category),
                                           color: isPaper
                                               ? (isDark
-                                                  ? AppTheme.paperTabBlue
-                                                  : AppTheme.paperInkNavy)
+                                                    ? AppTheme.paperTabBlue
+                                                    : AppTheme.paperInkNavy)
                                               : _getCategoryColor(t.type),
                                           size: 20,
                                         ),
@@ -4198,14 +4235,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                               children: [
                                                 Text(
                                                   '$formattedDate • ${t.type}',
-                                                  style: theme.textTheme.bodySmall
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
                                                       ?.copyWith(
                                                         color: isDark
                                                             ? AppTheme
                                                                   .darkOnSurfaceVariant
                                                             : AppTheme
                                                                   .onSurfaceVariant
-                                                                  .withOpacity(0.7),
+                                                                  .withOpacity(
+                                                                    0.7,
+                                                                  ),
                                                         fontSize: 11,
                                                       ),
                                                 ),
@@ -4213,11 +4254,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                     t.addedBy != null) ...[
                                                   Text(
                                                     ' • ${_getMemberNickname(t.addedBy!)}',
-                                                    style: theme.textTheme.bodySmall
+                                                    style: theme
+                                                        .textTheme
+                                                        .bodySmall
                                                         ?.copyWith(
                                                           color: isPaper
-                                                              ? AppTheme.paperLeatherMid
-                                                              : AppTheme.primary,
+                                                              ? AppTheme
+                                                                    .paperLeatherMid
+                                                              : AppTheme
+                                                                    .primary,
                                                           fontSize: 11,
                                                           fontWeight:
                                                               FontWeight.w600,
@@ -4230,20 +4275,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         ),
                                       ),
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
                                         children: [
                                           Text(
                                             '${t.type == 'Income' ? '+' : '-'}₹${t.amount.toStringAsFixed(2)}',
-                                            style: theme.textTheme.titleMedium
-                                                ?.copyWith(
-                                                  fontFamily: isPaper ? 'JetBrains Mono' : null,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: t.type == 'Income'
-                                                      ? (isPaper ? AppTheme.paperStampGreen : const Color(0xFF10B981))
-                                                      : (t.type == 'Family'
-                                                            ? (isPaper ? AppTheme.paperTabBlue : AppTheme.primary)
-                                                            : (isPaper ? AppTheme.paperStampRed : AppTheme.error)),
-                                                ),
+                                            style: theme.textTheme.titleMedium?.copyWith(
+                                              fontFamily: isPaper
+                                                  ? 'JetBrains Mono'
+                                                  : null,
+                                              fontWeight: FontWeight.w800,
+                                              color: t.type == 'Income'
+                                                  ? (isPaper
+                                                        ? AppTheme
+                                                              .paperStampGreen
+                                                        : const Color(
+                                                            0xFF10B981,
+                                                          ))
+                                                  : (t.type == 'Family'
+                                                        ? (isPaper
+                                                              ? AppTheme
+                                                                    .paperTabBlue
+                                                              : AppTheme
+                                                                    .primary)
+                                                        : (isPaper
+                                                              ? AppTheme
+                                                                    .paperStampRed
+                                                              : AppTheme
+                                                                    .error)),
+                                            ),
                                           ),
                                           const SizedBox(height: 4),
                                           Icon(
@@ -4252,8 +4312,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                 : Icons.cloud_off_rounded,
                                             size: 14,
                                             color: t.synced
-                                                ? (isPaper ? AppTheme.paperStampGreen : const Color(0xFF10B981))
-                                                : (isPaper ? AppTheme.paperTabPeach : AppTheme.secondary),
+                                                ? (isPaper
+                                                      ? AppTheme.paperStampGreen
+                                                      : const Color(0xFF10B981))
+                                                : (isPaper
+                                                      ? AppTheme.paperTabPeach
+                                                      : AppTheme.secondary),
                                           ),
                                         ],
                                       ),
@@ -4263,7 +4327,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               },
                             ),
                           ),
-                  ),,
+                  ),
                   const SizedBox(height: 80), // bottom spacing for FAB
                 ],
               ),

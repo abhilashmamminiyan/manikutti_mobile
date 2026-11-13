@@ -59,7 +59,9 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
   Future<void> _handleMarkLoanPaid(MandatoryEmiCheckItem item) async {
     if (widget.familyCode == null || widget.familyCode!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Family Code missing. Please sync first.')),
+        const SnackBar(
+          content: Text('Family Code missing. Please sync first.'),
+        ),
       );
       return;
     }
@@ -152,9 +154,9 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
       await widget.onRefresh();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error confirming SMS: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error confirming SMS: $e')));
       }
     } finally {
       if (mounted) setState(() => _isProcessingAction = false);
@@ -301,8 +303,8 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
                           ),
                           color: isPaid
                               ? (isDark
-                                  ? Colors.green.withValues(alpha: 0.1)
-                                  : Colors.green.shade50)
+                                    ? Colors.green.withValues(alpha: 0.1)
+                                    : Colors.green.shade50)
                               : Colors.transparent,
                           child: Row(
                             children: [
@@ -310,13 +312,19 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
                                 radius: 14,
                                 backgroundColor: isPaid
                                     ? Colors.green.shade700
-                                    : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                                    : (isDark
+                                          ? Colors.grey.shade800
+                                          : Colors.grey.shade200),
                                 child: Text(
                                   '#${inst.instNo}',
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
-                                    color: isPaid ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                                    color: isPaid
+                                        ? Colors.white
+                                        : (isDark
+                                              ? Colors.white70
+                                              : Colors.black87),
                                   ),
                                 ),
                               ),
@@ -337,7 +345,9 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
                                       'Bal: ${_currencyFormat.format(inst.closingPrincipal)}',
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: isDark ? Colors.white60 : Colors.grey.shade700,
+                                        color: isDark
+                                            ? Colors.white60
+                                            : Colors.grey.shade700,
                                       ),
                                     ),
                                   ],
@@ -349,7 +359,9 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(
-                                      _currencyFormat.format(inst.installmentAmount),
+                                      _currencyFormat.format(
+                                        inst.installmentAmount,
+                                      ),
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 12,
@@ -359,7 +371,9 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
                                       'P: ${_currencyFormat.format(inst.principal)} • I: ${_currencyFormat.format(inst.interest)}',
                                       style: TextStyle(
                                         fontSize: 10,
-                                        color: isDark ? Colors.white54 : Colors.grey.shade600,
+                                        color: isDark
+                                            ? Colors.white54
+                                            : Colors.grey.shade600,
                                       ),
                                     ),
                                   ],
@@ -395,10 +409,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
   }) {
     return Column(
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 10, color: Colors.grey),
-        ),
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
         const SizedBox(height: 2),
         Text(
           value,
@@ -494,9 +505,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
             ? AppTheme.darkSurfaceContainerLowest
             : AppTheme.primaryContainer.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppTheme.primary.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -580,17 +589,11 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
               const Expanded(
                 child: Text(
                   'SMS Expense Tracking',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.green.shade50,
                   borderRadius: BorderRadius.circular(12),
@@ -599,11 +602,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.circle,
-                      size: 8,
-                      color: Colors.green.shade700,
-                    ),
+                    Icon(Icons.circle, size: 8, color: Colors.green.shade700),
                     const SizedBox(width: 4),
                     Text(
                       'Live Auto-Detect',
@@ -656,10 +655,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
           ] else ...[
             Text(
               'Pending SMS Transactions (${pending.length}):',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             ),
             const SizedBox(height: 8),
             ...pending.map((sms) => _buildPendingSmsCard(sms, isDark)),
@@ -780,10 +776,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
               const Expanded(
                 child: Text(
                   'Mark Assigned Loan as Paid',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
               Text(
@@ -822,7 +815,8 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
 
   List<MandatoryEmiCheckItem> _buildFallbackChecks() {
     final list = <MandatoryEmiCheckItem>[];
-    if (widget.homeLoanConfig != null && widget.homeLoanConfig!.monthlyEMI > 0) {
+    if (widget.homeLoanConfig != null &&
+        widget.homeLoanConfig!.monthlyEMI > 0) {
       list.add(
         MandatoryEmiCheckItem(
           loanKey: 'Home Loan',
@@ -838,7 +832,9 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
         ),
       );
     }
-    for (final loan in widget.loans.where((l) => l.status.toLowerCase() == 'active')) {
+    for (final loan in widget.loans.where(
+      (l) => l.status.toLowerCase() == 'active',
+    )) {
       list.add(
         MandatoryEmiCheckItem(
           loanKey: loan.name,
@@ -865,8 +861,12 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isPaid
-            ? (isDark ? Colors.green.withValues(alpha: 0.12) : Colors.green.shade50)
-            : (isDark ? AppTheme.darkSurfaceContainer : AppTheme.surfaceContainerLow),
+            ? (isDark
+                  ? Colors.green.withValues(alpha: 0.12)
+                  : Colors.green.shade50)
+            : (isDark
+                  ? AppTheme.darkSurfaceContainer
+                  : AppTheme.surfaceContainerLow),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isPaid
@@ -972,7 +972,9 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
                       ? null
                       : () => _handleMarkLoanPaid(item),
                   icon: const Icon(Icons.check_rounded, size: 16),
-                  label: Text('Mark Paid (₹${item.emiAmount.toStringAsFixed(0)})'),
+                  label: Text(
+                    'Mark Paid (₹${item.emiAmount.toStringAsFixed(0)})',
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
@@ -1012,15 +1014,16 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_month_rounded, color: AppTheme.primary, size: 20),
+              Icon(
+                Icons.calendar_month_rounded,
+                color: AppTheme.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
                   'Repayment Schedules (PDF Linked)',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
             ],
@@ -1035,7 +1038,8 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
           ),
           const SizedBox(height: 14),
           ...schedules.map((s) => _buildScheduleCard(s, isDark)),
-          if (widget.homeLoanHistory.isNotEmpty || widget.homeLoanConfig != null)
+          if (widget.homeLoanHistory.isNotEmpty ||
+              widget.homeLoanConfig != null)
             _buildHomeLoanScheduleCard(isDark),
         ],
       ),
@@ -1045,9 +1049,10 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
   Widget _buildScheduleCard(LoanRepaymentSchedule schedule, bool isDark) {
     // Find matching loan in widget.loans to see current paidMonths
     final matchedLoan = widget.loans.cast<Loan?>().firstWhere(
-      (l) => l != null &&
+      (l) =>
+          l != null &&
           (l.name.toLowerCase().contains(schedule.agreementNo.toLowerCase()) ||
-           schedule.loanName.toLowerCase().contains(l.name.toLowerCase())),
+              schedule.loanName.toLowerCase().contains(l.name.toLowerCase())),
       orElse: () => null,
     );
 
@@ -1153,7 +1158,10 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
             children: [
               Text(
                 'Installments: $paidMonths / ${schedule.tenureMonths} Months',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               Text(
                 '${(progress * 100).toInt()}% Paid',
@@ -1171,7 +1179,9 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+              backgroundColor: isDark
+                  ? Colors.grey.shade800
+                  : Colors.grey.shade300,
               valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
             ),
           ),
@@ -1183,7 +1193,10 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
               icon: const Icon(Icons.table_chart_outlined, size: 16),
               label: const Text('View Repayment Schedule'),
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -1198,8 +1211,12 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
     final cfg = widget.homeLoanConfig;
     final history = widget.homeLoanHistory;
 
-    final principal = cfg?.principalAmount ?? (history.isNotEmpty ? history.first.balance : 0.0);
-    final balance = cfg?.balanceRemaining ?? (history.isNotEmpty ? history.last.balance : 0.0);
+    final principal =
+        cfg?.principalAmount ??
+        (history.isNotEmpty ? history.first.balance : 0.0);
+    final balance =
+        cfg?.balanceRemaining ??
+        (history.isNotEmpty ? history.last.balance : 0.0);
     final emi = cfg?.monthlyEMI ?? 12000.0;
     final rate = cfg?.interestRate ?? 8.5;
 
@@ -1229,10 +1246,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
                 children: [
                   const Text(
                     'Family Home Loan',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   Text(
                     'Rate: $rate% p.a. • Reducing Balance',
@@ -1304,9 +1318,7 @@ class _DemoRoleHomeScreenState extends State<DemoRoleHomeScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppTheme.darkSurfaceContainerLowest
-            : Colors.white,
+        color: isDark ? AppTheme.darkSurfaceContainerLowest : Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,

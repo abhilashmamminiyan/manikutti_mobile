@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Supported Design Theme Styles
-enum ThemeStyle {
-  modern,
-  paper,
-}
+enum ThemeStyle { modern, paper }
 
 /// Paper Morph Page Transitions Builder
 class PaperMorphPageTransitionsBuilder extends PageTransitionsBuilder {
@@ -58,18 +55,24 @@ class AppTheme {
   static const Color onPrimaryContainer = Color(0xFF00535B);
 
   static const Color secondary = Color(0xFF735C00); // Sunlight Gold
-  static const Color secondaryContainer = Color(0xFFFDD34D); // Growth / Warm Milestone
+  static const Color secondaryContainer = Color(
+    0xFFFDD34D,
+  ); // Growth / Warm Milestone
   static const Color onSecondary = Color(0xFFFFFFFF);
   static const Color onSecondaryContainer = Color(0xFF725B00);
 
   static const Color surface = Color(0xFFF8F9FA); // Clean expansive canvas
-  static const Color surfaceContainerLow = Color(0xFFF3F4F5); // Grouping / Sectioning
+  static const Color surfaceContainerLow = Color(
+    0xFFF3F4F5,
+  ); // Grouping / Sectioning
   static const Color surfaceContainer = Color(0xFFEDEEEF);
   static const Color surfaceContainerHigh = Color(0xFFE7E8E9);
   static const Color surfaceContainerHighest = Color(0xFFE1E3E4);
   static const Color surfaceContainerLowest = Color(0xFFFFFFFF); // Pop cards
 
-  static const Color onSurface = Color(0xFF191C1D); // Editorial charcoal (never #000000)
+  static const Color onSurface = Color(
+    0xFF191C1D,
+  ); // Editorial charcoal (never #000000)
   static const Color onSurfaceVariant = Color(0xFF3E484A);
   static const Color outline = Color(0xFF6F797B);
   static const Color outlineVariant = Color(0xFFBEC8CA);
@@ -101,20 +104,28 @@ class AppTheme {
   // ==========================================
   static const Color paperSurface = Color(0xFFF8F5EE); // Warm cream stationery
   static const Color paperCard = Color(0xFFFFFDF9); // Crisp lined paper sheet
-  static const Color paperContainerLow = Color(0xFFF2ECE1); // Secondary parchment
+  static const Color paperContainerLow = Color(
+    0xFFF2ECE1,
+  ); // Secondary parchment
   static const Color paperRuled = Color(0xFFE2E8F0); // Faint blue ruled line
   static const Color paperMargin = Color(0xFFF09898); // Red vertical margin
-  static const Color paperInkNavy = Color(0xFF0F2038); // Fountain pen blue-black ink
+  static const Color paperInkNavy = Color(
+    0xFF0F2038,
+  ); // Fountain pen blue-black ink
   static const Color paperInkSlate = Color(0xFF334155);
   static const Color paperInkMuted = Color(0xFF64748B);
-  static const Color paperLeatherDark = Color(0xFF3F2110); // Saddle leather cover
+  static const Color paperLeatherDark = Color(
+    0xFF3F2110,
+  ); // Saddle leather cover
   static const Color paperLeatherMid = Color(0xFF5A3119);
   static const Color paperTabBlue = Color(0xFFBCD7EF); // Thumb index blue
   static const Color paperTabPeach = Color(0xFFF6CEBF); // Thumb index peach
   static const Color paperTabGreen = Color(0xFFC6E6CD); // Thumb index green
   static const Color paperTabPurple = Color(0xFFE2D1E8); // Thumb index lavender
   static const Color paperStampGreen = Color(0xFF1B5E34); // Forest credit stamp
-  static const Color paperStampRed = Color(0xFFA31D1D); // Terracotta debit stamp
+  static const Color paperStampRed = Color(
+    0xFFA31D1D,
+  ); // Terracotta debit stamp
 
   // Paper Dark Mode (Midnight Notebook / Sepia Night)
   static const Color paperDarkBackground = Color(0xFF191A1C);
@@ -125,19 +136,11 @@ class AppTheme {
 
   // Ambient Shadows
   static const List<BoxShadow> editorialShadow = [
-    BoxShadow(
-      color: Color(0x0F191C1D),
-      blurRadius: 40,
-      offset: Offset(0, 20),
-    ),
+    BoxShadow(color: Color(0x0F191C1D), blurRadius: 40, offset: Offset(0, 20)),
   ];
 
   static const List<BoxShadow> ambientCardShadow = [
-    BoxShadow(
-      color: Color(0x0D191C1D),
-      blurRadius: 24,
-      offset: Offset(0, 8),
-    ),
+    BoxShadow(color: Color(0x0D191C1D), blurRadius: 24, offset: Offset(0, 8)),
   ];
 
   static const List<BoxShadow> subtleFloatShadow = [
@@ -146,16 +149,8 @@ class AppTheme {
 
   // Paper Diary Card Shadows (Soft, Physical Desk Elevation)
   static const List<BoxShadow> paperCardShadow = [
-    BoxShadow(
-      color: Color(0x0A2B1D0E),
-      blurRadius: 8,
-      offset: Offset(0, 2),
-    ),
-    BoxShadow(
-      color: Color(0x082B1D0E),
-      blurRadius: 2,
-      offset: Offset(0, 1),
-    ),
+    BoxShadow(color: Color(0x0A2B1D0E), blurRadius: 8, offset: Offset(0, 2)),
+    BoxShadow(color: Color(0x082B1D0E), blurRadius: 2, offset: Offset(0, 1)),
   ];
 
   // Gradients
@@ -659,18 +654,9 @@ class AppTheme {
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
-        bodyLarge: GoogleFonts.kalam(
-          color: paperInkNavy,
-          fontSize: 16,
-        ),
-        bodyMedium: GoogleFonts.kalam(
-          color: paperInkSlate,
-          fontSize: 14,
-        ),
-        bodySmall: GoogleFonts.patrickHand(
-          color: paperInkMuted,
-          fontSize: 13,
-        ),
+        bodyLarge: GoogleFonts.kalam(color: paperInkNavy, fontSize: 16),
+        bodyMedium: GoogleFonts.kalam(color: paperInkSlate, fontSize: 14),
+        bodySmall: GoogleFonts.patrickHand(color: paperInkMuted, fontSize: 13),
         labelLarge: GoogleFonts.jetbrainsMono(
           color: paperInkNavy,
           fontSize: 14,
@@ -834,14 +820,8 @@ class AppTheme {
           fontSize: 20,
           fontWeight: FontWeight.w700,
         ),
-        bodyLarge: GoogleFonts.kalam(
-          color: paperDarkInk,
-          fontSize: 16,
-        ),
-        bodyMedium: GoogleFonts.kalam(
-          color: paperDarkMuted,
-          fontSize: 14,
-        ),
+        bodyLarge: GoogleFonts.kalam(color: paperDarkInk, fontSize: 16),
+        bodyMedium: GoogleFonts.kalam(color: paperDarkMuted, fontSize: 14),
         labelLarge: GoogleFonts.jetbrainsMono(
           color: paperDarkInk,
           fontSize: 14,

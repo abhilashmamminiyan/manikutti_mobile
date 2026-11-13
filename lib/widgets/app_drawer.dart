@@ -51,15 +51,19 @@ class AppDrawer extends StatelessWidget {
                     color: isDestructive
                         ? AppTheme.error.withOpacity(0.1)
                         : (isPaper
-                            ? (isDark ? AppTheme.paperDarkCard : AppTheme.paperContainerLow)
-                            : (isDark
-                                ? AppTheme.darkSurfaceContainer
-                                : AppTheme.surfaceContainerLow)),
+                              ? (isDark
+                                    ? AppTheme.paperDarkCard
+                                    : AppTheme.paperContainerLow)
+                              : (isDark
+                                    ? AppTheme.darkSurfaceContainer
+                                    : AppTheme.surfaceContainerLow)),
                     shape: isPaper ? BoxShape.rectangle : BoxShape.circle,
                     borderRadius: isPaper ? BorderRadius.circular(10) : null,
                     border: isPaper
                         ? Border.all(
-                            color: isDark ? const Color(0xFF383A40) : const Color(0xFFE2DDD5),
+                            color: isDark
+                                ? const Color(0xFF383A40)
+                                : const Color(0xFFE2DDD5),
                           )
                         : null,
                   ),
@@ -69,8 +73,12 @@ class AppDrawer extends StatelessWidget {
                     color: isDestructive
                         ? AppTheme.error
                         : (isPaper
-                            ? (isDark ? AppTheme.paperTabBlue : AppTheme.paperInkNavy)
-                            : (isDark ? AppTheme.darkOnSurface : AppTheme.primary)),
+                              ? (isDark
+                                    ? AppTheme.paperTabBlue
+                                    : AppTheme.paperInkNavy)
+                              : (isDark
+                                    ? AppTheme.darkOnSurface
+                                    : AppTheme.primary)),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -82,10 +90,12 @@ class AppDrawer extends StatelessWidget {
                       color: isDestructive
                           ? AppTheme.error
                           : (isPaper
-                              ? (isDark ? AppTheme.paperDarkInk : AppTheme.paperInkNavy)
-                              : (isDark
-                                    ? AppTheme.darkOnSurface
-                                    : AppTheme.onSurface)),
+                                ? (isDark
+                                      ? AppTheme.paperDarkInk
+                                      : AppTheme.paperInkNavy)
+                                : (isDark
+                                      ? AppTheme.darkOnSurface
+                                      : AppTheme.onSurface)),
                     ),
                   ),
                 ),
@@ -123,7 +133,9 @@ class AppDrawer extends StatelessWidget {
 
     return Drawer(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.horizontal(right: Radius.circular(isPaper ? 18 : 28)),
+        borderRadius: BorderRadius.horizontal(
+          right: Radius.circular(isPaper ? 18 : 28),
+        ),
       ),
       backgroundColor: isPaper
           ? (isDark ? AppTheme.paperDarkBackground : AppTheme.paperSurface)
@@ -140,8 +152,14 @@ class AppDrawer extends StatelessWidget {
                   gradient: isPaper
                       ? LinearGradient(
                           colors: isDark
-                              ? [const Color(0xFF2B1F17), const Color(0xFF1E1712)]
-                              : [AppTheme.paperLeatherDark, AppTheme.paperLeatherMid],
+                              ? [
+                                  const Color(0xFF2B1F17),
+                                  const Color(0xFF1E1712),
+                                ]
+                              : [
+                                  AppTheme.paperLeatherDark,
+                                  AppTheme.paperLeatherMid,
+                                ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         )
@@ -153,7 +171,9 @@ class AppDrawer extends StatelessWidget {
                           width: 1.5,
                         )
                       : null,
-                  boxShadow: isPaper ? AppTheme.paperCardShadow : AppTheme.editorialShadow,
+                  boxShadow: isPaper
+                      ? AppTheme.paperCardShadow
+                      : AppTheme.editorialShadow,
                 ),
                 child: Row(
                   children: [
@@ -170,7 +190,9 @@ class AppDrawer extends StatelessWidget {
                       ),
                       child: Center(
                         child: Icon(
-                          isPaper ? Icons.menu_book_rounded : Icons.account_balance_wallet_rounded,
+                          isPaper
+                              ? Icons.menu_book_rounded
+                              : Icons.account_balance_wallet_rounded,
                           color: Colors.white,
                           size: 26,
                         ),
@@ -195,7 +217,9 @@ class AppDrawer extends StatelessWidget {
                             child: Text(
                               isPaper ? 'DIARY LEDGER' : 'SANCTUARY',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: isPaper ? Colors.white : AppTheme.onSecondaryContainer,
+                                color: isPaper
+                                    ? Colors.white
+                                    : AppTheme.onSecondaryContainer,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 9,
                                 letterSpacing: 1.0,
@@ -416,7 +440,9 @@ class AppDrawer extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                isPaper ? 'The Paper Ledger • Handwritten Aesthetic' : 'The Heritage Ledger • Offline First',
+                isPaper
+                    ? 'The Paper Ledger • Handwritten Aesthetic'
+                    : 'The Heritage Ledger • Offline First',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: isDark
                       ? AppTheme.darkOnSurfaceVariant.withOpacity(0.5)
