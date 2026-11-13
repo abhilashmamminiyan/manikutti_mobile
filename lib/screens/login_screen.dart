@@ -299,8 +299,12 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final isPaper = AppTheme.isPaper(context);
 
     return Scaffold(
+      backgroundColor: isPaper
+          ? (isDark ? AppTheme.paperDarkBackground : AppTheme.paperSurface)
+          : null,
       appBar: AppBar(
         actions: kDebugMode
             ? [
@@ -318,20 +322,29 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 24),
-              // Sanctuary Brand Emblem
+              // Sanctuary / Diary Brand Emblem
               Center(
                 child: Container(
                   width: 96,
                   height: 96,
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppTheme.darkSurfaceContainerLowest
-                        : AppTheme.surfaceContainerLowest,
-                    shape: BoxShape.circle,
-                    boxShadow: AppTheme.editorialShadow,
+                    color: isPaper
+                        ? (isDark
+                            ? AppTheme.paperDarkCard
+                            : AppTheme.paperCard)
+                        : (isDark
+                            ? AppTheme.darkSurfaceContainerLowest
+                            : AppTheme.surfaceContainerLowest),
+                    shape: isPaper ? BoxShape.rectangle : BoxShape.circle,
+                    borderRadius: isPaper ? BorderRadius.circular(20) : null,
+                    boxShadow: isPaper
+                        ? AppTheme.paperCardShadow
+                        : AppTheme.editorialShadow,
                     border: Border.all(
-                      color: AppTheme.primary.withOpacity(0.12),
-                      width: 2,
+                      color: isPaper
+                          ? AppTheme.paperLeatherMid
+                          : AppTheme.primary.withOpacity(0.12),
+                      width: isPaper ? 2 : 2,
                     ),
                   ),
                   child: Center(
@@ -339,21 +352,33 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: 72,
                       height: 72,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.primary.withOpacity(0.15),
-                            AppTheme.primaryContainer.withOpacity(0.25),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        shape: BoxShape.circle,
+                        gradient: isPaper
+                            ? LinearGradient(
+                                colors: [
+                                  AppTheme.paperTabBlue.withOpacity(0.4),
+                                  AppTheme.paperTabPeach.withOpacity(0.3),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : LinearGradient(
+                                colors: [
+                                  AppTheme.primary.withOpacity(0.15),
+                                  AppTheme.primaryContainer.withOpacity(0.25),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                        shape: isPaper ? BoxShape.rectangle : BoxShape.circle,
+                        borderRadius: isPaper ? BorderRadius.circular(14) : null,
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Icon(
-                          Icons.account_balance_wallet_rounded,
+                          isPaper
+                              ? Icons.menu_book_rounded
+                              : Icons.account_balance_wallet_rounded,
                           size: 36,
-                          color: AppTheme.primary,
+                          color: isPaper ? AppTheme.paperInkNavy : AppTheme.primary,
                         ),
                       ),
                     ),
@@ -362,7 +387,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 28),
 
-              // Editorial Headings
+              // Editorial / Diary Headings
               Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -370,13 +395,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.secondaryContainer.withOpacity(0.25),
-                    borderRadius: BorderRadius.circular(20),
+                    color: isPaper
+                        ? AppTheme.paperTabBlue.withOpacity(0.6)
+                        : AppTheme.secondaryContainer.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(isPaper ? 8 : 20),
+                    border: isPaper
+                        ? Border.all(color: const Color(0xFFBCD7EF))
+                        : null,
                   ),
                   child: Text(
-                    'HERITAGE SANCTUARY',
+                    isPaper ? 'EXECUTIVE CASHBOOK & DIARY' : 'HERITAGE SANCTUARY',
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: AppTheme.onSecondaryContainer,
+                      color: isPaper
+                          ? const Color(0xFF15365A)
+                          : AppTheme.onSecondaryContainer,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.5,
                     ),
@@ -385,7 +417,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Manikutti',
+                isPaper ? 'The Paper Ledger' : 'Manikutti',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineLarge?.copyWith(
                   fontWeight: FontWeight.w800,
@@ -395,10 +427,14 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 8),
               Text(
                 _isPinStep
-                    ? 'Secure your financial sanctuary with a 4-digit PIN'
+                    ? (isPaper
+                        ? 'Lock your personal diary with a 4-digit PIN'
+                        : 'Secure your financial sanctuary with a 4-digit PIN')
                     : _isOtpStep
                     ? 'Enter the 6-digit verification code sent to your email'
-                    : 'Personal & family wealth ledger, thoughtfully unified.',
+                    : (isPaper
+                        ? 'Every rupee written in pen on your daily ledger.'
+                        : 'Personal & family wealth ledger, thoughtfully unified.'),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
               ),
@@ -408,15 +444,22 @@ class _LoginScreenState extends State<LoginScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppTheme.darkSurfaceContainerLowest
-                      : AppTheme.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: AppTheme.ambientCardShadow,
+                  color: isPaper
+                      ? (isDark ? AppTheme.paperDarkCard : AppTheme.paperCard)
+                      : (isDark
+                          ? AppTheme.darkSurfaceContainerLowest
+                          : AppTheme.surfaceContainerLowest),
+                  borderRadius: BorderRadius.circular(isPaper ? 14 : 24),
+                  boxShadow: isPaper
+                      ? AppTheme.paperCardShadow
+                      : AppTheme.ambientCardShadow,
                   border: Border.all(
-                    color: isDark
-                        ? const Color(0xFF2C3233)
-                        : AppTheme.outlineVariant.withOpacity(0.2),
+                    color: isPaper
+                        ? const Color(0xFFE2DDD5)
+                        : (isDark
+                            ? const Color(0xFF2C3233)
+                            : AppTheme.outlineVariant.withOpacity(0.2)),
+                    width: isPaper ? 1.5 : 1,
                   ),
                 ),
                 child: Column(

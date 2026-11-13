@@ -213,6 +213,21 @@ class MyApp extends StatefulWidget {
     return state?._themeMode ?? ThemeMode.system;
   }
 
+  static ThemeStyle getThemeStyle(BuildContext context) {
+    _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    return state?._themeStyle ?? ThemeStyle.modern;
+  }
+
+  static void setThemeStyle(BuildContext context, ThemeStyle style) {
+    _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    state?.setThemeStyle(style);
+  }
+
+  static void restartApp(BuildContext context) {
+    _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
+    state?.restartApp();
+  }
+
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -220,6 +235,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Locale? _locale;
   ThemeMode _themeMode = ThemeMode.system;
+  ThemeStyle _themeStyle = ThemeStyle.modern;
   late bool _isLocked = widget.initialLocked;
   int? _lastPausedEpochMs;
   static const int lockGracePeriodMs = 2 * 60 * 1000; // 2 minutes grace period
@@ -236,6 +252,26 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     });
   }
 
+  void setThemeStyle(ThemeStyle themeStyle) {
+    AppTheme.currentStyle = themeStyle;
+    setState(() {
+      _themeStyle = themeStyle;
+    });
+  }
+
+  Future<void> restartApp() async {
+    final prefs = await SharedPreferences.getInstance();
+    final styleStr = prefs.getString('theme_style') ?? 'modern';
+    final style = styleStr == 'paper' ? ThemeStyle.paper : ThemeStyle.modern;
+    AppTheme.currentStyle = style;
+    setState(() {
+      _themeStyle = style;
+      _isLocked = widget.initialLocked;
+    });
+    // Pop all routes and rebuild root
+    navigatorKey.currentState?.popUntil((route) => route.isFirst);
+  }
+
   StreamSubscription? _widgetClickSubscription;
   static const MethodChannel _shareChannel = MethodChannel(
     'com.abhilash.manikutti/share',
@@ -248,6 +284,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _loadLocale();
     _loadThemeMode();
+    _loadThemeStyle();
     _checkInitialLockState();
     _initHomeWidgetAndDeepLinks();
     _initShareReceiver();
@@ -384,6 +421,16 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     });
   }
 
+  Future<void> _loadThemeStyle() async {
+    final prefs = await SharedPreferences.getInstance();
+    final styleStr = prefs.getString('theme_style') ?? 'modern';
+    final style = styleStr == 'paper' ? ThemeStyle.paper : ThemeStyle.modern;
+    AppTheme.currentStyle = style;
+    setState(() {
+      _themeStyle = style;
+    });
+  }
+
   Future<void> _checkInitialLockState() async {
     final defaultRoute =
         WidgetsBinding.instance.platformDispatcher.defaultRouteName;
@@ -505,13 +552,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final isPaper = _themeStyle == ThemeStyle.paper;
     return MaterialApp(
       navigatorKey: navigatorKey,
       navigatorObservers: [CrashReportingService.instance.routeObserver],
       title: 'Manikutti Finance',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: isPaper ? AppTheme.paperLightTheme : AppTheme.lightTheme,
+      darkTheme: isPaper ? AppTheme.paperDarkTheme : AppTheme.darkTheme,
       themeMode: _themeMode,
       locale: _locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
