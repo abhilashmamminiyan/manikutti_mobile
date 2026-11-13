@@ -239,6 +239,154 @@ class SettingsScreen extends StatelessWidget {
                   leading: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
+                      color: AppTheme.primary.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      MyApp.getThemeStyle(context) == ThemeStyle.paper
+                          ? Icons.menu_book_rounded
+                          : Icons.auto_awesome_rounded,
+                      color: AppTheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'Theme Design Style',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  subtitle: Text(
+                    MyApp.getThemeStyle(context) == ThemeStyle.paper
+                        ? 'Paper Diary (Handwritten parchment)'
+                        : 'Modern Sanctuary (Material 3)',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isDark
+                          ? AppTheme.darkOnSurfaceVariant
+                          : AppTheme.onSurfaceVariant.withOpacity(0.7),
+                    ),
+                  ),
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppTheme.darkSurfaceContainer
+                          : AppTheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<ThemeStyle>(
+                        value: MyApp.getThemeStyle(context),
+                        dropdownColor: isDark
+                            ? AppTheme.darkSurfaceContainer
+                            : AppTheme.surfaceContainerLowest,
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: AppTheme.primary,
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: ThemeStyle.modern,
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.auto_awesome_rounded,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Modern',
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: ThemeStyle.paper,
+                            child: Row(
+                              children: [
+                                const Icon(Icons.menu_book_rounded, size: 16),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Paper Theme',
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        onChanged: (newStyle) {
+                          if (newStyle == null ||
+                              newStyle == MyApp.getThemeStyle(context)) {
+                            return;
+                          }
+
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (dialogCtx) => AlertDialog(
+                              title: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.restart_alt_rounded,
+                                    color: AppTheme.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text('Restart Required'),
+                                ],
+                              ),
+                              content: Text(
+                                newStyle == ThemeStyle.paper
+                                    ? 'Switching to the Paper Theme completely transforms the app from login to dashboard into an authentic, tactile lined-paper diary with fountain pen fonts and morph page transitions.\n\nRestart the app now to apply?'
+                                    : 'Switching to the Modern Theme restores clean Material 3 surfaces, gradients, and modern typography.\n\nRestart the app now to apply?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(dialogCtx),
+                                  child: const Text('Later'),
+                                ),
+                                FilledButton(
+                                  onPressed: () async {
+                                    Navigator.pop(dialogCtx);
+                                    final prefs =
+                                        await SharedPreferences.getInstance();
+                                    await prefs.setString(
+                                      'theme_style',
+                                      newStyle == ThemeStyle.paper
+                                          ? 'paper'
+                                          : 'modern',
+                                    );
+                                    if (context.mounted) {
+                                      MyApp.setThemeStyle(context, newStyle);
+                                      MyApp.restartApp(context);
+                                    }
+                                  },
+                                  child: const Text('Restart Now'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Divider(
+                    color: isDark
+                        ? const Color(0xFF2C3233)
+                        : AppTheme.outlineVariant.withOpacity(0.15),
+                  ),
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
                       color: AppTheme.secondaryContainer.withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),

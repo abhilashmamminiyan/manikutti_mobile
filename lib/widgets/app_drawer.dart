@@ -29,13 +29,14 @@ class AppDrawer extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final isPaper = AppTheme.isPaper(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 4.0),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(isPaper ? 12 : 16),
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(
@@ -49,17 +50,35 @@ class AppDrawer extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isDestructive
                         ? AppTheme.error.withOpacity(0.1)
-                        : (isDark
-                              ? AppTheme.darkSurfaceContainer
-                              : AppTheme.surfaceContainerLow),
-                    shape: BoxShape.circle,
+                        : (isPaper
+                              ? (isDark
+                                    ? AppTheme.paperDarkCard
+                                    : AppTheme.paperContainerLow)
+                              : (isDark
+                                    ? AppTheme.darkSurfaceContainer
+                                    : AppTheme.surfaceContainerLow)),
+                    shape: isPaper ? BoxShape.rectangle : BoxShape.circle,
+                    borderRadius: isPaper ? BorderRadius.circular(10) : null,
+                    border: isPaper
+                        ? Border.all(
+                            color: isDark
+                                ? const Color(0xFF383A40)
+                                : const Color(0xFFE2DDD5),
+                          )
+                        : null,
                   ),
                   child: Icon(
                     icon,
                     size: 20,
                     color: isDestructive
                         ? AppTheme.error
-                        : (isDark ? AppTheme.darkOnSurface : AppTheme.primary),
+                        : (isPaper
+                              ? (isDark
+                                    ? AppTheme.paperTabBlue
+                                    : AppTheme.paperInkNavy)
+                              : (isDark
+                                    ? AppTheme.darkOnSurface
+                                    : AppTheme.primary)),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -70,9 +89,13 @@ class AppDrawer extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       color: isDestructive
                           ? AppTheme.error
-                          : (isDark
-                                ? AppTheme.darkOnSurface
-                                : AppTheme.onSurface),
+                          : (isPaper
+                                ? (isDark
+                                      ? AppTheme.paperDarkInk
+                                      : AppTheme.paperInkNavy)
+                                : (isDark
+                                      ? AppTheme.darkOnSurface
+                                      : AppTheme.onSurface)),
                     ),
                   ),
                 ),
@@ -106,12 +129,17 @@ class AppDrawer extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final isPaper = AppTheme.isPaper(context);
 
     return Drawer(
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.horizontal(right: Radius.circular(28)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.horizontal(
+          right: Radius.circular(isPaper ? 18 : 28),
+        ),
       ),
-      backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.surface,
+      backgroundColor: isPaper
+          ? (isDark ? AppTheme.paperDarkBackground : AppTheme.paperSurface)
+          : (isDark ? AppTheme.darkSurface : AppTheme.surface),
       child: SafeArea(
         child: Column(
           children: [
@@ -121,9 +149,31 @@ class AppDrawer extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: AppTheme.heroCardGradient,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: AppTheme.editorialShadow,
+                  gradient: isPaper
+                      ? LinearGradient(
+                          colors: isDark
+                              ? [
+                                  const Color(0xFF2B1F17),
+                                  const Color(0xFF1E1712),
+                                ]
+                              : [
+                                  AppTheme.paperLeatherDark,
+                                  AppTheme.paperLeatherMid,
+                                ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : AppTheme.heroCardGradient,
+                  borderRadius: BorderRadius.circular(isPaper ? 16 : 24),
+                  border: isPaper
+                      ? Border.all(
+                          color: const Color(0xFFD4AF37).withOpacity(0.4),
+                          width: 1.5,
+                        )
+                      : null,
+                  boxShadow: isPaper
+                      ? AppTheme.paperCardShadow
+                      : AppTheme.editorialShadow,
                 ),
                 child: Row(
                   children: [
@@ -138,9 +188,11 @@ class AppDrawer extends StatelessWidget {
                           width: 1.5,
                         ),
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Icon(
-                          Icons.account_balance_wallet_rounded,
+                          isPaper
+                              ? Icons.menu_book_rounded
+                              : Icons.account_balance_wallet_rounded,
                           color: Colors.white,
                           size: 26,
                         ),
@@ -157,13 +209,17 @@ class AppDrawer extends StatelessWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.secondaryContainer,
+                              color: isPaper
+                                  ? const Color(0xFFD4AF37).withOpacity(0.3)
+                                  : AppTheme.secondaryContainer,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              'SANCTUARY',
+                              isPaper ? 'DIARY LEDGER' : 'SANCTUARY',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: AppTheme.onSecondaryContainer,
+                                color: isPaper
+                                    ? Colors.white
+                                    : AppTheme.onSecondaryContainer,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 9,
                                 letterSpacing: 1.0,
@@ -384,7 +440,9 @@ class AppDrawer extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                'The Heritage Ledger • Offline First',
+                isPaper
+                    ? 'The Paper Ledger • Handwritten Aesthetic'
+                    : 'The Heritage Ledger • Offline First',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: isDark
                       ? AppTheme.darkOnSurfaceVariant.withOpacity(0.5)

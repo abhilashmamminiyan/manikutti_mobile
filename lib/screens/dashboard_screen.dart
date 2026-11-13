@@ -28,6 +28,7 @@ import '../widgets/family_pool_transfers_card.dart';
 import '../widgets/monthly_dues_section.dart';
 import '../widgets/dashboard_budget_progress.dart';
 import 'simple_family_home_screen.dart';
+import 'demo_role_home_screen.dart';
 import '../models/emi_model.dart';
 import '../models/home_loan_model.dart';
 import '../services/widget_data_service.dart';
@@ -1152,13 +1153,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildPersonalCard(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    final isPaper = AppTheme.isPaper(context);
     final availableBalance = _sbiBalance + _canaraBalance;
     final netCashflow = _totalIncome - _totalPersonalExpenses;
     return Container(
       decoration: BoxDecoration(
-        gradient: AppTheme.heroCardGradient,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: AppTheme.editorialShadow,
+        gradient: isPaper
+            ? LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF2B1F17), const Color(0xFF1E1712)]
+                    : [AppTheme.paperLeatherDark, AppTheme.paperLeatherMid],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : AppTheme.heroCardGradient,
+        borderRadius: BorderRadius.circular(isPaper ? 16 : 24),
+        border: isPaper
+            ? Border.all(
+                color: const Color(0xFFD4AF37).withOpacity(0.4),
+                width: 1.5,
+              )
+            : null,
+        boxShadow: isPaper
+            ? AppTheme.paperCardShadow
+            : AppTheme.editorialShadow,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 22.0),
       child: Column(
@@ -1174,7 +1193,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: isPaper
+                      ? (isDark
+                            ? Colors.black.withOpacity(0.3)
+                            : const Color(0xFFD4AF37).withOpacity(0.25))
+                      : Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -1183,14 +1206,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Container(
                       width: 6,
                       height: 6,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.secondaryContainer,
+                      decoration: BoxDecoration(
+                        color: isPaper
+                            ? const Color(0xFFD4AF37)
+                            : AppTheme.secondaryContainer,
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'PERSONAL SANCTUARY',
+                      isPaper ? 'PERSONAL DIARY LEDGER' : 'PERSONAL SANCTUARY',
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -1368,18 +1393,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBankAccountsSummaryCard(ThemeData theme, bool isDark) {
+    final isPaper = AppTheme.isPaper(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppTheme.darkSurfaceContainerLowest
-            : AppTheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: AppTheme.ambientCardShadow,
+        color: isPaper
+            ? (isDark ? AppTheme.paperDarkCard : AppTheme.paperCard)
+            : (isDark
+                  ? AppTheme.darkSurfaceContainerLowest
+                  : AppTheme.surfaceContainerLowest),
+        borderRadius: BorderRadius.circular(isPaper ? 14 : 20),
+        boxShadow: isPaper
+            ? AppTheme.paperCardShadow
+            : AppTheme.ambientCardShadow,
         border: Border.all(
-          color: isDark
-              ? const Color(0xFF2C3233)
-              : AppTheme.outlineVariant.withOpacity(0.18),
+          color: isPaper
+              ? (isDark ? const Color(0xFF383A40) : const Color(0xFFE2DDD5))
+              : (isDark
+                    ? const Color(0xFF2C3233)
+                    : AppTheme.outlineVariant.withOpacity(0.18)),
+          width: isPaper ? 1.2 : 1.0,
         ),
       ),
       child: Column(
@@ -2894,20 +2927,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildFamilyCard(ThemeData theme, bool isDark) {
+    final isPaper = AppTheme.isPaper(context);
     final totalPoolSpent = _totalFamilyExpenses + _totalPaidRegularExpenses;
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark
-              ? [const Color(0xFF1E282A), const Color(0xFF131A1B)]
-              : [const Color(0xFF1E2A38), const Color(0xFF0F172A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: AppTheme.editorialShadow,
+        gradient: isPaper
+            ? LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF172436), const Color(0xFF101B2B)]
+                    : [const Color(0xFF16325B), AppTheme.paperInkNavy],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF1E282A), const Color(0xFF131A1B)]
+                    : [const Color(0xFF1E2A38), const Color(0xFF0F172A)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+        borderRadius: BorderRadius.circular(isPaper ? 16 : 24),
+        boxShadow: isPaper
+            ? AppTheme.paperCardShadow
+            : AppTheme.editorialShadow,
         border: Border.all(
-          color: AppTheme.secondaryContainer.withOpacity(0.2),
+          color: isPaper
+              ? const Color(0xFFD4AF37).withOpacity(0.35)
+              : AppTheme.secondaryContainer.withOpacity(0.2),
           width: 1.5,
         ),
       ),
@@ -3537,12 +3583,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final isPaper = AppTheme.isPaper(context);
     final l10n = AppLocalizations.of(context)!;
 
     return ValueListenableBuilder<Map<String, bool>>(
       valueListenable: FeatureFlagService.instance.permissionsNotifier,
       builder: (context, _, _) {
         final flags = FeatureFlagService.instance;
+        if (flags.isDemoRole) {
+          final display = _memberNickname.isNotEmpty
+              ? _memberNickname
+              : (_userEmail?.split('@').first ?? 'Family');
+          return DemoRoleHomeScreen(
+            displayName: display,
+            userEmail: _userEmail ?? '',
+            familyCode: _familyCode,
+            loans: _loans,
+            emiBills: _emiList,
+            homeLoanConfig: _homeLoanConfig,
+            homeLoanHistory: _homeLoanHistory,
+            mandatoryEmiChecks: _mandatoryEmiChecks,
+            pendingSmsList: _pendingSmsList,
+            isLoading: _isLoading,
+            onRefresh: _triggerSync,
+            onLogout: _handleLogout,
+          );
+        }
+
         if (flags.roleName.trim().toLowerCase() == 'basic') {
           final display = _memberNickname.isNotEmpty
               ? _memberNickname
@@ -3583,6 +3650,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             : _filter;
 
         return Scaffold(
+          backgroundColor: isPaper
+              ? (isDark ? AppTheme.paperDarkBackground : AppTheme.paperSurface)
+              : null,
           drawer: const AppDrawer(),
           appBar: AppBar(
             automaticallyImplyLeading: false,
@@ -3822,33 +3892,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 24),
                   ],
 
-                  // Stitch Editorial Segmented Pill Selector
+                  // Stitch Editorial / Paper Thumb Tab Segmented Selector
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? AppTheme.darkSurfaceContainer
-                          : AppTheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(16),
+                      color: isPaper
+                          ? (isDark
+                                ? AppTheme.paperDarkCard
+                                : const Color(0xFFF0EBE1))
+                          : (isDark
+                                ? AppTheme.darkSurfaceContainer
+                                : AppTheme.surfaceContainerLow),
+                      borderRadius: BorderRadius.circular(isPaper ? 10 : 16),
+                      border: isPaper
+                          ? Border.all(
+                              color: const Color(0xFFE2DDD5),
+                              width: 1.2,
+                            )
+                          : null,
                     ),
                     child: Row(
                       children: filterOptions.map((name) {
                         final isSelected = effectiveFilter == name;
+                        final paperTabColor = name == 'All'
+                            ? AppTheme.paperTabBlue
+                            : (name == 'Personal'
+                                  ? AppTheme.paperTabGreen
+                                  : AppTheme.paperTabPeach);
                         return Expanded(
                           child: GestureDetector(
                             onTap: () => setState(() => _filter = name),
                             child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
+                              duration: const Duration(milliseconds: 250),
+                              curve: Curves.easeInOutCubic,
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? (isDark
-                                          ? AppTheme.primaryContainer
-                                          : AppTheme.primary)
+                                    ? (isPaper
+                                          ? paperTabColor
+                                          : (isDark
+                                                ? AppTheme.primaryContainer
+                                                : AppTheme.primary))
                                     : Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(
+                                  isPaper ? 8 : 12,
+                                ),
                                 boxShadow: isSelected
-                                    ? AppTheme.subtleFloatShadow
+                                    ? (isPaper
+                                          ? AppTheme.paperCardShadow
+                                          : AppTheme.subtleFloatShadow)
                                     : null,
                               ),
                               child: Center(
@@ -3856,14 +3948,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   name,
                                   style: theme.textTheme.labelMedium?.copyWith(
                                     color: isSelected
-                                        ? (isDark
-                                              ? AppTheme.onPrimaryContainer
-                                              : Colors.white)
+                                        ? (isPaper
+                                              ? AppTheme.paperInkNavy
+                                              : (isDark
+                                                    ? AppTheme
+                                                          .onPrimaryContainer
+                                                    : Colors.white))
                                         : (isDark
                                               ? AppTheme.darkOnSurfaceVariant
                                               : AppTheme.onSurfaceVariant),
                                     fontWeight: isSelected
-                                        ? FontWeight.w700
+                                        ? FontWeight.w800
                                         : FontWeight.w600,
                                   ),
                                 ),
@@ -3943,193 +4038,296 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 14),
 
                   // Transactions List (Latest 5 of Current Month)
-                  _dashboardTransactions.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 40.0),
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? AppTheme.darkSurfaceContainer
-                                      : AppTheme.surfaceContainerLow,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.receipt_long_rounded,
-                                  size: 40,
-                                  color: AppTheme.outline,
-                                ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    switchInCurve: Curves.easeInOutCubicEmphasized,
+                    switchOutCurve: Curves.easeInOutCubic,
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(
+                          scale: Tween<double>(
+                            begin: 0.96,
+                            end: 1.0,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _dashboardTransactions.isEmpty
+                        ? KeyedSubtree(
+                            key: ValueKey<String>(
+                              'tx_empty_${effectiveFilter}',
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 40.0,
                               ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No transactions recorded for ${DateFormat('MMMM').format(DateTime.now())} yet.',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: AppTheme.outline,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  side: BorderSide(
-                                    color: AppTheme.primary.withOpacity(0.3),
-                                  ),
-                                ),
-                                onPressed: () async {
-                                  await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => TransactionsLogScreen(
-                                        initialFilter: _filter,
-                                      ),
-                                    ),
-                                  );
-                                  if (mounted) _loadData();
-                                },
-                                icon: const Icon(
-                                  Icons.history_rounded,
-                                  size: 16,
-                                ),
-                                label: const Text(
-                                  'View All Past Transactions',
-                                  style: TextStyle(fontSize: 12),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _dashboardTransactions.length,
-                          itemBuilder: (context, index) {
-                            final t = _dashboardTransactions[index];
-                            final formattedDate = DateFormat(
-                              'MMM dd, yyyy',
-                            ).format(DateTime.parse(t.date));
-
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? AppTheme.darkSurfaceContainerLowest
-                                    : AppTheme.surfaceContainerLowest,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: AppTheme.ambientCardShadow,
-                                border: Border.all(
-                                  color: isDark
-                                      ? const Color(0xFF2C3233)
-                                      : AppTheme.outlineVariant.withOpacity(
-                                          0.18,
-                                        ),
-                                ),
-                              ),
-                              padding: const EdgeInsets.all(16.0),
-                              child: Row(
+                              child: Column(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.all(12),
+                                    padding: const EdgeInsets.all(20),
                                     decoration: BoxDecoration(
-                                      color: _getCategoryColor(
-                                        t.type,
-                                      ).withOpacity(0.12),
+                                      color: isPaper
+                                          ? (isDark
+                                                ? AppTheme.paperDarkCard
+                                                : AppTheme.paperContainerLow)
+                                          : (isDark
+                                                ? AppTheme.darkSurfaceContainer
+                                                : AppTheme.surfaceContainerLow),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
-                                      _getCategoryIcon(t.category),
-                                      color: _getCategoryColor(t.type),
-                                      size: 20,
+                                      isPaper
+                                          ? Icons.history_edu_rounded
+                                          : Icons.receipt_long_rounded,
+                                      size: 40,
+                                      color: isPaper
+                                          ? AppTheme.paperInkMuted
+                                          : AppTheme.outline,
                                     ),
                                   ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          t.note.isNotEmpty
-                                              ? t.note
-                                              : t.category,
-                                          style: theme.textTheme.titleSmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                                color: isDark
-                                                    ? AppTheme.darkOnSurface
-                                                    : AppTheme.onSurface,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            Text(
-                                              '$formattedDate • ${t.type}',
-                                              style: theme.textTheme.bodySmall
-                                                  ?.copyWith(
-                                                    color: isDark
-                                                        ? AppTheme
-                                                              .darkOnSurfaceVariant
-                                                        : AppTheme
-                                                              .onSurfaceVariant
-                                                              .withOpacity(0.7),
-                                                    fontSize: 11,
-                                                  ),
-                                            ),
-                                            if (t.type == 'Family' &&
-                                                t.addedBy != null) ...[
-                                              Text(
-                                                ' • ${_getMemberNickname(t.addedBy!)}',
-                                                style: theme.textTheme.bodySmall
-                                                    ?.copyWith(
-                                                      color: AppTheme.primary,
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ],
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No transactions recorded for ${DateFormat('MMMM').format(DateTime.now())} yet.',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: isPaper
+                                          ? AppTheme.paperInkMuted
+                                          : AppTheme.outline,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        '${t.type == 'Income' ? '+' : '-'}₹${t.amount.toStringAsFixed(2)}',
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w800,
-                                              color: t.type == 'Income'
-                                                  ? const Color(0xFF10B981)
-                                                  : (t.type == 'Family'
-                                                        ? AppTheme.primary
-                                                        : AppTheme.error),
-                                            ),
+                                  const SizedBox(height: 10),
+                                  OutlinedButton.icon(
+                                    style: OutlinedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                                      const SizedBox(height: 4),
-                                      Icon(
-                                        t.synced
-                                            ? Icons.cloud_done_rounded
-                                            : Icons.cloud_off_rounded,
-                                        size: 14,
-                                        color: t.synced
-                                            ? const Color(0xFF10B981)
-                                            : AppTheme.secondary,
+                                      side: BorderSide(
+                                        color:
+                                            (isPaper
+                                                    ? AppTheme.paperInkNavy
+                                                    : AppTheme.primary)
+                                                .withOpacity(0.3),
                                       ),
-                                    ],
+                                    ),
+                                    onPressed: () async {
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => TransactionsLogScreen(
+                                            initialFilter: _filter,
+                                          ),
+                                        ),
+                                      );
+                                      if (mounted) _loadData();
+                                    },
+                                    icon: const Icon(
+                                      Icons.history_rounded,
+                                      size: 16,
+                                    ),
+                                    label: const Text(
+                                      'View All Past Transactions',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
                                   ),
                                 ],
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          )
+                        : KeyedSubtree(
+                            key: ValueKey<String>(
+                              'tx_list_${effectiveFilter}_${_dashboardTransactions.length}',
+                            ),
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _dashboardTransactions.length,
+                              itemBuilder: (context, index) {
+                                final t = _dashboardTransactions[index];
+                                final formattedDate = DateFormat(
+                                  'MMM dd, yyyy',
+                                ).format(DateTime.parse(t.date));
+
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  decoration: BoxDecoration(
+                                    color: isPaper
+                                        ? (isDark
+                                              ? AppTheme.paperDarkCard
+                                              : AppTheme.paperCard)
+                                        : (isDark
+                                              ? AppTheme
+                                                    .darkSurfaceContainerLowest
+                                              : AppTheme
+                                                    .surfaceContainerLowest),
+                                    borderRadius: BorderRadius.circular(
+                                      isPaper ? 14 : 20,
+                                    ),
+                                    boxShadow: isPaper
+                                        ? AppTheme.paperCardShadow
+                                        : AppTheme.ambientCardShadow,
+                                    border: Border.all(
+                                      color: isPaper
+                                          ? (isDark
+                                                ? const Color(0xFF383A40)
+                                                : const Color(0xFFE2DDD5))
+                                          : (isDark
+                                                ? const Color(0xFF2C3233)
+                                                : AppTheme.outlineVariant
+                                                      .withOpacity(0.18)),
+                                      width: isPaper ? 1.2 : 1.0,
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: isPaper
+                                              ? (isDark
+                                                    ? const Color(0xFF1E2024)
+                                                    : AppTheme
+                                                          .paperContainerLow)
+                                              : _getCategoryColor(
+                                                  t.type,
+                                                ).withOpacity(0.12),
+                                          shape: BoxShape.circle,
+                                          border: isPaper
+                                              ? Border.all(
+                                                  color: isDark
+                                                      ? const Color(0xFF383A40)
+                                                      : const Color(0xFFE2DDD5),
+                                                )
+                                              : null,
+                                        ),
+                                        child: Icon(
+                                          _getCategoryIcon(t.category),
+                                          color: isPaper
+                                              ? (isDark
+                                                    ? AppTheme.paperTabBlue
+                                                    : AppTheme.paperInkNavy)
+                                              : _getCategoryColor(t.type),
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              t.note.isNotEmpty
+                                                  ? t.note
+                                                  : t.category,
+                                              style: theme.textTheme.titleSmall
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                    color: isDark
+                                                        ? AppTheme.darkOnSurface
+                                                        : AppTheme.onSurface,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  '$formattedDate • ${t.type}',
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: isDark
+                                                            ? AppTheme
+                                                                  .darkOnSurfaceVariant
+                                                            : AppTheme
+                                                                  .onSurfaceVariant
+                                                                  .withOpacity(
+                                                                    0.7,
+                                                                  ),
+                                                        fontSize: 11,
+                                                      ),
+                                                ),
+                                                if (t.type == 'Family' &&
+                                                    t.addedBy != null) ...[
+                                                  Text(
+                                                    ' • ${_getMemberNickname(t.addedBy!)}',
+                                                    style: theme
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                          color: isPaper
+                                                              ? AppTheme
+                                                                    .paperLeatherMid
+                                                              : AppTheme
+                                                                    .primary,
+                                                          fontSize: 11,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            '${t.type == 'Income' ? '+' : '-'}₹${t.amount.toStringAsFixed(2)}',
+                                            style: theme.textTheme.titleMedium?.copyWith(
+                                              fontFamily: isPaper
+                                                  ? 'JetBrains Mono'
+                                                  : null,
+                                              fontWeight: FontWeight.w800,
+                                              color: t.type == 'Income'
+                                                  ? (isPaper
+                                                        ? AppTheme
+                                                              .paperStampGreen
+                                                        : const Color(
+                                                            0xFF10B981,
+                                                          ))
+                                                  : (t.type == 'Family'
+                                                        ? (isPaper
+                                                              ? AppTheme
+                                                                    .paperTabBlue
+                                                              : AppTheme
+                                                                    .primary)
+                                                        : (isPaper
+                                                              ? AppTheme
+                                                                    .paperStampRed
+                                                              : AppTheme
+                                                                    .error)),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Icon(
+                                            t.synced
+                                                ? Icons.cloud_done_rounded
+                                                : Icons.cloud_off_rounded,
+                                            size: 14,
+                                            color: t.synced
+                                                ? (isPaper
+                                                      ? AppTheme.paperStampGreen
+                                                      : const Color(0xFF10B981))
+                                                : (isPaper
+                                                      ? AppTheme.paperTabPeach
+                                                      : AppTheme.secondary),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                  ),
                   const SizedBox(height: 80), // bottom spacing for FAB
                 ],
               ),
