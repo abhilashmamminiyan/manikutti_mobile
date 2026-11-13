@@ -439,35 +439,59 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: widget.onRefresh,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 1. Live SMS Zero-Confirmation Status (if sms_auto_tracking enabled)
-              if (showSmsAuto) ...[
-                _buildZeroConfirmationSmsCard(context, isDark),
-                const SizedBox(height: 18),
-              ],
+      body: widget.isLoading
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: AppTheme.primary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Loading family finances...',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: widget.onRefresh,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // 1. Live SMS Zero-Confirmation Status (if sms_auto_tracking enabled)
+                    if (showSmsAuto) ...[
+                      _buildZeroConfirmationSmsCard(context, isDark),
+                      const SizedBox(height: 18),
+                    ],
 
-              // 2. Mark Assigned Loan as Paid Section with Fallback 1-Tap (if loans_emi_ledger enabled)
-              if (showLoans || showHomeLoan) ...[
-                _buildLoansPaymentSection(context, isDark),
-                const SizedBox(height: 20),
-              ],
+                    // 2. Mark Assigned Loan as Paid Section with Fallback 1-Tap (if loans_emi_ledger or home_loan enabled)
+                    if (showLoans || showHomeLoan) ...[
+                      _buildLoansPaymentSection(context, isDark),
+                      const SizedBox(height: 20),
+                    ],
 
-              // 3. Repayment Schedule Breakdown (if repayment_schedules enabled)
-              if (showSchedules) ...[
-                _buildRepaymentScheduleSection(context, isDark),
-                const SizedBox(height: 24),
-              ],
-            ],
-          ),
-        ),
-      ),
+                    // 3. Repayment Schedule Breakdown (if repayment_schedules enabled)
+                    if (showSchedules) ...[
+                      _buildRepaymentScheduleSection(context, isDark),
+                      const SizedBox(height: 24),
+                    ],
+
+                    // 4. Safe Empty State Card if no capability sections are active
+                    if (!showSmsAuto &&
+                        !showLoans &&
+                        !showHomeLoan &&
+                        !showSchedules) ...[
+                      _buildCapabilityFallbackCard(context, isDark),
+                    ],
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
@@ -667,7 +691,92 @@ class _FocusedFamilyHomeScreenState extends State<FocusedFamilyHomeScreen> {
         ),
       );
     }
+    if (list.isEmpty) {
+      for (final s in RepaymentSchedulesData.allSchedules) {
+        list.add(
+          MandatoryEmiCheckItem(
+            loanKey: s.loanName,
+            title: s.loanName,
+            emiAmount: s.emiAmount,
+            payerName: 'Ajesh',
+            shareRecipient: 'Abhilash',
+            dueDay: 5,
+            paidToPayer: false,
+            sharedWithRecipient: false,
+            autoSmsDetected: false,
+            isResponsibleUser: true,
+          ),
+        );
+      }
+    }
     return list;
+  }
+
+  Widget _buildCapabilityFallbackCard(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppTheme.darkSurfaceContainerLowest
+            : AppTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppTheme.ambientCardShadow,
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF2C3233)
+              : AppTheme.outlineVariant.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.family_restroom_rounded,
+              size: 40,
+              color: AppTheme.primary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Welcome to Manikutti Family Hub',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'No active loans, SMS auto-pay, or dues pending for your current role view. You can test role views or customize theme colors in Settings.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+            icon: const Icon(Icons.settings_outlined, size: 18),
+            label: const Text('Open Settings & Role Switcher'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildLoanCard(MandatoryEmiCheckItem item, bool isDark) {

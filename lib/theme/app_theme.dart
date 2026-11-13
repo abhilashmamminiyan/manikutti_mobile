@@ -47,12 +47,31 @@ class AppTheme {
   }
 
   // ==========================================
-  // --- Modern (Heritage Teal) Color Tokens ---
+  // --- Modern Dynamic Primary & Color Tokens ---
   // ==========================================
-  static const Color primary = Color(0xFF006972); // Heritage Teal
-  static const Color primaryContainer = Color(0xFF68C9D6);
-  static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color onPrimaryContainer = Color(0xFF00535B);
+  static const Color defaultPrimary = Color(0xFF006972); // Heritage Teal
+  static Color _customPrimaryColor = defaultPrimary;
+
+  static Color get customPrimaryColor => _customPrimaryColor;
+  static Color get primary => _customPrimaryColor;
+
+  static void setPrimaryColor(Color color) {
+    _customPrimaryColor = color;
+  }
+
+  static Color get primaryContainer {
+    final hsl = HSLColor.fromColor(_customPrimaryColor);
+    return hsl
+        .withLightness((hsl.lightness + 0.35).clamp(0.0, 0.95))
+        .withSaturation((hsl.saturation * 0.7).clamp(0.0, 1.0))
+        .toColor();
+  }
+
+  static Color get onPrimary => const Color(0xFFFFFFFF);
+  static Color get onPrimaryContainer {
+    final hsl = HSLColor.fromColor(_customPrimaryColor);
+    return hsl.withLightness((hsl.lightness - 0.20).clamp(0.1, 0.9)).toColor();
+  }
 
   static const Color secondary = Color(0xFF735C00); // Sunlight Gold
   static const Color secondaryContainer = Color(
@@ -181,7 +200,19 @@ class AppTheme {
   // ==========================================
   // --- Modern Light Theme ---
   // ==========================================
-  static ThemeData get lightTheme {
+  static ThemeData get lightTheme => buildLightTheme();
+
+  static ThemeData buildLightTheme([Color? color]) {
+    final activePrimary = color ?? _customPrimaryColor;
+    final hsl = HSLColor.fromColor(activePrimary);
+    final activeContainer = hsl
+        .withLightness((hsl.lightness + 0.35).clamp(0.0, 0.95))
+        .withSaturation((hsl.saturation * 0.7).clamp(0.0, 1.0))
+        .toColor();
+    final activeOnContainer = hsl
+        .withLightness((hsl.lightness - 0.20).clamp(0.1, 0.9))
+        .toColor();
+
     final lightBase = ThemeData(brightness: Brightness.light).textTheme;
     final baseInter = GoogleFonts.interTextTheme(lightBase);
     final baseManrope = GoogleFonts.manropeTextTheme(lightBase);
@@ -189,13 +220,13 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      primaryColor: primary,
+      primaryColor: activePrimary,
       scaffoldBackgroundColor: surface,
-      colorScheme: const ColorScheme.light(
-        primary: primary,
+      colorScheme: ColorScheme.light(
+        primary: activePrimary,
         onPrimary: onPrimary,
-        primaryContainer: primaryContainer,
-        onPrimaryContainer: onPrimaryContainer,
+        primaryContainer: activeContainer,
+        onPrimaryContainer: activeOnContainer,
         secondary: secondary,
         onSecondary: onSecondary,
         secondaryContainer: secondaryContainer,
@@ -368,7 +399,15 @@ class AppTheme {
   // ==========================================
   // --- Modern Dark Theme ---
   // ==========================================
-  static ThemeData get darkTheme {
+  static ThemeData get darkTheme => buildDarkTheme();
+
+  static ThemeData buildDarkTheme([Color? color]) {
+    final activePrimary = color ?? _customPrimaryColor;
+    final hsl = HSLColor.fromColor(activePrimary);
+    final lightAccent = hsl
+        .withLightness((hsl.lightness + 0.25).clamp(0.4, 0.85))
+        .toColor();
+
     final darkBase = ThemeData(brightness: Brightness.dark).textTheme;
     final baseInter = GoogleFonts.interTextTheme(darkBase);
     final baseManrope = GoogleFonts.manropeTextTheme(darkBase);
@@ -376,26 +415,26 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      primaryColor: primary,
+      primaryColor: activePrimary,
       scaffoldBackgroundColor: darkBackground,
-      colorScheme: const ColorScheme.dark(
-        primary: primaryContainer,
+      colorScheme: ColorScheme.dark(
+        primary: lightAccent,
         onPrimary: onPrimaryContainer,
-        primaryContainer: primary,
+        primaryContainer: activePrimary,
         onPrimaryContainer: onPrimary,
-        secondary: Color(0xFFFFE087),
-        onSecondary: Color(0xFF3E2E00),
-        secondaryContainer: Color(0xFF574500),
-        onSecondaryContainer: Color(0xFFFFE087),
+        secondary: const Color(0xFFFFE087),
+        onSecondary: const Color(0xFF3E2E00),
+        secondaryContainer: const Color(0xFF574500),
+        onSecondaryContainer: const Color(0xFFFFE087),
         surface: darkSurface,
         onSurface: darkOnSurface,
         onSurfaceVariant: darkOnSurfaceVariant,
-        outline: Color(0xFF899294),
-        outlineVariant: Color(0xFF3F484A),
-        error: Color(0xFFFFB4AB),
-        onError: Color(0xFF690005),
-        errorContainer: Color(0xFF93000A),
-        onErrorContainer: Color(0xFFFFDAD6),
+        outline: const Color(0xFF899294),
+        outlineVariant: const Color(0xFF3F484A),
+        error: const Color(0xFFFFB4AB),
+        onError: const Color(0xFF690005),
+        errorContainer: const Color(0xFF93000A),
+        onErrorContainer: const Color(0xFFFFDAD6),
       ),
       textTheme: baseInter.copyWith(
         displayLarge: baseManrope.displayLarge?.copyWith(

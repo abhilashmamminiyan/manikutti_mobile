@@ -56,7 +56,7 @@ class _ScreenshotsScreenState extends State<ScreenshotsScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.auto_awesome, color: AppTheme.primary),
+                        Icon(Icons.auto_awesome, color: AppTheme.primary),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
