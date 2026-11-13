@@ -567,11 +567,6 @@ class AppTheme {
   // --- Paper Diary Light Theme ---
   // ==========================================
   static ThemeData get paperLightTheme {
-    final lightBase = ThemeData(brightness: Brightness.light).textTheme;
-    final baseKalam = GoogleFonts.kalamTextTheme(lightBase);
-    final basePatrick = GoogleFonts.patrickHandTextTheme(lightBase);
-    final baseMono = GoogleFonts.jetbrainsMonoTextTheme(lightBase);
-
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -657,17 +652,17 @@ class AppTheme {
         bodyLarge: GoogleFonts.kalam(color: paperInkNavy, fontSize: 16),
         bodyMedium: GoogleFonts.kalam(color: paperInkSlate, fontSize: 14),
         bodySmall: GoogleFonts.patrickHand(color: paperInkMuted, fontSize: 13),
-        labelLarge: GoogleFonts.jetbrainsMono(
+        labelLarge: GoogleFonts.jetBrainsMono(
           color: paperInkNavy,
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
-        labelMedium: GoogleFonts.jetbrainsMono(
+        labelMedium: GoogleFonts.jetBrainsMono(
           color: paperInkNavy,
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
-        labelSmall: GoogleFonts.jetbrainsMono(
+        labelSmall: GoogleFonts.jetBrainsMono(
           color: paperInkMuted,
           fontSize: 10,
           fontWeight: FontWeight.w500,
@@ -772,9 +767,6 @@ class AppTheme {
   // --- Paper Diary Dark Theme (Midnight Notebook) ---
   // ==========================================
   static ThemeData get paperDarkTheme {
-    final darkBase = ThemeData(brightness: Brightness.dark).textTheme;
-    final baseKalam = GoogleFonts.kalamTextTheme(darkBase);
-
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
@@ -822,7 +814,7 @@ class AppTheme {
         ),
         bodyLarge: GoogleFonts.kalam(color: paperDarkInk, fontSize: 16),
         bodyMedium: GoogleFonts.kalam(color: paperDarkMuted, fontSize: 14),
-        labelLarge: GoogleFonts.jetbrainsMono(
+        labelLarge: GoogleFonts.jetBrainsMono(
           color: paperDarkInk,
           fontSize: 14,
           fontWeight: FontWeight.w600,
