@@ -50,27 +50,16 @@ class AppTheme {
   // --- Modern Dynamic Primary & Color Tokens ---
   // ==========================================
   static const Color defaultPrimary = Color(0xFF006972); // Heritage Teal
-  static Color _customPrimaryColor = defaultPrimary;
+  static const Color primary = defaultPrimary;
+  static const Color primaryContainer = Color(0xFF92F1FE);
+  static const Color onPrimary = Color(0xFFFFFFFF);
+  static const Color onPrimaryContainer = Color(0xFF002023);
 
+  static Color _customPrimaryColor = defaultPrimary;
   static Color get customPrimaryColor => _customPrimaryColor;
-  static Color get primary => _customPrimaryColor;
 
   static void setPrimaryColor(Color color) {
     _customPrimaryColor = color;
-  }
-
-  static Color get primaryContainer {
-    final hsl = HSLColor.fromColor(_customPrimaryColor);
-    return hsl
-        .withLightness((hsl.lightness + 0.35).clamp(0.0, 0.95))
-        .withSaturation((hsl.saturation * 0.7).clamp(0.0, 1.0))
-        .toColor();
-  }
-
-  static Color get onPrimary => const Color(0xFFFFFFFF);
-  static Color get onPrimaryContainer {
-    final hsl = HSLColor.fromColor(_customPrimaryColor);
-    return hsl.withLightness((hsl.lightness - 0.20).clamp(0.1, 0.9)).toColor();
   }
 
   static const Color secondary = Color(0xFF735C00); // Sunlight Gold
