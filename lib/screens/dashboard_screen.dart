@@ -28,6 +28,7 @@ import '../widgets/family_pool_transfers_card.dart';
 import '../widgets/monthly_dues_section.dart';
 import '../widgets/dashboard_budget_progress.dart';
 import 'simple_family_home_screen.dart';
+import 'demo_role_home_screen.dart';
 import '../models/emi_model.dart';
 import '../models/home_loan_model.dart';
 import '../services/widget_data_service.dart';
@@ -3543,6 +3544,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
       valueListenable: FeatureFlagService.instance.permissionsNotifier,
       builder: (context, _, _) {
         final flags = FeatureFlagService.instance;
+        if (flags.isDemoRole) {
+          final display = _memberNickname.isNotEmpty
+              ? _memberNickname
+              : (_userEmail?.split('@').first ?? 'Family');
+          return DemoRoleHomeScreen(
+            displayName: display,
+            userEmail: _userEmail ?? '',
+            familyCode: _familyCode,
+            loans: _loans,
+            emiBills: _emiList,
+            homeLoanConfig: _homeLoanConfig,
+            homeLoanHistory: _homeLoanHistory,
+            mandatoryEmiChecks: _mandatoryEmiChecks,
+            pendingSmsList: _pendingSmsList,
+            isLoading: _isLoading,
+            onRefresh: _triggerSync,
+            onLogout: _handleLogout,
+          );
+        }
+
         if (flags.roleName.trim().toLowerCase() == 'basic') {
           final display = _memberNickname.isNotEmpty
               ? _memberNickname

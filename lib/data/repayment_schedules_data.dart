@@ -1,0 +1,204 @@
+// Generated from official Bajaj Finance Repayment Schedules (docs/RPS.pdf, docs/Repayment Schedule-1.pdf, docs/Repayment Schedule.pdf)
+class ScheduleInstallment {
+  final int instNo;
+  final String dueDate;
+  final double openingPrincipal;
+  final double installmentAmount;
+  final double principal;
+  final double interest;
+  final double closingPrincipal;
+
+  const ScheduleInstallment({
+    required this.instNo,
+    required this.dueDate,
+    required this.openingPrincipal,
+    required this.installmentAmount,
+    required this.principal,
+    required this.interest,
+    required this.closingPrincipal,
+  });
+}
+
+class LoanRepaymentSchedule {
+  final String loanName;
+  final String agreementNo;
+  final String customer;
+  final String payer;
+  final String shareRecipient;
+  final double interestRate;
+  final double principalAmount;
+  final double monthlyEmi;
+  final int tenureMonths;
+  final List<ScheduleInstallment> installments;
+
+  const LoanRepaymentSchedule({
+    required this.loanName,
+    required this.agreementNo,
+    required this.customer,
+    required this.payer,
+    required this.shareRecipient,
+    required this.interestRate,
+    required this.principalAmount,
+    required this.monthlyEmi,
+    required this.tenureMonths,
+    required this.installments,
+  });
+
+  double get totalInterest => installments.fold(0.0, (sum, i) => sum + i.interest);
+  double get totalRepayable => installments.fold(0.0, (sum, i) => sum + i.installmentAmount);
+
+  double getPaidPrincipal(int paidMonths) {
+    return installments
+        .where((i) => i.instNo <= paidMonths)
+        .fold(0.0, (sum, i) => sum + i.principal);
+  }
+
+  double getPaidInterest(int paidMonths) {
+    return installments
+        .where((i) => i.instNo <= paidMonths)
+        .fold(0.0, (sum, i) => sum + i.interest);
+  }
+
+  double getRemainingPrincipal(int paidMonths) {
+    if (paidMonths >= tenureMonths) return 0.0;
+    if (paidMonths <= 0) return principalAmount;
+    final inst = installments.firstWhere((i) => i.instNo == paidMonths, orElse: () => installments.last);
+    return inst.closingPrincipal;
+  }
+
+  double getRemainingInterest(int paidMonths) {
+    return installments
+        .where((i) => i.instNo > paidMonths)
+        .fold(0.0, (sum, i) => sum + i.interest);
+  }
+}
+
+class RepaymentSchedulesData {
+  static const List<LoanRepaymentSchedule> allSchedules = [
+    LoanRepaymentSchedule(
+      loanName: 'Bajaj Personal Loan',
+      agreementNo: 'P595PRB70267501',
+      customer: 'NISHA P',
+      payer: 'Ajesh',
+      shareRecipient: 'Nisha',
+      interestRate: 30.0,
+      principalAmount: 215378.0,
+      monthlyEmi: 7755.0,
+      tenureMonths: 48,
+      installments: [
+        ScheduleInstallment(instNo: 1, dueDate: '02/02/2026', openingPrincipal: 215378.0, installmentAmount: 7755.0, principal: 2371.0, interest: 5384.0, closingPrincipal: 213007.0),
+        ScheduleInstallment(instNo: 2, dueDate: '02/03/2026', openingPrincipal: 213007.0, installmentAmount: 7755.0, principal: 2429.0, interest: 5326.0, closingPrincipal: 210578.0),
+        ScheduleInstallment(instNo: 3, dueDate: '02/04/2026', openingPrincipal: 210578.0, installmentAmount: 7755.0, principal: 2491.0, interest: 5264.0, closingPrincipal: 208087.0),
+        ScheduleInstallment(instNo: 4, dueDate: '02/05/2026', openingPrincipal: 208087.0, installmentAmount: 7755.0, principal: 2553.0, interest: 5202.0, closingPrincipal: 205534.0),
+        ScheduleInstallment(instNo: 5, dueDate: '02/06/2026', openingPrincipal: 205534.0, installmentAmount: 7755.0, principal: 2616.0, interest: 5139.0, closingPrincipal: 202918.0),
+        ScheduleInstallment(instNo: 6, dueDate: '02/07/2026', openingPrincipal: 202918.0, installmentAmount: 7755.0, principal: 2682.0, interest: 5073.0, closingPrincipal: 200236.0),
+        ScheduleInstallment(instNo: 7, dueDate: '02/08/2026', openingPrincipal: 200236.0, installmentAmount: 7755.0, principal: 2750.0, interest: 5005.0, closingPrincipal: 197486.0),
+        ScheduleInstallment(instNo: 8, dueDate: '02/09/2026', openingPrincipal: 197486.0, installmentAmount: 7755.0, principal: 2817.0, interest: 4938.0, closingPrincipal: 194669.0),
+        ScheduleInstallment(instNo: 9, dueDate: '02/10/2026', openingPrincipal: 194669.0, installmentAmount: 7755.0, principal: 2889.0, interest: 4866.0, closingPrincipal: 191780.0),
+        ScheduleInstallment(instNo: 10, dueDate: '02/11/2026', openingPrincipal: 191780.0, installmentAmount: 7755.0, principal: 2960.0, interest: 4795.0, closingPrincipal: 188820.0),
+        ScheduleInstallment(instNo: 11, dueDate: '02/12/2026', openingPrincipal: 188820.0, installmentAmount: 7755.0, principal: 3035.0, interest: 4720.0, closingPrincipal: 185785.0),
+        ScheduleInstallment(instNo: 12, dueDate: '02/01/2027', openingPrincipal: 185785.0, installmentAmount: 7755.0, principal: 3110.0, interest: 4645.0, closingPrincipal: 182675.0),
+        ScheduleInstallment(instNo: 13, dueDate: '02/02/2027', openingPrincipal: 182675.0, installmentAmount: 7755.0, principal: 3188.0, interest: 4567.0, closingPrincipal: 179487.0),
+        ScheduleInstallment(instNo: 14, dueDate: '02/03/2027', openingPrincipal: 179487.0, installmentAmount: 7755.0, principal: 3268.0, interest: 4487.0, closingPrincipal: 176219.0),
+        ScheduleInstallment(instNo: 15, dueDate: '02/04/2027', openingPrincipal: 176219.0, installmentAmount: 7755.0, principal: 3350.0, interest: 4405.0, closingPrincipal: 172869.0),
+        ScheduleInstallment(instNo: 16, dueDate: '02/05/2027', openingPrincipal: 172869.0, installmentAmount: 7755.0, principal: 3433.0, interest: 4322.0, closingPrincipal: 169436.0),
+        ScheduleInstallment(instNo: 17, dueDate: '02/06/2027', openingPrincipal: 169436.0, installmentAmount: 7755.0, principal: 3519.0, interest: 4236.0, closingPrincipal: 165917.0),
+        ScheduleInstallment(instNo: 18, dueDate: '02/07/2027', openingPrincipal: 165917.0, installmentAmount: 7755.0, principal: 3607.0, interest: 4148.0, closingPrincipal: 162310.0),
+        ScheduleInstallment(instNo: 19, dueDate: '02/08/2027', openingPrincipal: 162310.0, installmentAmount: 7755.0, principal: 3697.0, interest: 4058.0, closingPrincipal: 158613.0),
+        ScheduleInstallment(instNo: 20, dueDate: '02/09/2027', openingPrincipal: 158613.0, installmentAmount: 7755.0, principal: 3790.0, interest: 3965.0, closingPrincipal: 154823.0),
+        ScheduleInstallment(instNo: 21, dueDate: '02/10/2027', openingPrincipal: 154823.0, installmentAmount: 7755.0, principal: 3884.0, interest: 3871.0, closingPrincipal: 150939.0),
+        ScheduleInstallment(instNo: 22, dueDate: '02/11/2027', openingPrincipal: 150939.0, installmentAmount: 7755.0, principal: 3982.0, interest: 3773.0, closingPrincipal: 146957.0),
+        ScheduleInstallment(instNo: 23, dueDate: '02/12/2027', openingPrincipal: 146957.0, installmentAmount: 7755.0, principal: 4081.0, interest: 3674.0, closingPrincipal: 142876.0),
+        ScheduleInstallment(instNo: 24, dueDate: '02/01/2028', openingPrincipal: 142876.0, installmentAmount: 7755.0, principal: 4183.0, interest: 3572.0, closingPrincipal: 138693.0),
+        ScheduleInstallment(instNo: 25, dueDate: '02/02/2028', openingPrincipal: 138693.0, installmentAmount: 7755.0, principal: 4288.0, interest: 3467.0, closingPrincipal: 134405.0),
+        ScheduleInstallment(instNo: 26, dueDate: '02/03/2028', openingPrincipal: 134405.0, installmentAmount: 7755.0, principal: 4395.0, interest: 3360.0, closingPrincipal: 130010.0),
+        ScheduleInstallment(instNo: 27, dueDate: '02/04/2028', openingPrincipal: 130010.0, installmentAmount: 7755.0, principal: 4504.0, interest: 3251.0, closingPrincipal: 125506.0),
+        ScheduleInstallment(instNo: 28, dueDate: '02/05/2028', openingPrincipal: 125506.0, installmentAmount: 7755.0, principal: 4618.0, interest: 3137.0, closingPrincipal: 120888.0),
+        ScheduleInstallment(instNo: 29, dueDate: '02/06/2028', openingPrincipal: 120888.0, installmentAmount: 7755.0, principal: 4732.0, interest: 3023.0, closingPrincipal: 116156.0),
+        ScheduleInstallment(instNo: 30, dueDate: '02/07/2028', openingPrincipal: 116156.0, installmentAmount: 7755.0, principal: 4852.0, interest: 2903.0, closingPrincipal: 111304.0),
+        ScheduleInstallment(instNo: 31, dueDate: '02/08/2028', openingPrincipal: 111304.0, installmentAmount: 7755.0, principal: 4972.0, interest: 2783.0, closingPrincipal: 106332.0),
+        ScheduleInstallment(instNo: 32, dueDate: '02/09/2028', openingPrincipal: 106332.0, installmentAmount: 7755.0, principal: 5097.0, interest: 2658.0, closingPrincipal: 101235.0),
+        ScheduleInstallment(instNo: 33, dueDate: '02/10/2028', openingPrincipal: 101235.0, installmentAmount: 7755.0, principal: 5224.0, interest: 2531.0, closingPrincipal: 96011.0),
+        ScheduleInstallment(instNo: 34, dueDate: '02/11/2028', openingPrincipal: 96011.0, installmentAmount: 7755.0, principal: 5355.0, interest: 2400.0, closingPrincipal: 90656.0),
+        ScheduleInstallment(instNo: 35, dueDate: '02/12/2028', openingPrincipal: 90656.0, installmentAmount: 7755.0, principal: 5488.0, interest: 2267.0, closingPrincipal: 85168.0),
+        ScheduleInstallment(instNo: 36, dueDate: '02/01/2029', openingPrincipal: 85168.0, installmentAmount: 7755.0, principal: 5626.0, interest: 2129.0, closingPrincipal: 79542.0),
+        ScheduleInstallment(instNo: 37, dueDate: '02/02/2029', openingPrincipal: 79542.0, installmentAmount: 7755.0, principal: 5766.0, interest: 1989.0, closingPrincipal: 73776.0),
+        ScheduleInstallment(instNo: 38, dueDate: '02/03/2029', openingPrincipal: 73776.0, installmentAmount: 7755.0, principal: 5911.0, interest: 1844.0, closingPrincipal: 67865.0),
+        ScheduleInstallment(instNo: 39, dueDate: '02/04/2029', openingPrincipal: 67865.0, installmentAmount: 7755.0, principal: 6058.0, interest: 1697.0, closingPrincipal: 61807.0),
+        ScheduleInstallment(instNo: 40, dueDate: '02/05/2029', openingPrincipal: 61807.0, installmentAmount: 7755.0, principal: 6210.0, interest: 1545.0, closingPrincipal: 55597.0),
+        ScheduleInstallment(instNo: 41, dueDate: '02/06/2029', openingPrincipal: 55597.0, installmentAmount: 7755.0, principal: 6365.0, interest: 1390.0, closingPrincipal: 49232.0),
+        ScheduleInstallment(instNo: 42, dueDate: '02/07/2029', openingPrincipal: 49232.0, installmentAmount: 7755.0, principal: 6524.0, interest: 1231.0, closingPrincipal: 42708.0),
+        ScheduleInstallment(instNo: 43, dueDate: '02/08/2029', openingPrincipal: 42708.0, installmentAmount: 7755.0, principal: 6688.0, interest: 1067.0, closingPrincipal: 36020.0),
+        ScheduleInstallment(instNo: 44, dueDate: '02/09/2029', openingPrincipal: 36020.0, installmentAmount: 7755.0, principal: 6854.0, interest: 901.0, closingPrincipal: 29166.0),
+        ScheduleInstallment(instNo: 45, dueDate: '02/10/2029', openingPrincipal: 29166.0, installmentAmount: 7755.0, principal: 7026.0, interest: 729.0, closingPrincipal: 22140.0),
+        ScheduleInstallment(instNo: 46, dueDate: '02/11/2029', openingPrincipal: 22140.0, installmentAmount: 7755.0, principal: 7202.0, interest: 553.0, closingPrincipal: 14938.0),
+        ScheduleInstallment(instNo: 47, dueDate: '02/12/2029', openingPrincipal: 14938.0, installmentAmount: 7755.0, principal: 7381.0, interest: 374.0, closingPrincipal: 7557.0),
+        ScheduleInstallment(instNo: 48, dueDate: '02/01/2030', openingPrincipal: 7557.0, installmentAmount: 7746.0, principal: 7557.0, interest: 189.0, closingPrincipal: 0.0),
+      ],
+    ),
+    LoanRepaymentSchedule(
+      loanName: 'Bajaj Lifestyle 0%',
+      agreementNo: 'P595PSC90568277',
+      customer: 'NISHA P',
+      payer: 'Ajesh',
+      shareRecipient: 'Nisha',
+      interestRate: 0.0,
+      principalAmount: 28369.0,
+      monthlyEmi: 3546.0,
+      tenureMonths: 8,
+      installments: [
+        ScheduleInstallment(instNo: 1, dueDate: '02/05/2026', openingPrincipal: 28369.0, installmentAmount: 3546.0, principal: 3546.0, interest: 0.0, closingPrincipal: 24823.0),
+        ScheduleInstallment(instNo: 2, dueDate: '02/06/2026', openingPrincipal: 24823.0, installmentAmount: 3546.0, principal: 3546.0, interest: 0.0, closingPrincipal: 21277.0),
+        ScheduleInstallment(instNo: 3, dueDate: '02/07/2026', openingPrincipal: 21277.0, installmentAmount: 3546.0, principal: 3546.0, interest: 0.0, closingPrincipal: 17731.0),
+        ScheduleInstallment(instNo: 4, dueDate: '02/08/2026', openingPrincipal: 17731.0, installmentAmount: 3546.0, principal: 3546.0, interest: 0.0, closingPrincipal: 14185.0),
+        ScheduleInstallment(instNo: 5, dueDate: '02/09/2026', openingPrincipal: 14185.0, installmentAmount: 3546.0, principal: 3546.0, interest: 0.0, closingPrincipal: 10639.0),
+        ScheduleInstallment(instNo: 6, dueDate: '02/10/2026', openingPrincipal: 10639.0, installmentAmount: 3546.0, principal: 3546.0, interest: 0.0, closingPrincipal: 7093.0),
+        ScheduleInstallment(instNo: 7, dueDate: '02/11/2026', openingPrincipal: 7093.0, installmentAmount: 3546.0, principal: 3546.0, interest: 0.0, closingPrincipal: 3547.0),
+        ScheduleInstallment(instNo: 8, dueDate: '02/12/2026', openingPrincipal: 3547.0, installmentAmount: 3547.0, principal: 3547.0, interest: 0.0, closingPrincipal: 0.0),
+      ],
+    ),
+    LoanRepaymentSchedule(
+      loanName: 'Bajaj Lifestyle 23.58%',
+      agreementNo: 'P595PSC89289290',
+      customer: 'NISHA P',
+      payer: 'Ajesh',
+      shareRecipient: 'Nisha',
+      interestRate: 23.58,
+      principalAmount: 78000.0,
+      monthlyEmi: 4834.0,
+      tenureMonths: 18,
+      installments: [
+        ScheduleInstallment(instNo: 1, dueDate: '02/05/2026', openingPrincipal: 58664.0, installmentAmount: 4411.0, principal: 3681.0, interest: 730.0, closingPrincipal: 54983.0),
+        ScheduleInstallment(instNo: 2, dueDate: '02/06/2026', openingPrincipal: 54983.0, installmentAmount: 4834.0, principal: 3754.0, interest: 1080.0, closingPrincipal: 51229.0),
+        ScheduleInstallment(instNo: 3, dueDate: '02/07/2026', openingPrincipal: 51229.0, installmentAmount: 4834.0, principal: 3827.0, interest: 1007.0, closingPrincipal: 47402.0),
+        ScheduleInstallment(instNo: 4, dueDate: '02/08/2026', openingPrincipal: 47402.0, installmentAmount: 4834.0, principal: 3903.0, interest: 931.0, closingPrincipal: 43499.0),
+        ScheduleInstallment(instNo: 5, dueDate: '02/09/2026', openingPrincipal: 43499.0, installmentAmount: 4834.0, principal: 3979.0, interest: 855.0, closingPrincipal: 39520.0),
+        ScheduleInstallment(instNo: 6, dueDate: '02/10/2026', openingPrincipal: 39520.0, installmentAmount: 4834.0, principal: 4057.0, interest: 777.0, closingPrincipal: 35463.0),
+        ScheduleInstallment(instNo: 7, dueDate: '02/11/2026', openingPrincipal: 35463.0, installmentAmount: 4834.0, principal: 4138.0, interest: 696.0, closingPrincipal: 31325.0),
+        ScheduleInstallment(instNo: 8, dueDate: '02/12/2026', openingPrincipal: 31325.0, installmentAmount: 4834.0, principal: 4218.0, interest: 616.0, closingPrincipal: 27107.0),
+        ScheduleInstallment(instNo: 9, dueDate: '02/01/2027', openingPrincipal: 27107.0, installmentAmount: 4834.0, principal: 4301.0, interest: 533.0, closingPrincipal: 22806.0),
+        ScheduleInstallment(instNo: 10, dueDate: '02/02/2027', openingPrincipal: 22806.0, installmentAmount: 4834.0, principal: 4386.0, interest: 448.0, closingPrincipal: 18420.0),
+        ScheduleInstallment(instNo: 11, dueDate: '02/03/2027', openingPrincipal: 18420.0, installmentAmount: 4834.0, principal: 4472.0, interest: 362.0, closingPrincipal: 13948.0),
+        ScheduleInstallment(instNo: 12, dueDate: '02/04/2027', openingPrincipal: 13948.0, installmentAmount: 4834.0, principal: 4560.0, interest: 274.0, closingPrincipal: 9388.0),
+        ScheduleInstallment(instNo: 13, dueDate: '02/05/2027', openingPrincipal: 9388.0, installmentAmount: 4834.0, principal: 4650.0, interest: 184.0, closingPrincipal: 4738.0),
+        ScheduleInstallment(instNo: 14, dueDate: '02/06/2027', openingPrincipal: 4738.0, installmentAmount: 4831.0, principal: 4738.0, interest: 93.0, closingPrincipal: 0.0),
+        ScheduleInstallment(instNo: 15, dueDate: '02/07/2027', openingPrincipal: 0.0, installmentAmount: 4834.0, principal: 4834.0, interest: 0.0, closingPrincipal: 0.0),
+        ScheduleInstallment(instNo: 16, dueDate: '02/08/2027', openingPrincipal: 0.0, installmentAmount: 4834.0, principal: 4834.0, interest: 0.0, closingPrincipal: 0.0),
+        ScheduleInstallment(instNo: 17, dueDate: '02/09/2027', openingPrincipal: 0.0, installmentAmount: 4834.0, principal: 4834.0, interest: 0.0, closingPrincipal: 0.0),
+        ScheduleInstallment(instNo: 18, dueDate: '02/10/2027', openingPrincipal: 0.0, installmentAmount: 4834.0, principal: 4834.0, interest: 0.0, closingPrincipal: 0.0),
+      ],
+    ),
+  ];
+
+  static LoanRepaymentSchedule? findByLoanNameOrAgreement(String query) {
+    final q = query.trim().toLowerCase();
+    for (final s in allSchedules) {
+      if (s.loanName.toLowerCase().contains(q) ||
+          s.agreementNo.toLowerCase().contains(q) ||
+          q.contains(s.agreementNo.toLowerCase())) {
+        return s;
+      }
+    }
+    return null;
+  }
+}

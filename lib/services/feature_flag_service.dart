@@ -61,6 +61,8 @@ class FeatureFlagService {
 
   String get roleName => _roleName;
   bool get masterAiEnabled => _masterAiEnabled;
+  bool get isDemoRole => _roleName.trim().toLowerCase() == 'demo';
+  bool get isBasicRole => _roleName.trim().toLowerCase() == 'basic';
 
   static Map<String, bool> _buildDefaultOpenMap() {
     return {for (final k in FeatureKeys.allKeys) k: true};
